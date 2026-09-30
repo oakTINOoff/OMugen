@@ -10,6 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -512,6 +513,12 @@ func FileExist(filename string) string {
 			return ""
 		}
 		return filepath.ToSlash(filename)
+	}
+	// Case-insensitive retry. Windows file names already ignore case, so there
+	// it could only find what os.Stat just missed (and each retry scans a
+	// whole folder).
+	if runtime.GOOS == "windows" {
+		return engineAsset(filename)
 	}
 	var pattern string
 	for _, r := range filename {

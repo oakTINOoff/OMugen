@@ -11,6 +11,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -1788,12 +1789,15 @@ func preloadSff(filename string, char bool, preloadSpr map[[2]uint16]bool) (*Sff
 	sff := newSff()
 	sff.filename = filename
 
-	raw, err := OpenFile(filename)
+	// OMugen: buffered reads, served from the SFF header cache when possible.
+	f, commit, err := sffCacheOpen(filename)
 	if err != nil {
 		return nil, nil, err
 	}
-	// OMugen: buffer the many small header reads of the sprite walk.
-	f := newBufReadSeeker(raw, 64<<10)
+	if loadProf.enabled {
+		t0 := time.Now()
+		defer func() { loadProfAdd(fmt.Sprintf("5sff.v%d", sff.header.Version[0]), t0) }()
+	}
 
 	defer func() {
 		chk(f.Close())
@@ -2062,6 +2066,7 @@ func preloadSff(filename string, char bool, preloadSpr map[[2]uint16]bool) (*Sff
 	if sff.header.Version[0] == 1 {
 		sff.palList = *pl
 	}
+	commit(sff.header.Version[0] == 1)
 	return sff, selPal, nil
 }
 

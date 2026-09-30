@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/pprof"
 	"sort"
 	"strings"
 	"sync"
@@ -47,16 +48,51 @@ func loadProfChar() {
 	}
 	loadProf.chars++
 	if loadProf.chars%100 == 0 {
-		names := make([]string, 0, len(loadProf.phases))
-		for k := range loadProf.phases {
-			names = append(names, k)
+		loadProfPrintLocked()
+	}
+}
+
+// loadProfDump prints the totals (e.g. when background loading finishes).
+func loadProfDump() {
+	loadProfStopCPU()
+	if !loadProf.enabled {
+		return
+	}
+	loadProf.Lock()
+	defer loadProf.Unlock()
+	loadProfPrintLocked()
+}
+
+func loadProfPrintLocked() {
+	names := make([]string, 0, len(loadProf.phases))
+	for k := range loadProf.phases {
+		names = append(names, k)
+	}
+	sort.Strings(names)
+	parts := make([]string, 0, len(names))
+	for _, k := range names {
+		parts = append(parts, fmt.Sprintf("%s=%v", k, loadProf.phases[k].Round(time.Millisecond)))
+	}
+	fmt.Fprintf(os.Stderr, "OMugen loadprof: %d entries, wall %v | %s\n",
+		loadProf.chars, time.Since(loadProf.start).Round(time.Millisecond), strings.Join(parts, " "))
+}
+
+// OMUGEN_CPUPROFILE=file writes a CPU profile (go tool pprof) of the start
+// of the game, up to the end of background loading.
+var loadProfCPU *os.File
+
+func init() {
+	if p := os.Getenv("OMUGEN_CPUPROFILE"); p != "" {
+		if f, err := os.Create(p); err == nil && pprof.StartCPUProfile(f) == nil {
+			loadProfCPU = f
 		}
-		sort.Strings(names)
-		parts := make([]string, 0, len(names))
-		for _, k := range names {
-			parts = append(parts, fmt.Sprintf("%s=%v", k, loadProf.phases[k].Round(time.Millisecond)))
-		}
-		fmt.Fprintf(os.Stderr, "OMugen loadprof: %d entries, wall %v | %s\n",
-			loadProf.chars, time.Since(loadProf.start).Round(time.Millisecond), strings.Join(parts, " "))
+	}
+}
+
+func loadProfStopCPU() {
+	if loadProfCPU != nil {
+		pprof.StopCPUProfile()
+		loadProfCPU.Close()
+		loadProfCPU = nil
 	}
 }

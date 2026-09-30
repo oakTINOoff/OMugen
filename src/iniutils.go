@@ -1088,11 +1088,12 @@ func assignField(structPtr interface{}, parts []queryPart, value interface{}, ba
 					case "Spr":
 						// Expect a [2]int32 array
 						if fieldVal.Kind() == reflect.Array && fieldVal.Len() == 2 {
-							// Read both elements as int32
-							a0 := uint16(fieldVal.Index(0).Int())
-							a1 := uint16(fieldVal.Index(1).Int())
-							if a0 >= 0 && a1 >= 0 {
-								key := [2]uint16{a0, a1}
+							// Read both elements as int32. "-1, 0" means no sprite:
+							// requesting 65535,0 would make every SFF scan run to
+							// the end looking for a sprite that is never there.
+							v0, v1 := fieldVal.Index(0).Int(), fieldVal.Index(1).Int()
+							if v0 >= 0 && v1 >= 0 && v0 <= 0xFFFF && v1 <= 0xFFFF {
+								key := [2]uint16{uint16(v0), uint16(v1)}
 								if preload == "char" {
 									sys.sel.charSpritePreload[key] = true
 								} else {

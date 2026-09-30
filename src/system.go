@@ -5042,6 +5042,8 @@ func (s *Select) preloadWorkerLoop() {
 				}
 				s.preloadBatchCount++
 				if s.preloadIdleLocked() {
+					loadProfDump()
+					go sffCacheSave()
 					LogMessage("OMugen: background loading finished: %d characters/stages in %v (%d workers)",
 						s.preloadBatchCount, time.Since(s.preloadBatchStart).Round(time.Millisecond), preloadWorkerCount())
 					s.preloadBatchCount = 0
@@ -5086,7 +5088,8 @@ func (s *Select) preloadCharAssets(ref int) error {
 	tempSff := newSff()
 
 	tphase := time.Now()
-	if sc.preloadAnim != "" {
+	// The AIR file is only needed when the screenpack asks for animations.
+	if sc.preloadAnim != "" && len(s.charAnimPreload) > 0 {
 		defer loadProfAdd("4air", tphase)
 		animPath := sc.preloadAnim
 		if err := LoadFile(&animPath, []string{sc.def}, "", func(filename string) error {
@@ -5192,17 +5195,32 @@ func (s *Select) preloadStageAssets(ref int) error {
 		return nil
 	}
 	ss := s.stagelist[ref-1]
+	// Nothing to show for this stage on the select screen: skip reading it.
+	if len(s.stageAnimPreload) == 0 && len(s.stageSpritePreload) == 0 {
+		localSff := newSff()
+		localAnims := NewPreloadedAnims()
+		localAnims.updateSff(localSff)
+		s.preloadMu.Lock()
+		dst := &s.stagelist[ref-1]
+		dst.sff = localSff
+		dst.anims = localAnims
+		s.preloadMu.Unlock()
+		return nil
+	}
+	// The stage .def is only needed for its animations.
 	lines := []string{}
 	defPath := ss.def
-	if err := LoadFile(&defPath, nil, "", func(file string) error {
-		str, err := LoadText(file)
-		if err != nil {
+	if len(s.stageAnimPreload) > 0 {
+		if err := LoadFile(&defPath, nil, "", func(file string) error {
+			str, err := LoadText(file)
+			if err != nil {
+				return err
+			}
+			lines = SplitAndTrim(str, "\n")
+			return nil
+		}); err != nil {
 			return err
 		}
-		lines = SplitAndTrim(str, "\n")
-		return nil
-	}); err != nil {
-		return err
 	}
 
 	localAnims := NewPreloadedAnims()
@@ -5568,9 +5586,17 @@ func (s *Select) AddChar(def string) *SelectChar {
 		sc.preloadAnim = anim_orig
 	}
 
-	// Try to use the "_preload.sff" file if available
+	// Try to use the "_preload.sff" file if available (checked directly: it is
+	// almost never there, and FileExist would also look in the engine files)
 	fp := fmt.Sprintf("%v_preload.sff", strings.TrimSuffix(sc.def, filepath.Ext(sc.def)))
-	if fp = FileExist(fp); len(fp) == 0 {
+	if isZip, _, _ := IsZipPath(fp); isZip || runtime.GOOS != "windows" {
+		fp = FileExist(fp)
+	} else if fi, err := os.Stat(fp); err == nil && !fi.IsDir() {
+		fp = filepath.ToSlash(fp)
+	} else {
+		fp = ""
+	}
+	if len(fp) == 0 {
 		// Fall back to normal SFF
 		fp = sprite_orig
 	}

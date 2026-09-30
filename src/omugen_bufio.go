@@ -44,50 +44,88 @@ func loadFirstIniSection(filename, name string) ([]string, error) {
 	return out, sc.Err()
 }
 
-// bufReadSeeker adds a read buffer to a ReadSeekCloser while keeping Seek.
-// SFF preloading walks sprite headers with many small Seek+Read calls; on an
-// unbuffered *os.File each one is a system call (costly on compressed files).
-// Reads inside the buffered window are served from memory; large reads
-// bypass the buffer.
+// bufReadSeeker adds a read cache to a ReadSeekCloser while keeping Seek.
+// SFF preloading makes many small Seek+Read calls; on an unbuffered *os.File
+// each one is a system call (costly on compressed files). The cache keeps a
+// few blocks aligned to the block size, so the access patterns of the SFF
+// loader stay cheap: jumping between palette headers and palette data, and
+// scanning backwards byte by byte. Reads of a block or more bypass it.
 type bufReadSeeker struct {
-	rs       io.ReadSeekCloser
-	buf      []byte
-	bufStart int64 // file offset of buf[0]
-	n        int   // valid bytes in buf
-	pos      int64 // logical read position
+	rs        io.ReadSeekCloser
+	blocks    []bufBlock
+	blockSize int64
+	tick      uint64
+	pos       int64 // logical read position
 }
 
+type bufBlock struct {
+	start int64 // file offset of data[0], -1 if unused
+	n     int   // valid bytes in data
+	used  uint64
+	data  []byte
+}
+
+// newBufReadSeeker caches up to size bytes, in blocks of at most 16 KB.
 func newBufReadSeeker(rs io.ReadSeekCloser, size int) *bufReadSeeker {
-	return &bufReadSeeker{rs: rs, buf: make([]byte, size), bufStart: -1}
+	bs := 16 << 10
+	if size/4 < bs {
+		bs = size / 4
+	}
+	if bs < 64 {
+		bs = 64
+	}
+	b := &bufReadSeeker{rs: rs, blockSize: int64(bs)}
+	for i := 0; i < size/bs || i < 1; i++ {
+		b.blocks = append(b.blocks, bufBlock{start: -1, data: make([]byte, bs)})
+	}
+	return b
 }
 
 func (b *bufReadSeeker) Read(p []byte) (int, error) {
 	if len(p) == 0 {
 		return 0, nil
 	}
-	if b.bufStart >= 0 && b.pos >= b.bufStart && b.pos < b.bufStart+int64(b.n) {
-		c := copy(p, b.buf[b.pos-b.bufStart:b.n])
-		b.pos += int64(c)
-		return c, nil
+	start := b.pos - b.pos%b.blockSize
+	var blk *bufBlock
+	for i := range b.blocks {
+		if b.blocks[i].start == start {
+			blk = &b.blocks[i]
+			break
+		}
 	}
-	if _, err := b.rs.Seek(b.pos, io.SeekStart); err != nil {
-		return 0, err
+	if blk == nil {
+		if int64(len(p)) >= b.blockSize {
+			if _, err := b.rs.Seek(b.pos, io.SeekStart); err != nil {
+				return 0, err
+			}
+			c, err := b.rs.Read(p)
+			b.pos += int64(c)
+			return c, err
+		}
+		// Replace the least recently used block.
+		blk = &b.blocks[0]
+		for i := range b.blocks {
+			if b.blocks[i].used < blk.used {
+				blk = &b.blocks[i]
+			}
+		}
+		blk.start = -1
+		if _, err := b.rs.Seek(start, io.SeekStart); err != nil {
+			return 0, err
+		}
+		n, err := io.ReadFull(b.rs, blk.data)
+		if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
+			return 0, err
+		}
+		blk.start, blk.n = start, n
 	}
-	if len(p) >= len(b.buf) {
-		c, err := b.rs.Read(p)
-		b.pos += int64(c)
-		return c, err
-	}
-	n, err := io.ReadFull(b.rs, b.buf)
-	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) && !errors.Is(err, io.EOF) {
-		b.bufStart = -1
-		return 0, err
-	}
-	b.bufStart, b.n = b.pos, n
-	if n == 0 {
+	b.tick++
+	blk.used = b.tick
+	off := int(b.pos - start)
+	if off >= blk.n {
 		return 0, io.EOF
 	}
-	c := copy(p, b.buf[:n])
+	c := copy(p, blk.data[off:blk.n])
 	b.pos += int64(c)
 	return c, nil
 }

@@ -644,6 +644,7 @@ loadDebugFont(gameOption('Debug.Font'), gameOption('Debug.FontScale'))
 main.t_stageDef = {['random'] = 0}
 main.t_charDef = {}
 main.t_selChars = {}
+main.t_rowsByRef = {} -- char_ref -> rows of main.t_selChars using it
 main.t_selStages = {}
 main.preload = {
 	lowQueued = false,
@@ -683,7 +684,8 @@ function main.f_syncCharPaletteData(ref)
 	local t_info = getCharInfo(ref)
 	if t_info == nil then return false end
 	local changed = false
-	for row, ch in ipairs(main.t_selChars) do
+	for _, row in ipairs(main.t_rowsByRef[ref] or {}) do
+		local ch = main.t_selChars[row]
 		if ch.playable and ch.char_ref == ref then
 			local oldPalCount = ch.pal and #ch.pal or 0
 			local oldDefaultCount = ch.pal_defaults and #ch.pal_defaults or 0
@@ -823,52 +825,58 @@ function main.f_materializeStagePortrait(stageNo)
 	return st.anim_data_ready
 end
 
-function main.f_preloadTick(limit)
+-- Builds the select-screen cells of the characters and stages whose data is
+-- ready, spending at most `ms` milliseconds per call (default 4); the next
+-- call carries on where this one stopped. Cells are cheap, so a roster that
+-- is ready at once fills the grid in a few frames.
+function main.f_preloadTick(ms)
 	if gameOption('Config.BootLoadingMode') == 0 then
 		return
 	end
-	limit = limit or 4
-	local n = 0
-
-	for row, ch in ipairs(main.t_selChars) do
-		if n >= limit then break end
-		if ch.playable and ch.char_ref ~= nil and not ch.cell_data_ready then
-			local state, err = getCharPreloadStatus(ch.char_ref)
-			local prev = main.preload.charState[ch.char_ref]
-			if state ~= prev then
-				main.preload.charState[ch.char_ref] = state
-				if state == 'ready' then
-					--print("Char preload ready ref=" .. tostring(ch.char_ref) .. " row=" .. tostring(row))
-					main.f_syncCharPaletteData(ch.char_ref)
-				-- elseif state == 'error' then
-					-- print("Char preload error ref=" .. tostring(ch.char_ref) .. " row=" .. tostring(row) .. ": " .. tostring(err))
-				end
-			end
-			if state == 'ready' then
-				if main.f_materializeCharCell(row) then
-					start.needUpdateDrawList = true
-					n = n + 1
-				end
-			end
-		end
+	local deadline = os.clock() + (ms or 4) / 1000
+	local p = main.preload
+	local chars, stages = main.t_selChars, main.t_selStages
+	local total = #chars + #stages
+	if total == 0 then
+		return
 	end
-	for stageNo, st in ipairs(main.t_selStages) do
-		if n >= limit then break end
-		if not st.anim_data_ready then
-			local state, err = getStagePreloadStatus(stageNo)
-			local prev = main.preload.stageState[stageNo]
-			if state ~= prev then
-				main.preload.stageState[stageNo] = state
+	p.scanPos = p.scanPos or 0
+	for i = 1, total do
+		if i % 32 == 0 and os.clock() >= deadline then
+			return
+		end
+		p.scanPos = p.scanPos % total + 1
+		local n = p.scanPos
+		if n <= #chars then
+			local ch = chars[n]
+			if ch.playable and ch.char_ref ~= nil and not ch.cell_data_ready and not ch.cell_checked then
+				local state = getCharPreloadStatus(ch.char_ref)
+				if state ~= p.charState[ch.char_ref] then
+					p.charState[ch.char_ref] = state
+					if state == 'ready' then
+						main.f_syncCharPaletteData(ch.char_ref)
+					end
+				end
 				if state == 'ready' then
-					--print("Stage preload ready stage=" .. tostring(stageNo))
-				-- elseif state == 'error' then
-					-- print("Stage preload error stage=" .. tostring(stageNo) .. ": " .. tostring(err))
+					if main.f_materializeCharCell(n) then
+						start.needUpdateDrawList = true
+					else
+						ch.cell_checked = true -- ready, but has no portrait
+					end
 				end
 			end
-			if state == 'ready' then
-				if main.f_materializeStagePortrait(stageNo) then
-					start.needUpdateDrawList = true
-					n = n + 1
+		else
+			local stageNo = n - #chars
+			local st = stages[stageNo]
+			if not st.anim_data_ready and not st.anim_data_checked then
+				local state = getStagePreloadStatus(stageNo)
+				p.stageState[stageNo] = state
+				if state == 'ready' then
+					if main.f_materializeStagePortrait(stageNo) then
+						start.needUpdateDrawList = true
+					else
+						st.anim_data_checked = true -- ready, but has no portrait
+					end
 				end
 			end
 		end
@@ -1391,6 +1399,11 @@ function main.f_addChar(line, playable, loading, slot)
 	end
 	if main.t_selChars[row].char ~= nil then
 		main.t_selChars[row].char_ref = main.t_charDef[main.t_selChars[row].char:lower()]
+		local ref = main.t_selChars[row].char_ref
+		if ref ~= nil then
+			main.t_rowsByRef[ref] = main.t_rowsByRef[ref] or {}
+			table.insert(main.t_rowsByRef[ref], row)
+		end
 	end
 	if playable then
 		-- order / order<gamemode> params
