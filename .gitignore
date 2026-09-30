@@ -86,3 +86,6 @@ build/winres/
 *.exe
 *.dll
 external/script/version
+
+# Claude Code local session settings
+.claude/
