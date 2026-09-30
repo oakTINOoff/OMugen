@@ -1,0 +1,18 @@
+; Characters and stages of this game.
+;
+; [Characters]: one character per line, in select-screen order:
+;   folder or .def path, then optional parameters, e.g.
+;   proto, stages/proto_arena.def, music=sound/theme.mp3
+; "randomselect" adds a random-choice box.
+; [ExtraStages]: stages that can be picked on the select screen.
+
+[Characters]
+proto, stages/proto_arena.def
+randomselect
+
+[ExtraStages]
+stages/proto_arena.def
+
+[Options]
+arcade.maxmatches = 6,1,1,0,0,0,0,0,0,0
+team.maxmatches = 4,1,1,0,0,0,0,0,0,0

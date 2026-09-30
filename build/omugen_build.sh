@@ -52,6 +52,12 @@ else
 		go run ./tools/screenpackgen 2>&1 | tee -a "$LOG"
 		status=${PIPESTATUS[0]}
 	fi
+	# So are the new-game template's fighter and stage (tools/templategen).
+	if [[ $status -eq 0 ]] && { [[ ! -f templates/newgame/chars/proto/proto.sff ]] || [[ -n "$(find tools/templategen tools/internal src/sffwrite -newer templates/newgame/chars/proto/proto.sff -name '*.go')" ]]; }; then
+		echo "==> Generating the new-game template (Proto, Proto Arena)" | tee -a "$LOG"
+		go run ./tools/templategen 2>&1 | tee -a "$LOG"
+		status=${PIPESTATUS[0]}
+	fi
 	if [[ $status -eq 0 ]]; then
 		echo "==> Packing engine files" | tee -a "$LOG"
 		go run ./tools/packengine 2>&1 | tee -a "$LOG"

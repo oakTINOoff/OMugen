@@ -1,0 +1,37 @@
+; Proto - the OMugen template fighter
+;
+; A complete, playable character to learn from and build on. Every file is a
+; standard MUGEN 1.1 character file, so tools and guides for MUGEN apply:
+;   proto.def  this file: name and file list
+;   proto.cns  constants (life, speeds, sizes) and the character's own states
+;   proto.cmd  button commands, and which state each command starts
+;   proto.air  animations: sprite frames, timings and collision boxes
+;   proto.sff  sprites and palettes (6 color schemes)
+; The engine's common states (standing, walking, jumping, guarding, getting
+; hit...) come from common1.cns and use the animation numbers in proto.air.
+
+[Info]
+name = "Proto"
+displayname = "Proto"
+versiondate = 09,30,2026
+mugenversion = 1.1
+author = "OMugen"
+pal.defaults = 1,2,3,4
+localcoord = 1280,720    ;coordinates are in a 1280x720 space
+
+[Files]
+cmd = proto.cmd
+cns = proto.cns
+st = proto.cns
+stcommon = common1.cns    ;the engine's common states
+sprite = proto.sff
+anim = proto.air
+
+; Button pressed on the select screen -> palette used
+[Palette Keymap]
+x = 1
+y = 2
+z = 3
+a = 4
+b = 5
+c = 6

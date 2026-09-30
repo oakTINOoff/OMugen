@@ -1,0 +1,195 @@
+===============================================================================
+  Your OMugen game - how to make it yours
+===============================================================================
+
+This folder is a complete fighting game that already runs: one fighter
+(Proto), one stage (Proto Arena), menus, lifebars and all the game modes.
+Start it with OMugen.exe. Then change it piece by piece, testing as you go.
+
+Every file here uses the standard MUGEN 1.1 formats (.def, .cns, .cmd, .air,
+.sff, .snd). That means guides, tutorials and tools made for MUGEN work with
+OMugen too, and characters or stages made for MUGEN can be added to your game.
+
+
+-------------------------------------------------------------------------------
+ 1. What is in this folder
+-------------------------------------------------------------------------------
+
+  OMugen.exe                  the engine (plays your game)
+  GUIDE.txt                   this guide
+  data/select.def             the roster: characters and stages of your game
+  data/omugen/system.def      the menus: title, select screen, versus, options
+  data/omugen/system.sff      the menus' sprites
+  chars/proto/                Proto, the template fighter
+  stages/proto_arena.def      Proto Arena, the template stage
+  stages/proto_arena.sff      its sprites
+  save/config.ini             your game's settings (window title...)
+
+Files you don't have (lifebars, hit sparks, common sounds, the engine's
+common states) come from OMugen itself. Add your own copy to override one.
+
+
+-------------------------------------------------------------------------------
+ 2. Play it (default keyboard)
+-------------------------------------------------------------------------------
+
+             Player 1              Player 2
+  Move       arrow keys            I J K L
+  Punches    A  S  D   (x y z)     R  T      (x y)
+  Kicks      Z  X  C   (a b c)     F  G      (a b)
+  Start      Enter
+
+Keys and gamepads can be changed in Options.
+
+Proto's moves (facing right):
+  A / S                 jab / cross              (crouching: low jab / uppercut)
+  Z / X                 front kick / roundhouse  (crouching: low kick / sweep)
+  in the air            punches and kicks work too
+  forward, forward      run            back, back      hop back
+  Enter                 taunt
+  down, down-forward, forward + punch               Proto Blast (projectile)
+  the same motion twice + punch, with a full power bar     Proto Overdrive
+
+
+-------------------------------------------------------------------------------
+ 3. Your game's name and menus
+-------------------------------------------------------------------------------
+
+The window title is in save/config.ini:
+
+  [Config]
+  WindowTitle = My OMugen Game
+
+Any other setting of OMugen can go in that file too; everything missing uses
+OMugen's default.
+
+The menus are data/omugen/system.def. Each screen has its own section
+([Title Info], [Select Info], [VS Screen], [Option Info]...) with positions,
+fonts, colors and sprite numbers. Change a value, save, restart OMugen.
+
+The logo on the title screen is sprite 10,0 of data/omugen/system.sff (see
+[TitleBG Logo] in system.def): replace it with your own logo in a sprite
+editor. The box shown the first time the game starts is [Infobox Text].
+
+
+-------------------------------------------------------------------------------
+ 4. How a character works (Proto)
+-------------------------------------------------------------------------------
+
+  proto.def   name, author, and the list of the character's files
+  proto.cns   constants (life, speeds, size, jump height) and the
+              character's own states: every attack is a state
+  proto.cmd   the commands (button motions) and, in [Statedef -1] at the
+              end, which state each command starts
+  proto.air   animations: which sprite to show, for how long, and the
+              collision boxes of each frame
+  proto.sff   the sprites and 6 palettes (color schemes)
+
+What happens when you press a button:
+
+  1. proto.cmd notices the command, e.g. "blast" = down, down-forward,
+     forward + x, and its [Statedef -1] changes Proto to state 1000.
+  2. [Statedef 1000] in proto.cns plays animation 1000 and, on its 3rd
+     frame, fires a Projectile (the orb, animation 1005).
+  3. The HitDef (or the projectile) says what happens on a hit: damage,
+     hit sound, spark, how far the opponent is pushed, whether it falls.
+
+Standing, walking, jumping, guarding and getting hit are not in proto.cns:
+the engine's common states (common1.cns) handle them. They only need the
+standard animation numbers in proto.air (0 stand, 20 walk, 40-47 jump,
+120-155 guard, 5000-5300 getting hit...). Keep those numbers when you
+replace Proto's animations.
+
+Collision boxes (in proto.air):
+  Clsn2  the body: where the character can be hit
+  Clsn1  the attack: where the character hits, on attack frames only
+A HitDef only connects when a Clsn1 box touches the opponent's Clsn2 box.
+
+Rule to remember: when a state ends with "AnimTime = 0" (wait for the end
+of the animation), the last frame of that animation needs a time. A frame
+time of -1 means "forever", so the state would never end.
+
+Coordinates: Proto uses localcoord = 1280,720 (in proto.def). Positions,
+speeds and box sizes are pixels in a 1280x720 screen; the ground is y = 0 and
+up is negative.
+
+
+-------------------------------------------------------------------------------
+ 5. Make your own character
+-------------------------------------------------------------------------------
+
+  1. Copy chars/proto to chars/yourname.
+  2. Rename the files inside (proto.def -> yourname.def, and so on) and
+     update the [Files] section of the .def to the new names.
+  3. In the .def, set name and displayname.
+  4. Add a line to data/select.def, under [Characters]:
+       yourname, stages/proto_arena.def
+  5. Start OMugen: your character is on the select screen.
+
+Then change it one thing at a time:
+  - Constants: life, walk and jump speeds are at the top of the .cns.
+  - A new move: add a [Command] in the .cmd, a ChangeState to a new state
+    number in [Statedef -1], and the new [Statedef] with a HitDef in the .cns.
+    Copying one of Proto's attacks is the fastest way to start.
+  - Sprites: open the .sff in a MUGEN sprite editor (Fighter Factory is the
+    usual one), replace Proto's sprites with yours, keep or change the
+    group/image numbers, and update the .air to match.
+  - Sounds: add "sound = yourname.snd" under [Files] in the .def. PlaySnd
+    plays from your .snd (F5,0 plays a common sound instead). A HitDef's
+    hitsound and guardsound play common sounds (S5,0 plays from your .snd).
+
+Characters made for MUGEN also work: put their folder in chars/ and add them
+to data/select.def the same way.
+
+
+-------------------------------------------------------------------------------
+ 6. Stages
+-------------------------------------------------------------------------------
+
+stages/proto_arena.def is made of layers ([BG ...] sections), drawn from
+top to bottom of the file:
+
+  spriteno   sprite group, number in the stage's .sff
+  start      where the sprite's axis is at the start of the round
+  delta      how fast the layer scrolls with the camera: 1 moves with the
+             fighters, smaller numbers move slower and look farther away
+  mask = 1   draw transparent pixels as transparent
+
+Other useful values:
+  [StageInfo] zoffset         where the ground is, from the top of the screen
+  [Camera] boundleft/right    how far the camera can scroll
+  [PlayerInfo] p1startx...    where the fighters start
+  [Music] bgmusic             a music file (mp3, ogg...) for the stage
+
+To make a new stage: copy proto_arena.def, point [BGdef] spr to your own
+.sff, and add it to data/select.def under [ExtraStages] (and after a
+character's name to make it that character's home stage).
+
+
+-------------------------------------------------------------------------------
+ 7. The roster (data/select.def)
+-------------------------------------------------------------------------------
+
+  [Characters]    one character per line, in select-screen order:
+                  folder, then the home stage and options, e.g.
+                    proto, stages/proto_arena.def, music=sound/theme.mp3
+                  "randomselect" adds a random-choice box
+  [ExtraStages]   the stages players can pick
+  [Options]       how many matches arcade and team modes have
+
+The select screen grows with your roster: its grid resizes and scrolls on
+its own, from 2 characters to hundreds.
+
+
+-------------------------------------------------------------------------------
+ 8. Share your game
+-------------------------------------------------------------------------------
+
+Zip this whole folder (you can delete save/logs and save/replays first).
+OMugen.exe is inside, so players just unzip it and start OMugen.exe; they
+don't need to install anything.
+
+Before sharing, check the whole game at once: start "OMugen.exe -doctor"
+(from a command prompt in this folder, or a shortcut with -doctor added).
+It loads every character and stage of data/select.def and writes what is
+broken, and why, to save/doctor/report.html.

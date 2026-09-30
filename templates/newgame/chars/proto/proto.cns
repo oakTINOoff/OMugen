@@ -1,0 +1,718 @@
+; Proto - constants and states
+;
+; Units are pixels of the character's 1280x720 space (localcoord in
+; proto.def); velocities are pixels per tick (60 ticks per second).
+; Lines starting with ; are comments.
+
+[Data]
+life = 1000
+attack = 100
+defence = 100
+fall.defence_up = 50
+liedown.time = 60
+airjuggle = 15
+sparkno = 2
+guard.sparkno = 40
+KO.echo = 0
+volume = 0
+IntPersistIndex = 60
+FloatPersistIndex = 40
+
+[Size]
+xscale = 1
+yscale = 1
+ground.back = 56
+ground.front = 60
+air.back = 48
+air.front = 48
+height = 250
+attack.dist = 640
+proj.attack.dist = 360
+proj.doscale = 0
+head.pos = -10, -320
+mid.pos = -10, -230
+shadowoffset = 0
+draw.offset = 0,0
+
+[Velocity]
+walk.fwd  = 9.6
+walk.back = -8.8
+run.fwd  = 18.4, 0
+run.back = -18,-15.2
+jump.neu = 0,-33.6
+jump.back = -10.2,-33.6
+jump.fwd = 10,-33.6
+runjump.back = -10.2,-32.4
+runjump.fwd = 16,-32.4
+airjump.neu = 0,-32.4
+airjump.back = -10.2
+airjump.fwd = 10
+air.gethit.groundrecover = -.6,-14
+air.gethit.airrecover.mul = .5,.2
+air.gethit.airrecover.add = 0,-18
+air.gethit.airrecover.back = -4
+air.gethit.airrecover.fwd = 0
+air.gethit.airrecover.up = -8
+air.gethit.airrecover.down = 6
+
+[Movement]
+airjump.num = 1
+airjump.height = 140
+yaccel = 1.76
+stand.friction = .85
+crouch.friction = .82
+stand.friction.threshold = 8
+crouch.friction.threshold = .2
+air.gethit.groundlevel = 100
+air.gethit.groundrecover.ground.threshold = -80
+air.gethit.groundrecover.groundlevel = 40
+air.gethit.airrecover.threshold = -4
+air.gethit.airrecover.yaccel = 1.4
+air.gethit.trip.groundlevel = 60
+down.bounce.offset = 0, 80
+down.bounce.yaccel = 1.6
+down.bounce.groundlevel = 48
+down.friction.threshold = .2
+
+[Quotes]
+victory1 = "Calibration complete."
+victory2 = "Your inputs have been recorded. Mine were better."
+victory3 = "Prototype, not beta."
+
+;===========================================================================
+; Intro and win pose
+;===========================================================================
+[Statedef 190]
+type = S
+ctrl = 0
+anim = 190
+velset = 0,0
+
+[State 190, Intro]
+type = AssertSpecial
+trigger1 = 1
+flag = Intro
+
+[State 190, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+
+[Statedef 181]
+type = S
+ctrl = 0
+anim = 181
+velset = 0,0
+
+;===========================================================================
+; Taunt (Start)
+;===========================================================================
+[Statedef 195]
+type = S
+movetype = I
+physics = S
+ctrl = 0
+anim = 195
+velset = 0,0
+poweradd = 40
+
+[State 195, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+;===========================================================================
+; Standing attacks
+;===========================================================================
+; Light punch (x): a quick jab
+[Statedef 200]
+type = S
+movetype = A
+physics = S
+juggle = 1
+poweradd = 20
+ctrl = 0
+velset = 0,0
+anim = 200
+sprpriority = 2
+
+[State 200, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = S, NA                ;standing, normal attack
+damage = 26, 0              ;damage on hit, on guard
+animtype = Light            ;how the opponent reacts
+guardflag = MA              ;guardable standing or crouching
+hitflag = MAF               ;hits standing, crouching and falling players
+priority = 3, Hit
+pausetime = 8, 8            ;hit pause for attacker, defender
+sparkno = 0
+sparkxy = -10, -250
+hitsound = 5, 0             ;from the common sounds (fight.def)
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 6
+ground.hittime = 10
+ground.velocity = -16
+air.velocity = -10, -16
+
+[State 200, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+; Strong punch (y): a straight with the rear hand
+[Statedef 210]
+type = S
+movetype = A
+physics = S
+juggle = 3
+poweradd = 40
+ctrl = 0
+velset = 0,0
+anim = 210
+sprpriority = 2
+
+[State 210, Step]
+type = PosAdd
+trigger1 = AnimElem = 2
+x = 12
+
+[State 210, Hit]
+type = HitDef
+trigger1 = AnimElem = 3
+attr = S, NA
+damage = 62, 0
+animtype = Medium
+guardflag = MA
+hitflag = MAF
+priority = 4, Hit
+pausetime = 12, 12
+sparkno = 1
+sparkxy = -10, -262
+hitsound = 5, 2
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 10
+ground.hittime = 14
+ground.velocity = -22
+air.velocity = -12, -20
+
+[State 210, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+; Light kick (a): a snap kick at knee height
+[Statedef 230]
+type = S
+movetype = A
+physics = S
+juggle = 1
+poweradd = 22
+ctrl = 0
+velset = 0,0
+anim = 230
+sprpriority = 2
+
+[State 230, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = S, NA
+damage = 30, 0
+animtype = Light
+guardflag = MA
+hitflag = MAF
+priority = 3, Hit
+pausetime = 8, 8
+sparkno = 0
+sparkxy = -10, -120
+hitsound = 5, 0
+guardsound = 6, 0
+ground.type = Low
+ground.slidetime = 6
+ground.hittime = 10
+ground.velocity = -18
+air.velocity = -10, -16
+
+[State 230, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+; Strong kick (b): a roundhouse to the head
+[Statedef 240]
+type = S
+movetype = A
+physics = S
+juggle = 4
+poweradd = 45
+ctrl = 0
+velset = 0,0
+anim = 240
+sprpriority = 2
+
+[State 240, Hit]
+type = HitDef
+trigger1 = AnimElem = 3
+attr = S, NA
+damage = 72, 0
+animtype = Heavy
+guardflag = MA
+hitflag = MAF
+priority = 4, Hit
+pausetime = 14, 14
+sparkno = 2
+sparkxy = -10, -280
+hitsound = 5, 2
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 12
+ground.hittime = 16
+ground.velocity = -26
+air.velocity = -14, -24
+
+[State 240, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+;===========================================================================
+; Crouching attacks (hold down)
+;===========================================================================
+; Crouching light punch
+[Statedef 400]
+type = C
+movetype = A
+physics = C
+juggle = 1
+poweradd = 18
+ctrl = 0
+velset = 0,0
+anim = 400
+sprpriority = 2
+
+[State 400, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = C, NA
+damage = 22, 0
+animtype = Light
+guardflag = MA
+hitflag = MAF
+priority = 3, Hit
+pausetime = 7, 7
+sparkno = 0
+sparkxy = -10, -170
+hitsound = 5, 0
+guardsound = 6, 0
+ground.type = Low
+ground.slidetime = 5
+ground.hittime = 9
+ground.velocity = -14
+air.velocity = -10, -16
+
+[State 400, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 11
+ctrl = 1
+
+; Crouching strong punch: an uppercut that launches
+[Statedef 410]
+type = C
+movetype = A
+physics = C
+juggle = 4
+poweradd = 45
+ctrl = 0
+velset = 0,0
+anim = 410
+sprpriority = 2
+
+[State 410, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = C, NA
+damage = 66, 0
+animtype = Up
+guardflag = MA
+hitflag = MAF
+priority = 4, Hit
+pausetime = 12, 12
+sparkno = 1
+sparkxy = -10, -300
+hitsound = 5, 2
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 10
+ground.hittime = 16
+ground.velocity = -10, -40
+air.velocity = -8, -34
+fall = 1                    ;the opponent falls down (can be juggled)
+
+[State 410, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 11
+ctrl = 1
+
+; Crouching light kick: a low poke (must be guarded crouching)
+[Statedef 430]
+type = C
+movetype = A
+physics = C
+juggle = 1
+poweradd = 20
+ctrl = 0
+velset = 0,0
+anim = 430
+sprpriority = 2
+
+[State 430, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = C, NA
+damage = 28, 0
+animtype = Light
+guardflag = L               ;low: only a crouching guard blocks it
+hitflag = MAF
+priority = 3, Hit
+pausetime = 8, 8
+sparkno = 0
+sparkxy = -10, -40
+hitsound = 5, 0
+guardsound = 6, 0
+ground.type = Low
+ground.slidetime = 6
+ground.hittime = 10
+ground.velocity = -16
+air.velocity = -10, -16
+
+[State 430, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 11
+ctrl = 1
+
+; Crouching strong kick: a sweep that trips
+[Statedef 440]
+type = C
+movetype = A
+physics = C
+juggle = 4
+poweradd = 45
+ctrl = 0
+velset = 0,0
+anim = 440
+sprpriority = 2
+
+[State 440, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = C, NA
+damage = 70, 0
+animtype = Back
+guardflag = L
+hitflag = MAF
+priority = 4, Hit
+pausetime = 12, 12
+sparkno = 1
+sparkxy = -10, -30
+hitsound = 5, 2
+guardsound = 6, 0
+ground.type = Trip          ;knocks the opponent off their feet
+ground.slidetime = 12
+ground.hittime = 16
+ground.velocity = -8, -12
+air.velocity = -8, -12
+fall = 1
+
+[State 440, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 11
+ctrl = 1
+
+;===========================================================================
+; Air attacks (the character lands by itself; no end state needed)
+;===========================================================================
+[Statedef 600]
+type = A
+movetype = A
+physics = A
+juggle = 2
+poweradd = 18
+ctrl = 0
+anim = 600
+sprpriority = 2
+
+[State 600, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = A, NA
+damage = 30, 0
+animtype = Light
+guardflag = HA              ;air attacks are guarded standing
+hitflag = MAF
+priority = 3, Hit
+pausetime = 8, 8
+sparkno = 0
+sparkxy = -10, -220
+hitsound = 5, 0
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 6
+ground.hittime = 10
+ground.velocity = -12
+air.velocity = -10, -16
+
+[Statedef 610]
+type = A
+movetype = A
+physics = A
+juggle = 3
+poweradd = 36
+ctrl = 0
+anim = 610
+sprpriority = 2
+
+[State 610, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = A, NA
+damage = 60, 0
+animtype = Medium
+guardflag = HA
+hitflag = MAF
+priority = 4, Hit
+pausetime = 12, 12
+sparkno = 1
+sparkxy = -10, -230
+hitsound = 5, 2
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 10
+ground.hittime = 14
+ground.velocity = -18
+air.velocity = -12, -20
+
+[Statedef 630]
+type = A
+movetype = A
+physics = A
+juggle = 2
+poweradd = 20
+ctrl = 0
+anim = 630
+sprpriority = 2
+
+[State 630, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = A, NA
+damage = 34, 0
+animtype = Light
+guardflag = HA
+hitflag = MAF
+priority = 3, Hit
+pausetime = 8, 8
+sparkno = 0
+sparkxy = -10, -150
+hitsound = 5, 0
+guardsound = 6, 0
+ground.type = Low
+ground.slidetime = 6
+ground.hittime = 10
+ground.velocity = -14
+air.velocity = -10, -16
+
+[Statedef 640]
+type = A
+movetype = A
+physics = A
+juggle = 3
+poweradd = 40
+ctrl = 0
+anim = 640
+sprpriority = 2
+
+[State 640, Hit]
+type = HitDef
+trigger1 = AnimElem = 2
+attr = A, NA
+damage = 66, 0
+animtype = Heavy
+guardflag = HA
+hitflag = MAF
+priority = 4, Hit
+pausetime = 14, 14
+sparkno = 2
+sparkxy = -10, -160
+hitsound = 5, 2
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 12
+ground.hittime = 16
+ground.velocity = -22
+air.velocity = -14, -22
+
+;===========================================================================
+; Special move: Proto Blast (down, down-forward, forward + punch)
+;===========================================================================
+[Statedef 1000]
+type = S
+movetype = A
+physics = S
+juggle = 4
+poweradd = 60
+ctrl = 0
+velset = 0,0
+anim = 1000
+sprpriority = 2
+
+[State 1000, Shot]
+type = Projectile
+trigger1 = AnimElem = 3
+projid = 1000
+projanim = 1005             ;the orb (trans = add in proto.air)
+projhitanim = 1006
+projremanim = 1006
+projcancelanim = 1006
+offset = 175, -252          ;from the character's feet: at the hands
+velocity = 24, 0
+projpriority = 1
+projsprpriority = 3
+attr = S, SP                ;special projectile
+damage = 80, 10
+animtype = Medium
+guardflag = MA
+hitflag = MAF
+pausetime = 0, 14
+sparkno = -1                ;the orb draws its own impact
+hitsound = 5, 2
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 12
+ground.hittime = 16
+ground.velocity = -20
+air.velocity = -14, -24
+fall = 1
+
+[State 1000, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1
+
+;===========================================================================
+; Super move: Proto Overdrive (twice down, down-forward, forward + punch;
+; needs a full power bar)
+;===========================================================================
+[Statedef 3000]
+type = S
+movetype = A
+physics = S
+juggle = 0
+poweradd = -1000
+ctrl = 0
+velset = 0,0
+anim = 3000
+sprpriority = 3
+
+[State 3000, Freeze]
+type = SuperPause
+trigger1 = AnimElem = 2
+time = 32
+movetime = 32
+darken = 1
+pos = 0, -260
+p2defmul = 1
+
+[State 3000, Flare]
+type = Explod
+trigger1 = AnimElem = 4
+anim = 3006
+pos = 175, -252
+postype = p1
+bindtime = -1
+removetime = 50
+sprpriority = 4
+ownpal = 1
+
+[State 3000, Beam]
+type = Explod
+trigger1 = AnimElem = 4
+anim = 3005
+pos = 175, -252
+postype = p1
+bindtime = -1
+removetime = 50
+sprpriority = 4
+ownpal = 1
+
+[State 3000, Shake]
+type = EnvShake
+trigger1 = AnimElem = 4
+time = 40
+ampl = 6
+freq = 60
+
+; One hit per beam frame; the last one knocks down.
+[State 3000, Beam hits]
+type = HitDef
+trigger1 = AnimElem = 4
+trigger2 = AnimElem = 5
+trigger3 = AnimElem = 6
+trigger4 = AnimElem = 7
+trigger5 = AnimElem = 8
+trigger6 = AnimElem = 9
+trigger7 = AnimElem = 10
+attr = S, HP                ;hyper projectile
+damage = 42, 6
+animtype = Medium
+guardflag = MA
+hitflag = MAF
+priority = 5, Hit
+pausetime = 2, 6
+sparkno = 1
+sparkxy = -10, -250
+hitsound = 5, 2
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 12
+ground.hittime = 20
+ground.velocity = -6
+air.velocity = -6, -10
+
+[State 3000, Final hit]
+type = HitDef
+trigger1 = AnimElem = 11
+attr = S, HP
+damage = 70, 10
+animtype = Heavy
+guardflag = MA
+hitflag = MAF
+priority = 5, Hit
+pausetime = 10, 14
+sparkno = 2
+sparkxy = -10, -250
+hitsound = 5, 2
+guardsound = 6, 0
+ground.type = High
+ground.slidetime = 16
+ground.hittime = 24
+ground.velocity = -20, -24
+air.velocity = -16, -26
+fall = 1
+
+[State 3000, Done]
+type = ChangeState
+trigger1 = AnimTime = 0
+value = 0
+ctrl = 1

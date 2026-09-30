@@ -1,7 +1,7 @@
-package main
-
-// A small float compositor: straight-alpha colors painted through coverage
-// masks onto premultiplied RGBA canvases, plus blur for glows.
+// Package art is a small float compositor used by OMugen's art generators:
+// straight-alpha colors painted through coverage masks onto premultiplied
+// RGBA canvases, plus blur for glows and Open Sans text.
+package art
 
 import (
 	"image"
@@ -18,98 +18,98 @@ import (
 	"github.com/ikemen-engine/Ikemen-GO/tools/internal/logo"
 )
 
-type rgba struct{ r, g, b, a float64 }
+type RGBA struct{ R, G, B, A float64 }
 
-func hex(v uint32, a float64) rgba {
-	return rgba{float64(v>>16&0xFF) / 255, float64(v>>8&0xFF) / 255, float64(v&0xFF) / 255, a}
+func Hex(v uint32, a float64) RGBA {
+	return RGBA{float64(v>>16&0xFF) / 255, float64(v>>8&0xFF) / 255, float64(v&0xFF) / 255, a}
 }
 
-func (c rgba) alpha(a float64) rgba { c.a *= a; return c }
+func (c RGBA) Alpha(a float64) RGBA { c.A *= a; return c }
 
-func mix(a, b rgba, t float64) rgba {
-	t = clamp01(t)
-	return rgba{a.r + (b.r-a.r)*t, a.g + (b.g-a.g)*t, a.b + (b.b-a.b)*t, a.a + (b.a-a.a)*t}
+func Mix(a, b RGBA, t float64) RGBA {
+	t = Clamp01(t)
+	return RGBA{a.R + (b.R-a.R)*t, a.G + (b.G-a.G)*t, a.B + (b.B-a.B)*t, a.A + (b.A-a.A)*t}
 }
 
-func clamp01(v float64) float64 { return math.Max(0, math.Min(1, v)) }
+func Clamp01(v float64) float64 { return math.Max(0, math.Min(1, v)) }
 
-func smooth(t float64) float64 { t = clamp01(t); return t * t * (3 - 2*t) }
+func Smooth(t float64) float64 { t = Clamp01(t); return t * t * (3 - 2*t) }
 
-type paint func(x, y float64) rgba
+type Paint func(x, y float64) RGBA
 
-func solid(c rgba) paint { return func(x, y float64) rgba { return c } }
+func Solid(c RGBA) Paint { return func(x, y float64) RGBA { return c } }
 
 // linear is a gradient from c0 at (x0, y0) to c1 at (x1, y1).
-func linear(x0, y0, x1, y1 float64, c0, c1 rgba) paint {
+func Linear(x0, y0, x1, y1 float64, c0, c1 RGBA) Paint {
 	dx, dy := x1-x0, y1-y0
 	l2 := dx*dx + dy*dy
-	return func(x, y float64) rgba {
-		return mix(c0, c1, ((x-x0)*dx+(y-y0)*dy)/l2)
+	return func(x, y float64) RGBA {
+		return Mix(c0, c1, ((x-x0)*dx+(y-y0)*dy)/l2)
 	}
 }
 
 // canvas holds premultiplied RGBA in 0..1.
-type canvas struct {
-	w, h int
-	p    []float64
+type Canvas struct {
+	W, H int
+	P    []float64
 }
 
-func newCanvas(w, h int) *canvas { return &canvas{w, h, make([]float64, w*h*4)} }
+func NewCanvas(w, h int) *Canvas { return &Canvas{w, h, make([]float64, w*h*4)} }
 
-func (c *canvas) over(x, y int, col rgba, cov float64) {
-	a := col.a * cov
-	if a <= 0 || x < 0 || y < 0 || x >= c.w || y >= c.h {
+func (c *Canvas) Over(x, y int, col RGBA, cov float64) {
+	a := col.A * cov
+	if a <= 0 || x < 0 || y < 0 || x >= c.W || y >= c.H {
 		return
 	}
-	i := (y*c.w + x) * 4
-	c.p[i] = col.r*a + c.p[i]*(1-a)
-	c.p[i+1] = col.g*a + c.p[i+1]*(1-a)
-	c.p[i+2] = col.b*a + c.p[i+2]*(1-a)
-	c.p[i+3] = a + c.p[i+3]*(1-a)
+	i := (y*c.W + x) * 4
+	c.P[i] = col.R*a + c.P[i]*(1-a)
+	c.P[i+1] = col.G*a + c.P[i+1]*(1-a)
+	c.P[i+2] = col.B*a + c.P[i+2]*(1-a)
+	c.P[i+3] = a + c.P[i+3]*(1-a)
 }
 
 // light adds color (additive), for glows. Alpha grows with the added light
 // so glows also work on transparent sprites.
-func (c *canvas) light(x, y int, col rgba, amt float64) {
-	a := col.a * amt
-	if a <= 0 || x < 0 || y < 0 || x >= c.w || y >= c.h {
+func (c *Canvas) Light(x, y int, col RGBA, amt float64) {
+	a := col.A * amt
+	if a <= 0 || x < 0 || y < 0 || x >= c.W || y >= c.H {
 		return
 	}
-	i := (y*c.w + x) * 4
-	c.p[i] += col.r * a
-	c.p[i+1] += col.g * a
-	c.p[i+2] += col.b * a
-	c.p[i+3] = math.Min(1, c.p[i+3]+a*math.Max(col.r, math.Max(col.g, col.b)))
+	i := (y*c.W + x) * 4
+	c.P[i] += col.R * a
+	c.P[i+1] += col.G * a
+	c.P[i+2] += col.B * a
+	c.P[i+3] = math.Min(1, c.P[i+3]+a*math.Max(col.R, math.Max(col.G, col.B)))
 }
 
-func (c *canvas) fill(p paint) {
-	for y := 0; y < c.h; y++ {
-		for x := 0; x < c.w; x++ {
-			c.over(x, y, p(float64(x)+0.5, float64(y)+0.5), 1)
+func (c *Canvas) Fill(p Paint) {
+	for y := 0; y < c.H; y++ {
+		for x := 0; x < c.W; x++ {
+			c.Over(x, y, p(float64(x)+0.5, float64(y)+0.5), 1)
 		}
 	}
 }
 
-func (c *canvas) paintMask(m []float64, p paint) {
-	for y := 0; y < c.h; y++ {
-		for x := 0; x < c.w; x++ {
-			if v := m[y*c.w+x]; v > 0 {
-				c.over(x, y, p(float64(x)+0.5, float64(y)+0.5), v)
+func (c *Canvas) PaintMask(m []float64, p Paint) {
+	for y := 0; y < c.H; y++ {
+		for x := 0; x < c.W; x++ {
+			if v := m[y*c.W+x]; v > 0 {
+				c.Over(x, y, p(float64(x)+0.5, float64(y)+0.5), v)
 			}
 		}
 	}
 }
 
-func (c *canvas) lightMask(m []float64, col rgba, amt float64) {
+func (c *Canvas) LightMask(m []float64, col RGBA, amt float64) {
 	for i, v := range m {
 		if v > 0 {
-			c.light(i%c.w, i/c.w, col, v*amt)
+			c.Light(i%c.W, i/c.W, col, v*amt)
 		}
 	}
 }
 
 // shapeMask rasterizes closed contours (nonzero winding) into a coverage mask.
-func shapeMask(w, h int, contours ...[]logo.Pt) []float64 {
+func ShapeMask(w, h int, contours ...[]logo.Pt) []float64 {
 	z := vector.NewRasterizer(w, h)
 	for _, c := range contours {
 		if len(c) == 0 {
@@ -130,7 +130,7 @@ func shapeMask(w, h int, contours ...[]logo.Pt) []float64 {
 	return m
 }
 
-func reversed(c []logo.Pt) []logo.Pt {
+func Reversed(c []logo.Pt) []logo.Pt {
 	out := make([]logo.Pt, len(c))
 	for i, p := range c {
 		out[len(c)-1-i] = p
@@ -139,19 +139,19 @@ func reversed(c []logo.Pt) []logo.Pt {
 }
 
 // ring is the outline of a rounded rectangle, width t, as two contours.
-func ring(x0, y0, x1, y1, r, t float64) [][]logo.Pt {
+func Ring(x0, y0, x1, y1, r, t float64) [][]logo.Pt {
 	return [][]logo.Pt{
 		logo.RoundRect(x0, y0, x1, y1, r),
-		reversed(logo.RoundRect(x0+t, y0+t, x1-t, y1-t, math.Max(0, r-t))),
+		Reversed(logo.RoundRect(x0+t, y0+t, x1-t, y1-t, math.Max(0, r-t))),
 	}
 }
 
 // para is a parallelogram whose top edge is shifted right by slant.
-func para(x0, y0, x1, y1, slant float64) []logo.Pt {
+func Para(x0, y0, x1, y1, slant float64) []logo.Pt {
 	return []logo.Pt{{X: x0 + slant, Y: y0}, {X: x1 + slant, Y: y0}, {X: x1, Y: y1}, {X: x0, Y: y1}}
 }
 
-func translate(cs [][]logo.Pt, dx, dy, s float64) [][]logo.Pt {
+func Translate(cs [][]logo.Pt, dx, dy, s float64) [][]logo.Pt {
 	out := make([][]logo.Pt, len(cs))
 	for i, c := range cs {
 		for _, p := range c {
@@ -162,7 +162,7 @@ func translate(cs [][]logo.Pt, dx, dy, s float64) [][]logo.Pt {
 }
 
 // blur is three box blurs (close to a gaussian of sigma ~ r).
-func blur(m []float64, w, h int, r int) []float64 {
+func Blur(m []float64, w, h int, r int) []float64 {
 	if r < 1 {
 		return m
 	}
@@ -214,7 +214,7 @@ func clampi(v, lo, hi int) int {
 	return v
 }
 
-func scaleMask(m []float64, k float64) []float64 {
+func ScaleMask(m []float64, k float64) []float64 {
 	out := make([]float64, len(m))
 	for i, v := range m {
 		out[i] = math.Min(1, v*k)
@@ -231,21 +231,21 @@ func loadFont(file string) *opentype.Font {
 		return f
 	}
 	data, err := os.ReadFile(file)
-	check(err)
+	Check(err)
 	f, err := opentype.Parse(data)
-	check(err)
+	Check(err)
 	faces[file] = f
 	return f
 }
 
-func face(file string, size float64) font.Face {
+func Face(file string, size float64) font.Face {
 	f, err := opentype.NewFace(loadFont(file), &opentype.FaceOptions{Size: size, DPI: 72, Hinting: font.HintingNone})
-	check(err)
+	Check(err)
 	return f
 }
 
 // textWidth measures s with extra tracking (pixels between letters).
-func textWidth(f font.Face, s string, tracking float64) float64 {
+func TextWidth(f font.Face, s string, tracking float64) float64 {
 	var w fixed.Int26_6
 	prev := rune(-1)
 	n := 0
@@ -263,8 +263,8 @@ func textWidth(f font.Face, s string, tracking float64) float64 {
 
 // textMask draws s with its baseline starting at (x, y); align -1 left,
 // 0 center, 1 right of x.
-func textMask(w, h int, f font.Face, s string, x, y float64, align int, tracking float64) []float64 {
-	tw := textWidth(f, s, tracking)
+func TextMask(w, h int, f font.Face, s string, x, y float64, align int, tracking float64) []float64 {
+	tw := TextWidth(f, s, tracking)
 	switch align {
 	case 0:
 		x -= tw / 2
@@ -299,12 +299,12 @@ var bayer4 = [16]float64{0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5}
 
 // image converts to straight alpha. dither adds ordered noise (in 8-bit
 // steps) to opaque backgrounds.
-func (c *canvas) image(dither bool) *image.NRGBA {
-	img := image.NewNRGBA(image.Rect(0, 0, c.w, c.h))
-	for y := 0; y < c.h; y++ {
-		for x := 0; x < c.w; x++ {
-			i := (y*c.w + x) * 4
-			a := clamp01(c.p[i+3])
+func (c *Canvas) Image(dither bool) *image.NRGBA {
+	img := image.NewNRGBA(image.Rect(0, 0, c.W, c.H))
+	for y := 0; y < c.H; y++ {
+		for x := 0; x < c.W; x++ {
+			i := (y*c.W + x) * 4
+			a := Clamp01(c.P[i+3])
 			if a <= 0 {
 				continue
 			}
@@ -313,9 +313,9 @@ func (c *canvas) image(dither bool) *image.NRGBA {
 				d = (bayer4[(y&3)*4+(x&3)] + 0.5) / 16
 			}
 			q := func(v float64) uint8 {
-				return uint8(math.Min(255, math.Max(0, math.Floor(clamp01(v/a)*255+d))))
+				return uint8(math.Min(255, math.Max(0, math.Floor(Clamp01(v/a)*255+d))))
 			}
-			img.SetNRGBA(x, y, color.NRGBA{q(c.p[i]), q(c.p[i+1]), q(c.p[i+2]), uint8(math.Round(a * 255))})
+			img.SetNRGBA(x, y, color.NRGBA{q(c.P[i]), q(c.P[i+1]), q(c.P[i+2]), uint8(math.Round(a * 255))})
 		}
 	}
 	return img
@@ -324,13 +324,13 @@ func (c *canvas) image(dither bool) *image.NRGBA {
 // additive converts a light layer (drawn with trans = add): the color is the
 // light itself and lit pixels are opaque, so it adds the same light whether
 // or not the renderer multiplies by alpha.
-func (c *canvas) additive() *image.NRGBA {
-	img := image.NewNRGBA(image.Rect(0, 0, c.w, c.h))
-	for y := 0; y < c.h; y++ {
-		for x := 0; x < c.w; x++ {
-			i := (y*c.w + x) * 4
-			q := func(v float64) uint8 { return uint8(math.Round(clamp01(v) * 255)) }
-			r, g, b := q(c.p[i]), q(c.p[i+1]), q(c.p[i+2])
+func (c *Canvas) Additive() *image.NRGBA {
+	img := image.NewNRGBA(image.Rect(0, 0, c.W, c.H))
+	for y := 0; y < c.H; y++ {
+		for x := 0; x < c.W; x++ {
+			i := (y*c.W + x) * 4
+			q := func(v float64) uint8 { return uint8(math.Round(Clamp01(v) * 255)) }
+			r, g, b := q(c.P[i]), q(c.P[i+1]), q(c.P[i+2])
 			if r|g|b == 0 {
 				continue
 			}
@@ -340,14 +340,14 @@ func (c *canvas) additive() *image.NRGBA {
 	return img
 }
 
-func writePNG(path string, img image.Image) {
+func WritePNG(path string, img image.Image) {
 	f, err := os.Create(path)
-	check(err)
+	Check(err)
 	defer f.Close()
-	check(png.Encode(f, img))
+	Check(png.Encode(f, img))
 }
 
-func check(err error) {
+func Check(err error) {
 	if err != nil {
 		panic(err)
 	}

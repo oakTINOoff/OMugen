@@ -21,6 +21,7 @@ screenpack for any roster size, and tools to find what's broken in a game.
 | Checking a whole game | — | `OMugen.exe -doctor`: loads every character and stage, writes a report |
 | Content MUGEN tolerates | Some characters refused (bad statedef types, extra values, Windows-1252 file names) | Loaded with a warning, as in MUGEN |
 | Effects | — | Optional glow (bloom) on additive effects |
+| Making your own game | Start from an empty folder | `OMugen.exe -newgame "My Game"`: a playable game with a template fighter and stage, all generated from code |
 
 ## Using it
 Copy `OMugen.exe` into a MUGEN 1.1 folder (next to `data`, `chars`, `stages`) and run it.
@@ -46,8 +47,25 @@ reports). Files in the game folder always take priority over the engine's copies
   Options: `-doctor chars|stages`, `-doctorlimit N`, `-doctorfilter name1,name2`.
 - **Glow:** Options > Video Settings > Glow Effects (off by default, like MUGEN).
 
+## Making your own game
+`OMugen.exe -newgame "My Game"` creates a folder with everything a new fighting game needs,
+ready to play and to change:
+
+- **Proto**, a complete template fighter: 6 palettes, normals on the ground and in the air,
+  a projectile (down, down-forward, forward + punch), a super beam (the motion twice +
+  punch) and every standard animation the common states use, with collision boxes.
+- **Proto Arena**, a parallax night-dojo stage in 1280x720.
+- An editable copy of the OMugen screenpack, `data/select.def`, and the game's name as
+  its window title.
+- `GUIDE.txt`: how the files fit together and how to make characters, stages and menus.
+
+Everything uses the MUGEN 1.1 formats, so MUGEN tools and tutorials apply. Proto and the
+stage are drawn by `tools/templategen` (no third-party art); the template itself is in
+`templates/newgame`.
+
 ## Tools
 - `tools/screenpackgen`: generates the OMugen screenpack's art from code.
+- `tools/templategen`: draws Proto and Proto Arena and writes their `.sff` and `.air`.
 - `tools/logogen`: draws the OMugen logo and icons.
 - `tools/mugenjoytest`: shows the MUGEN joystick code and config-screen label of every
   button you press. Use `-raw` to see what Windows reports.

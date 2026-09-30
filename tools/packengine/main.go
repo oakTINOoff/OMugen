@@ -55,6 +55,12 @@ var sources = []source{
 	{glob: "build/screenpack/data/fightfx.*", dest: "data/omugen/omugen-fallback-lifebars", required: true},
 	{glob: "build/screenpack/data/common.snd", dest: "data/omugen/omugen-fallback-lifebars", required: true},
 	{glob: "build/screenpack/data/ikemen1/fonts/*", dest: "data/omugen/omugen-fallback-lifebars/ikemen1/fonts", required: true},
+	// The new-game template (OMugen.exe -newgame; the sprites and animations
+	// come from tools/templategen).
+	{glob: "templates/newgame/*", required: true},
+	{glob: "templates/newgame/data/*", required: true},
+	{glob: "templates/newgame/chars/proto/*", required: true},
+	{glob: "templates/newgame/stages/*", required: true},
 	// Runtime DLLs (SDL2, FFmpeg, libxmp, MinGW runtime).
 	{glob: "lib/*.dll", required: true},
 	// Licenses.

@@ -59,3 +59,58 @@ func TestSffWriteRoundTrip(t *testing.T) {
 		<-sys.mainThreadTask
 	}
 }
+
+// 8-bit sprites use the file's palettes (1,1 and 1,2 here).
+func TestSffWritePaletted(t *testing.T) {
+	colors := func(c imgcolor.RGBA) []imgcolor.RGBA {
+		p := make([]imgcolor.RGBA, 256)
+		p[1] = c
+		return p
+	}
+	img := image.NewPaletted(image.Rect(0, 0, 6, 4), imgcolor.Palette{imgcolor.RGBA{}, imgcolor.RGBA{255, 0, 0, 255}})
+	img.Pix[5] = 1
+	var buf bytes.Buffer
+	err := sffwrite.WriteWithPalettes(&buf, []sffwrite.Sprite{{Group: 9000, Number: 0, Image: img, Palette: 0}},
+		[]sffwrite.Palette{{Group: 1, Number: 1, Colors: colors(imgcolor.RGBA{200, 10, 20, 255})},
+			{Group: 1, Number: 2, Colors: colors(imgcolor.RGBA{20, 40, 220, 255})}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := bytes.NewReader(buf.Bytes())
+	sff := newSff()
+	var lofs, tofs uint32
+	if err := sff.header.Read(r, &lofs, &tofs); err != nil {
+		t.Fatal(err)
+	}
+	if sff.header.NumberOfPalettes != 2 {
+		t.Fatalf("palettes = %d", sff.header.NumberOfPalettes)
+	}
+	if err := sff.loadPalettes(r, lofs); err != nil {
+		t.Fatal(err)
+	}
+	for i, want := range []uint32{0xff14_0ac8, 0xffdc_2814} {
+		pal := sff.palList.Get(i)
+		if pal[0]>>24 != 0 || pal[1] != want {
+			t.Errorf("palette %d: index 0 %08x, index 1 %08x, want %08x", i, pal[0], pal[1], want)
+		}
+	}
+	if idx, ok := sff.palList.PalTable[[2]uint16{1, 2}]; !ok || idx != 1 {
+		t.Errorf("palette 1,2 -> %v %v", idx, ok)
+	}
+	r.Seek(int64(sff.header.FirstSpriteHeaderOffset), 0)
+	s := newSprite()
+	var xofs, size uint32
+	var link uint16
+	if err := s.readHeaderV2(r, &xofs, &size, lofs, tofs, &link); err != nil {
+		t.Fatal(err)
+	}
+	if s.coldepth != 8 || s.rle != -10 || s.palidx != 0 {
+		t.Fatalf("sprite header: depth %d format %d palette %d", s.coldepth, -s.rle, s.palidx)
+	}
+	if err := s.readV2(r, int64(xofs), size); err != nil {
+		t.Fatal(err)
+	}
+	for len(sys.mainThreadTask) > 0 {
+		<-sys.mainThreadTask
+	}
+}

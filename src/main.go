@@ -140,6 +140,12 @@ func realMain() {
 		sys.cmdFlags = make(map[string]string)
 	}
 
+	// OMugen.exe -newgame ["My Game"]: create a game folder instead of playing.
+	if name, ok := sys.cmdFlags["-newgame"]; ok {
+		runNewGame(name)
+		return
+	}
+
 	// Stats file path
 	if _, ok := sys.cmdFlags["-stats"]; !ok {
 		sys.cmdFlags["-stats"] = filepath.Join(sys.baseDir, "save/stats.json")
@@ -251,6 +257,7 @@ func processCommandLine() {
 			"-nomusic":        true,
 			"-nosound":        true,
 			"-omugenui":       true,
+			"-nodialog":       true,
 		}
 		key := ""
 		player := 1
@@ -315,7 +322,11 @@ Debug Options:
 -speedtest              Speed test (match speed x100)
 -sessionseed <seed>     Start every (offline) match from the same random state
 -inputscript <file>     Play scripted key presses (wait/tap/down/up/shot/quit)
--omugenui               Use the OMugen screenpack (Config.OMugenScreenpack = 1)`
+-omugenui               Use the OMugen screenpack (Config.OMugenScreenpack = 1)
+
+Creating a game:
+-newgame [folder]       Creates a new game folder (OMugen.exe, a template fighter
+                        and stage, the screenpack and GUIDE.txt), then exits`
 					//ShowInfoDialog(text, "OMugen command line options")
 					fmt.Printf("OMugen command line options\n\n" + text + "\nPress ENTER to exit")
 					var s string
