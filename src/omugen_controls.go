@@ -179,6 +179,23 @@ func omugenScriptInit(l *lua.LState) {
 		l.Push(lua.LString(mugenjoy.Label(code)))
 		return 2
 	})
+	luaRegister(l, "omugenKeySupported", func(l *lua.LState) int {
+		/*Whether MUGEN's mugen.cfg can store a keyboard key.
+		@function omugenKeySupported
+		@tparam string key OMugen key name (as returned by getKey)
+		@treturn boolean ok*/
+		l.Push(lua.LBool(keycodeToSdl12(StringToKey(strArg(l, 1))) != 0))
+		return 1
+	})
+	luaRegister(l, "omugenRevertControls", func(l *lua.LState) int {
+		/*Drop unsaved MUGEN-mode binding changes and reload data/mugen.cfg.
+		@function omugenRevertControls*/
+		if len(omugenPendingEdits) > 0 {
+			omugenPendingEdits = nil
+			applyMugenInputConfig(loadGameMugenCfg())
+		}
+		return 0
+	})
 	luaRegister(l, "omugenSaveControls", func(l *lua.LState) int {
 		/*Write changed MUGEN-mode bindings to data/mugen.cfg (old file backed up to save/backups).
 		@function omugenSaveControls

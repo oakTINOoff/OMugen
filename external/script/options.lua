@@ -36,6 +36,13 @@ function options.f_saveCfg(reload)
 	end
 	-- Save the current configuration to 'config.ini'
 	saveGameOption(getCommandLineValue("-config"))
+	-- OMugen: MUGEN-mode controls go to data/mugen.cfg
+	if omugenControlsActive() then
+		local ok, err = omugenSaveControls()
+		if not ok then
+			print('OMugen: could not save controls to data/mugen.cfg: ' .. tostring(err))
+		end
+	end
 	hook.run("options.save", reload)
 	-- Reload the game if the reload parameter is true
 	if reload then
@@ -1347,6 +1354,7 @@ options.t_itemname = {
 	['return'] = function(t, item, cursorPosY, moveTxt)
 		if getInput(-1, motif.option_info.menu.done.key) then
 			sndPlay(motif.Snd, motif.option_info.cancel.snd[1], motif.option_info.cancel.snd[2])
+			omugenRevertControls() -- OMugen: back to the saved mugen.cfg controls
 			if options.needReload then
 				main.f_warning(motif.warning_info.text.text.noreload, motif.option_info, motif.optionbgdef)
 			end
@@ -1411,6 +1419,7 @@ function options.f_createMenu(tbl, bool_main)
 						if options.modified then
 							--options.f_saveCfg(options.needReload)
 						end
+						omugenRevertControls() -- OMugen: leaving without saving
 						if options.needReload then
 							main.f_warning(motif.warning_info.text.text.noreload, motif.option_info, motif.optionbgdef)
 						end
@@ -1924,7 +1933,91 @@ local side = 1
 local btn = ''
 local joyNum = 0
 
--- which actions we save / restore per player
+--OMugen: in MUGEN mode players 1-2 are bound by data/mugen.cfg. Their rows
+--show and edit those bindings (MUGEN keys, joystick codes like A-17) through
+--the omugen* functions, saved to mugen.cfg with the options. MUGEN has no D
+--and W buttons, and its keyboard menu key is always Esc.
+local keyCode = 0 --MUGEN joystick code of the captured input
+local t_savedMugen = {}
+local t_mugenActions = {up = true, down = true, left = true, right = true, a = true, b = true, c = true, x = true, y = true, z = true, start = true}
+
+local function f_mugenPlayer(pn)
+	return omugenControlsActive() and pn >= 1 and pn <= 2
+end
+
+local function f_nokey()
+	return tostring(motif.option_info.menu.valuename.nokey)
+end
+
+--whether a row can be changed for this player
+local function f_keyCfgSettable(cfgType, pn, action)
+	if not f_mugenPlayer(pn) then
+		return true
+	end
+	return t_mugenActions[action] == true or (cfgType == 'Joystick' and action == 'menu')
+end
+
+--controller id used to group bindings for conflict checks
+local function f_keyCfgJoy(cfgType, pn)
+	if f_mugenPlayer(pn) then
+		return 'mugen' .. cfgType
+	end
+	return gameOption(cfgType .. '_P' .. pn .. '.Joystick')
+end
+
+--binding shown for a row
+local function f_keyCfgGet(cfgType, pn, action)
+	if not f_mugenPlayer(pn) then
+		return gameOption(cfgType .. '_P' .. pn .. '.' .. action)
+	end
+	if cfgType == 'Keys' and action == 'menu' then
+		return 'ESCAPE'
+	end
+	if not f_keyCfgSettable(cfgType, pn, action) then
+		return f_nokey()
+	end
+	local text = omugenGetBinding(pn, cfgType, action)
+	if text == '' then
+		return f_nokey()
+	end
+	return text
+end
+
+--change a row's binding: value is the shown text (key name, joystick label
+--or "not used"), code the MUGEN joystick code
+local function f_keyCfgSet(cfgType, pn, action, value, code)
+	if not f_mugenPlayer(pn) then
+		modifyGameOption(cfgType .. '_P' .. pn .. '.' .. action, value)
+		return true
+	end
+	if not f_keyCfgSettable(cfgType, pn, action) then
+		return false
+	end
+	local v = value
+	if value == f_nokey() then
+		v = cfgType == 'Keys' and '' or '0'
+	elseif cfgType == 'Joystick' then
+		v = tostring(code or 0)
+	end
+	return omugenSetBinding(pn, cfgType, action, v)
+end
+
+local function f_saveMugenBindings(cfgType)
+	t_savedMugen = {}
+	for pn = 1, 2 do
+		if f_mugenPlayer(pn) then
+			t_savedMugen[pn] = {}
+			for action in pairs(t_mugenActions) do
+				local text, value = omugenGetBinding(pn, cfgType, action)
+				t_savedMugen[pn][action] = cfgType == 'Keys' and text or tostring(value)
+			end
+			if cfgType == 'Joystick' then
+				local _, value = omugenGetBinding(pn, cfgType, 'menu')
+				t_savedMugen[pn].menu = tostring(value)
+			end
+		end
+	end
+end
 local t_keyCfgFields = {
 	'Joystick', 'up', 'down', 'left', 'right',
 	'a', 'b', 'c', 'x', 'y', 'z',
@@ -1940,6 +2033,12 @@ end
 
 -- Restore saved key config for a single player from t_savedConfig
 local function f_restoreKeyConfigPlayer(cfgType, pn)
+	if f_mugenPlayer(pn) then
+		for action, v in pairs(t_savedMugen[pn] or {}) do
+			omugenSetBinding(pn, cfgType, action, v)
+		end
+		return
+	end
 	local saved = t_savedConfig[pn]
 	if not saved then
 		return
@@ -1968,16 +2067,18 @@ function options.f_keyCfgReset(cfgType)
 	t_keyList = {}
 	for i = 1, gameOption('Config.Players') do
 		local c = gameOption(cfgType .. '_P' .. i)
-		if t_keyList[c.Joystick] == nil then
-			t_keyList[c.Joystick] = {} --creates subtable for each controller (1 for all keyboard configs, new one for each gamepad)
-			t_conflict[c.Joystick] = false --set default conflict flag for each controller
+		local joy = f_keyCfgJoy(cfgType, i)
+		if t_keyList[joy] == nil then
+			t_keyList[joy] = {} --creates subtable for each controller (1 for all keyboard configs, new one for each gamepad)
+			t_conflict[joy] = false --set default conflict flag for each controller
 		end
 		for k, v in ipairs(t_keyCfg) do
 			if t_btnEnabled[v.itemname] then
-				local btn = c[v.itemname]
+				local btn = f_keyCfgGet(cfgType, i, v.itemname)
 				t_keyCfg[k]['vardisplay' .. i] = btn
-				if btn ~= tostring(motif.option_info.menu.valuename.nokey) then --if button is not disabled
-					t_keyList[c.Joystick][btn] = (t_keyList[c.Joystick][btn] or 0) + 1
+				--if button is not disabled (and not fixed, like MUGEN's Esc menu key)
+				if btn ~= tostring(motif.option_info.menu.valuename.nokey) and f_keyCfgSettable(cfgType, i, v.itemname) then
+					t_keyList[joy][btn] = (t_keyList[joy][btn] or 0) + 1
 				end
 			elseif v.itemname == 'rumble' then
 				t_keyCfg[k]['vardisplay' .. i] = options.f_boolDisplay(c.RumbleOn)
@@ -2006,6 +2107,7 @@ function options.f_keyCfgInit(cfgType, title)
 	for i = 1, gameOption('Config.Players') do
 		table.insert(t_savedConfig, gameOption(cfgType .. '_P' .. i))
 	end
+	f_saveMugenBindings(cfgType)
 	btnReleased = false
 	player = 1
 	side = 1
@@ -2013,7 +2115,7 @@ function options.f_keyCfgInit(cfgType, title)
 	textImgReset(motif.option_info.title.TextSpriteData)
 	textImgSetText(motif.option_info.title.TextSpriteData, title)
 	options.f_keyCfgReset(cfgType)
-	joyNum = gameOption(cfgType .. '_P' .. player .. '.Joystick')
+	joyNum = f_keyCfgJoy(cfgType, player)
 end
 
 function options.f_keyCfg(cfgType, controller, bg, skipClear)
@@ -2046,8 +2148,11 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 	local forcedDir = nil
 	-- Config all / single-button capture
 	if captureActive then
+		-- OMugen: rows MUGEN has no binding for are skipped
+		if not f_keyCfgSettable(cfgType, player, t[item].itemname) then
+			key = '__SKIP__'
 		-- esc while capturing (cancel)
-		if esc() --[[or getInput(-1, motif.option_info.menu.cancel.key)]] then
+		elseif esc() --[[or getInput(-1, motif.option_info.menu.cancel.key)]] then
 			sndPlay(motif.Snd, motif.option_info.cancel.snd[1], motif.option_info.cancel.snd[2])
 			esc(false)
 			for i = 1, gameOption('Config.Players') do
@@ -2074,6 +2179,17 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 		--keyboard key detection
 		elseif cfgType == 'Keys' then
 			key = getKey()
+			-- OMugen: mugen.cfg stores SDL 1.2 keys only
+			if key ~= '' and f_mugenPlayer(player) and not omugenKeySupported(key) then
+				sndPlay(motif.Snd, motif.option_info.cancel.snd[1], motif.option_info.cancel.snd[2])
+				key = ''
+			end
+		-- OMugen: MUGEN joystick codes (A-17...) for mugen.cfg players
+		elseif f_mugenPlayer(player) then
+			local code, label = omugenCaptureJoystick()
+			if code > 0 then
+				key, keyCode = label, code
+			end
 		--gamepad key detection
 		else
 			local tmp = getJoystickKey(joyNum)
@@ -2096,7 +2212,9 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 		forcedDir = 0
 		--other keyboard or gamepad key
 		if key ~= '' and key ~= 'nil' then
-			if key == '__UNBIND__' then
+			if key == '__SKIP__' then
+				-- nothing to assign on this row
+			elseif key == '__UNBIND__' then
 				sndPlay(motif.Snd, motif.option_info.cancel.snd[1], motif.option_info.cancel.snd[2])
 				--decrease old button count
 				if t_keyList[joyNum][btn] ~= nil and t_keyList[joyNum][btn] > 1 then
@@ -2106,7 +2224,7 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 				end
 				--update vardisplay / config data
 				t[item]['vardisplay' .. player] = motif.option_info.menu.valuename.nokey
-				modifyGameOption(cfgType .. '_P' .. player .. '.' .. t[item].itemname, tostring(motif.option_info.menu.valuename.nokey))
+				f_keyCfgSet(cfgType, player, t[item].itemname, tostring(motif.option_info.menu.valuename.nokey))
 				options.modified = true
 			elseif cfgType == 'Keys' or (cfgType == 'Joystick' and key ~= 'nil') then
 				sndPlay(motif.Snd, motif.option_info.cursor.done.snd[1], motif.option_info.cursor.done.snd[2])
@@ -2118,9 +2236,9 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 				end
 				--remove previous button assignment if already set
 				for k, v in ipairs(t) do
-					if v['vardisplay' .. player] == key then
+					if v['vardisplay' .. player] == key and f_keyCfgSettable(cfgType, player, v.itemname) then
 						v['vardisplay' .. player] = tostring(motif.option_info.menu.valuename.nokey)
-						modifyGameOption(cfgType .. '_P' .. player .. '.' .. v.itemname, tostring(motif.option_info.menu.valuename.nokey))
+						f_keyCfgSet(cfgType, player, v.itemname, tostring(motif.option_info.menu.valuename.nokey))
 						if t_keyList[joyNum][key] ~= nil and t_keyList[joyNum][key] > 1 then
 							t_keyList[joyNum][key] = t_keyList[joyNum][key] - 1
 						else
@@ -2136,7 +2254,7 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 				end
 				--update vardisplay / config data
 				t[item]['vardisplay' .. player] = key
-				modifyGameOption(cfgType .. '_P' .. player .. '.' .. t[item].itemname, key)
+				f_keyCfgSet(cfgType, player, t[item].itemname, key, keyCode)
 				options.modified = true
 			end
 			if captureMode == 'all' then
@@ -2165,7 +2283,7 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 			key = ''
 		end
 		if t_btnEnabled[t[item].itemname] then
-			btn = gameOption(cfgType .. '_P' .. player .. '.' .. t[item].itemname)
+			btn = f_keyCfgGet(cfgType, player, t[item].itemname)
 		end
 		resetKey()
 	else
@@ -2196,19 +2314,19 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 			else
 				side = main.f_playerSide(player)
 			end
-			joyNum = gameOption(cfgType .. '_P' .. player .. '.Joystick')
+			joyNum = f_keyCfgJoy(cfgType, player)
 		--move right
 		elseif getInput(-1, motif.option_info.menu.add.key) and player + 1 <= gameOption('Config.Players') then
 			sndPlay(motif.Snd, motif.option_info.cursor.move.snd[1], motif.option_info.cursor.move.snd[2])
 			player = player + 1
 			side = main.f_playerSide(player)
-			joyNum = gameOption(cfgType .. '_P' .. player .. '.Joystick')
+			joyNum = f_keyCfgJoy(cfgType, player)
 		--move left
 		elseif getInput(-1, motif.option_info.menu.subtract.key) and player - 1 >= 1 then
 			sndPlay(motif.Snd, motif.option_info.cursor.move.snd[1], motif.option_info.cursor.move.snd[2])
 			player = player - 1
 			side = main.f_playerSide(player)
-			joyNum = gameOption(cfgType .. '_P' .. player .. '.Joystick')
+			joyNum = f_keyCfgJoy(cfgType, player)
 		--Config all
 		elseif t[item].itemname == 'configall' or key:match('^F[0-9]+$') then
 			local pn = key:match('^F([0-9]+)$')
@@ -2221,9 +2339,9 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 				if pn ~= nil then
 					player = pn
 					side = main.f_playerSide(player)
-					joyNum = gameOption(cfgType .. '_P' .. player .. '.Joystick')
+					joyNum = f_keyCfgJoy(cfgType, player)
 				end
-				if cfgType == 'Joystick' and getJoystickPresent(joyNum) == false then
+				if cfgType == 'Joystick' and not f_mugenPlayer(player) and getJoystickPresent(joyNum) == false then
 					main.f_warning(motif.warning_info.text.text.pad, motif.option_info, motif.optionbgdef)
 					item = configall_start
 					cursorPosY = configall_start
@@ -2234,11 +2352,17 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 					cursorPosY = configall_start + 1
 					btnReleased = false
 					captureActive = true
+					if cfgType == 'Joystick' and f_mugenPlayer(player) then
+						omugenCaptureJoystick(true) -- inputs already held don't count
+					end
 				end
 			end
 		-- Single-button assignment
 		elseif t_btnEnabled[t[item].itemname] and getInput(-1, motif.option_info.keymenu.done.key) then
-			if cfgType == 'Joystick' and getJoystickPresent(joyNum) == false then
+			if not f_keyCfgSettable(cfgType, player, t[item].itemname) then
+				-- OMugen: MUGEN has no binding for this row
+				sndPlay(motif.Snd, motif.option_info.cancel.snd[1], motif.option_info.cancel.snd[2])
+			elseif cfgType == 'Joystick' and not f_mugenPlayer(player) and getJoystickPresent(joyNum) == false then
 				-- same behaviour as Config all when no gamepad is connected
 				main.f_warning(motif.warning_info.text.text.pad, motif.option_info, motif.optionbgdef)
 				item = configall_start
@@ -2251,9 +2375,12 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 				btnReleased = false
 				captureMode = 'single'
 				captureActive = true
+				if cfgType == 'Joystick' and f_mugenPlayer(player) then
+					omugenCaptureJoystick(true) -- inputs already held don't count
+				end
 				-- preload current button for this action (used by configall logic)
 				if t_btnEnabled[t[item].itemname] then
-					btn = gameOption(cfgType .. '_P' .. player .. '.' .. t[item].itemname)
+					btn = f_keyCfgGet(cfgType, player, t[item].itemname)
 				else
 					btn = ''
 				end
@@ -2310,7 +2437,7 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 	-- Build per-pane item arrays with correct vardisplay/infodisplay and conflict flags
 	local function buildPaneItems(pane)
 		local pn = pane + player - side
-		local joy = gameOption(cfgType .. '_P' .. pn .. '.Joystick')
+		local joy = f_keyCfgJoy(cfgType, pn)
 		local list = {}
 		for i = 1, #t do
 			local base = t[i]

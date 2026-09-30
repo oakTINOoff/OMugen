@@ -551,6 +551,38 @@ cursor.move.snd = 100, 0
 cursor.done.snd = 100, 1
 cancel.snd = 100, 2
 
+; Key config: two player columns
+keymenu.pos = 0, 0
+keymenu.p1.menuoffset = 420, 200
+keymenu.p1.playerno.offset = 230, 0
+keymenu.p1.playerno.font = 1, 0, 0, 255, 80, 92, 255, 30
+keymenu.p1.playerno.text = PLAYER %i
+keymenu.p2.menuoffset = 1040, 200
+keymenu.p2.playerno.offset = 230, 0
+keymenu.p2.playerno.font = 1, 0, 0, 90, 160, 255, 255, 30
+keymenu.p2.playerno.text = PLAYER %i
+keymenu.item.font = 3, 0, 1, 165, 165, 178, 255, 26
+keymenu.item.active.font = 3, 0, 1, 255, 255, 255, 255, 26
+keymenu.item.value.font = 3, 0, -1, 165, 165, 178, 255, 26
+keymenu.item.value.offset = 460, 0
+keymenu.item.value.active.font = 3, 0, -1, 255, 255, 255, 255, 26
+keymenu.item.value.active.offset = 460, 0
+keymenu.item.value.conflict.font = 3, 0, -1, 255, 60, 70, 255, 26
+keymenu.item.value.conflict.offset = 460, 0
+keymenu.item.info.font = 3, 0, -1, 255, 205, 110, 255, 26
+keymenu.item.info.offset = 460, 0
+keymenu.item.info.active.font = 3, 0, -1, 255, 225, 140, 255, 26
+keymenu.item.info.active.offset = 460, 0
+keymenu.item.spacing = 0, 44
+keymenu.window.margins.y = 0, 0
+keymenu.window.visibleitems = 0
+keymenu.boxcursor.visible = 1
+keymenu.boxcursor.coords = -18, -30, 478, 10
+keymenu.boxcursor.col = 255, 42, 58
+keymenu.boxbg.visible = 1
+keymenu.boxbg.col = 0, 0, 0
+keymenu.boxbg.alpha = 0, 110
+
 [OptionBGdef]
 bgclearcolor = 0, 0, 0
 

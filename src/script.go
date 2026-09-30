@@ -6448,6 +6448,11 @@ func systemScriptInit(l *lua.LState) {
 		if joy < -1 || joy > len(sys.joystickConfig) {
 			l.RaiseError("\nInvalid controller number: %v\n", joy)
 		}
+		// OMugen: players bound by data/mugen.cfg keep those bindings (the
+		// options menu edits them through omugenSetBinding)
+		if mugenInputActive != nil && pn <= len(mugenInputActive.players) {
+			return 0
+		}
 		tableArg(l, 3).ForEach(func(key, value lua.LValue) {
 			if joy == -1 {
 				btn := int(StringToKey(lua.LVAsString(value)))
