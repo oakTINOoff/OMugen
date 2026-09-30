@@ -5012,7 +5012,9 @@ func (s *Select) preloadCharAssets(ref int) error {
 	}
 	tempSff := newSff()
 
+	tphase := time.Now()
 	if sc.preloadAnim != "" {
+		defer loadProfAdd("4air", tphase)
 		animPath := sc.preloadAnim
 		if err := LoadFile(&animPath, []string{sc.def}, "", func(filename string) error {
 			str, err := LoadText(filename)
@@ -5044,6 +5046,8 @@ func (s *Select) preloadCharAssets(ref int) error {
 		var selPal []int32
 		if err := LoadFile(&spritePath, []string{sc.def, "", "data/"}, "", func(file string) error {
 			var err error
+			tsff := time.Now()
+			defer loadProfAdd("5sff", tsff)
 			localSff, selPal, err = preloadSff(file, true, listSpr)
 			if err != nil {
 				return err
@@ -5248,6 +5252,7 @@ func getDefaultDefPathInZip(zipFilePathOnDisk string) (path1 string, path2 strin
 
 func (s *Select) AddChar(def string) *SelectChar {
 	tnow := time.Now()
+	defer loadProfChar()
 	s.charlist = append(s.charlist, *newSelectChar())
 	sc := &s.charlist[len(s.charlist)-1]
 
@@ -5343,6 +5348,8 @@ func (s *Select) AddChar(def string) *SelectChar {
 	if sc.def == "" {
 		return useDummy("Empty DEF path")
 	}
+	loadProfAdd("1resolve", tnow)
+	tphase := time.Now()
 
 	charDefContent, err := LoadText(sc.def)
 	if err != nil {
@@ -5454,7 +5461,10 @@ func (s *Select) AddChar(def string) *SelectChar {
 		}
 	}
 
+	loadProfAdd("2def", tphase)
+	tphase = time.Now()
 	LoadFile(&cns_orig, []string{sc.def, "", "data/"}, "", func(filename string) error {
+		defer loadProfAdd("3cns", tphase)
 		str, err := LoadText(filename)
 		if err != nil {
 			return err

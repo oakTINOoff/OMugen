@@ -92,7 +92,9 @@ func applyMugenInputConfig(mc mugenCfg) {
 		}
 		jc := KeyConfig{Joy: -1}
 		if pc.useJoystick && !noJoy {
-			jc.mugenCodes = pc.joy[:]
+			// Copy: go.mod targets go1.20, where pc is one variable reused by every
+			// iteration, so slicing pc.joy would make every player share P2's codes.
+			jc.mugenCodes = append([]int(nil), pc.joy[:]...)
 			if mugenJoy == nil {
 				mugenJoy = mugenjoy.NewManager()
 				for _, d := range mugenJoy.Devices() {

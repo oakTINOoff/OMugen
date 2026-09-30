@@ -125,6 +125,38 @@ func TestLoadRealJumpForceConfig(t *testing.T) {
 	}
 }
 
+// Regression: both players used to share P2's joystick codes (loop variable aliasing).
+func TestApplyMugenInputKeepsPerPlayerCodes(t *testing.T) {
+	mc := mugenCfg{
+		"input":       {"p1.joystick.type": "1", "p2.joystick.type": "1"},
+		"p1 joystick": {"jump": "1", "a": "17"},
+		"p2 joystick": {"jump": "41", "a": "0"},
+		"p1 keys":     {"jump": "119"},
+		"p2 keys":     {"jump": "273"},
+	}
+	savedKeys, savedJoy, savedFlags := sys.keyConfig, sys.joystickConfig, sys.cmdFlags
+	defer func() { sys.keyConfig, sys.joystickConfig, sys.cmdFlags = savedKeys, savedJoy, savedFlags }()
+	sys.keyConfig = make([]KeyConfig, 2)
+	sys.joystickConfig = make([]KeyConfig, 2)
+	sys.cmdFlags = map[string]string{}
+
+	applyMugenInputConfig(mc)
+
+	p1, p2 := sys.joystickConfig[0].mugenCodes, sys.joystickConfig[1].mugenCodes
+	if len(p1) == 0 || len(p2) == 0 {
+		t.Fatalf("mugenCodes not set: p1=%v p2=%v", p1, p2)
+	}
+	if p1[0] != 1 || p1[4] != 17 {
+		t.Errorf("P1 codes = %v, want jump=1 a=17", p1)
+	}
+	if p2[0] != 41 || p2[4] != 0 {
+		t.Errorf("P2 codes = %v, want jump=41 a=0", p2)
+	}
+	if sys.keyConfig[0].dU != int(sdl.K_w) || sys.keyConfig[1].dU != int(sdl.K_UP) {
+		t.Errorf("keyboard jump: p1=%#x p2=%#x", sys.keyConfig[0].dU, sys.keyConfig[1].dU)
+	}
+}
+
 func TestMugenCfgParsing(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "mugen.cfg")
 	text := "[Options]\n  motif = \"data/foo/system.def\" ; quoted\n[OPTIONS]\nmotif = ignored\n[Video]\nWidth=640\nHeight = abc\n"

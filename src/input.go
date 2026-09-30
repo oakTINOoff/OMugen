@@ -3007,6 +3007,10 @@ func (cl *CommandList) IsControllerButtonPressed(token string, controllerIdx int
 				in = m
 			}
 		}
+		if in >= 0 && in < len(sys.joystickConfig) && sys.joystickConfig[in].mugenCodes != nil {
+			// OMugen: players bound through mugen.cfg only use MUGEN joystick codes.
+			return false
+		}
 		if in >= 0 && in < len(sys.joystickConfig) && sys.joystickConfig[in].Joy >= 0 {
 			joyIdx = sys.joystickConfig[in].Joy
 		} else {
