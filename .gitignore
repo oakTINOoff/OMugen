@@ -92,3 +92,5 @@ external/script/version
 
 # OMugen local test game folders (junctions/hard links to real games)
 /test/
+# Ikemen-GO-Screenpack clone (engine assets for test folders)
+/build/screenpack/

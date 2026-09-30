@@ -86,6 +86,25 @@ if (Test-Path (Join-Path $Game 'font')) { Mirror-Folder (Join-Path $Game 'font')
 else { New-Item -ItemType Directory (Join-Path $Out 'font') -Force | Out-Null }
 Copy-EngineFiles (Join-Path $Repo 'font') (Join-Path $Out 'font')
 
+# Engine assets Ikemen releases ship from the Ikemen-GO-Screenpack repo
+# (build.sh clones it into build\screenpack). Until OMugen embeds them in the
+# exe, copy only the ones the engine itself needs, never a game's own files.
+$enginePack = Join-Path $Repo 'build\screenpack'
+if (Test-Path $enginePack) {
+	foreach ($rel in @('data\gofx', 'data\glyphs.sff', 'font\Open_Sans.def')) {
+		$src = Join-Path $enginePack $rel
+		$dst = Join-Path $Out $rel
+		if (-not (Test-Path -LiteralPath $src)) { continue }
+		if (Test-Path -LiteralPath $dst) {
+			$existing = Get-Item -LiteralPath $dst -Force
+			if ($existing.LinkType -in @('HardLink', 'Junction')) { Write-Warning "Skipping $rel : the game already has it"; continue }
+		}
+		Copy-Item -LiteralPath $src -Destination $dst -Recurse -Force
+	}
+} else {
+	Write-Warning "build\screenpack missing: clone https://github.com/ikemen-engine/Ikemen-GO-Screenpack.git there for engine assets"
+}
+
 Link-Dir (Join-Path $Out 'external') (Join-Path $Repo 'external')
 Link-Dir (Join-Path $Out 'lib') (Join-Path $Repo 'lib')
 

@@ -1405,7 +1405,13 @@ func applyCustomDefaults(m *Motif, iniFile *ini.File) {
 	}
 	raw := strings.TrimSpace(k.Value())
 	// If user specified a single value (no comma/&), duplicate it into the second slot.
-	if raw != "" && !strings.Contains(raw, ",") && !strings.Contains(raw, "&") {
+	// OMugen: MUGEN 1.1 reads cell.spacing as a single integer (atoi, so "-1,5" is -1)
+	// for both axes, so screenpacks made for MUGEN always use the first value.
+	mugenMotif := strings.TrimSpace(m.Info.IkemenVersion) == ""
+	if mugenMotif {
+		m.SelectInfo.Cell.Spacing[0] = float32(int32(m.SelectInfo.Cell.Spacing[0]))
+	}
+	if raw != "" && (mugenMotif || (!strings.Contains(raw, ",") && !strings.Contains(raw, "&"))) {
 		// At this point, the first component has already been parsed into the struct.
 		// Just mirror it to the second component.
 		m.SelectInfo.Cell.Spacing[1] = m.SelectInfo.Cell.Spacing[0]

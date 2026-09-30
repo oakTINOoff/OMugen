@@ -419,6 +419,11 @@ func LoadFntSff(f *Fnt, fontfile string, filename string) {
 
 	// Load sprites
 	var pal_default []uint32
+	// SFF v1 fonts have no palette table: default to the first palette in file
+	// order (sff.sprites is a map, so picking inside the loop would be random).
+	if sff.header.Version[0] == 1 && len(sff.palList.palettes) > 0 {
+		pal_default = sff.palList.Get(0)
+	}
 	for k, sprite := range sff.sprites {
 		s := sff.cloneSpriteWithPal(sprite.Group, sprite.Number, &sff.palList)
 		if sprite.Group == 0 || f.BankType == "sprite" {
@@ -547,12 +552,21 @@ func (f *Fnt) drawChar(
 
 	// Only paletted sprites (<=8bpp) use palette mapping.
 	if spr.coldepth <= 8 {
+		own := f.images[bt][c].img[0].Pal
+		switch {
+		// OMugen: with BankType=sprite the bank picks a sprite group, not a palette,
+		// and SFF v1 fonts have no palette table (each PCX glyph carries its own).
+		// MUGEN 1.1 draws those glyphs with their own palette; using one shared
+		// palette garbles glyphs that have different palettes (e.g. full-screen
+		// menu art stored as font glyphs).
+		case len(own) > 0 && (f.BankType == "sprite" || len(f.coldepth) == 0):
+			pal = own
 		// In case of mismatched color depth between bank palette and the sprite's own palette,
 		// Mugen 1.1 uses the latter, ignoring the bank
-		if len(f.palettes) != 0 && len(f.coldepth) > int(bank) &&
+		case len(f.palettes) != 0 && len(f.coldepth) > int(bank) &&
 			f.images[bt][c].img[0].coldepth != 32 &&
-			f.coldepth[bank] != f.images[bt][c].img[0].coldepth {
-			pal = f.images[bt][c].img[0].Pal[:] //palfx.getFxPal(f.images[bt][c].img[0].Pal[:], false)
+			f.coldepth[bank] != f.images[bt][c].img[0].coldepth:
+			pal = own[:] //palfx.getFxPal(f.images[bt][c].img[0].Pal[:], false)
 		}
 	}
 
