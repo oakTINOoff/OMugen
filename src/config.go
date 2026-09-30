@@ -451,6 +451,7 @@ func (c *Config) sysSet() {
 			}
 		}
 	}
+	applyMugenInputConfig()
 }
 
 // GetValue retrieves the value based on the query string.

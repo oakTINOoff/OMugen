@@ -196,6 +196,9 @@ func GetKeyboardState(kc KeyConfig) [14]bool {
 // values from a shared state for both buttons and axes.
 // All XInput axes and digital buttons are supported.
 func GetJoystickState(kc KeyConfig) [14]bool {
+	if kc.mugenCodes != nil {
+		return mugenJoystickState(kc.mugenCodes)
+	}
 	var out [14]bool
 	joy := kc.Joy
 
@@ -282,6 +285,7 @@ type KeyConfig struct {
 	isInitialized                                          bool
 	rumbleOn                                               bool
 	GUID                                                   string
+	mugenCodes                                             []int // OMugen: MUGEN joystick codes from mugen.cfg
 }
 
 func (kc *KeyConfig) set(v [14]int) {
