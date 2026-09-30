@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -24,13 +25,35 @@ func main() {
 	cfgPath := flag.String("cfg", "", "mugen.cfg to show what each pressed code is bound to (default: data/mugen.cfg if present)")
 	raw := flag.Bool("raw", false, "print raw WinMM data for every joystick ID twice per second")
 	flag.Parse()
+
+	// Windows may only deliver joystick data to the focused window's process,
+	// so, like MUGEN, we own a window and keep its message queue serviced.
+	runtime.LockOSThread()
+	openTestWindow()
+	focused := true
+	checkFocus := func() {
+		pumpMessages()
+		if f := windowFocused(); f != focused {
+			focused = f
+			if f {
+				fmt.Println("(test window focused)")
+			} else {
+				fmt.Println("(test window NOT focused - click the mugenjoytest window, input may be ignored)")
+			}
+		}
+	}
+
 	if *raw {
 		for {
+			checkFocus()
 			fmt.Println(time.Now().Format("15:04:05.0"))
 			for _, line := range mugenjoy.RawDump() {
 				fmt.Println("  " + line)
 			}
-			time.Sleep(500 * time.Millisecond)
+			for i := 0; i < 50; i++ {
+				pumpMessages()
+				time.Sleep(10 * time.Millisecond)
+			}
 		}
 	}
 	if *cfgPath == "" {
@@ -54,6 +77,7 @@ func main() {
 	var prev mugenjoy.State
 	devs := m.Devices()
 	for {
+		checkFocus()
 		m.Poll()
 		if d := m.Devices(); len(d) != len(devs) {
 			devs = d
