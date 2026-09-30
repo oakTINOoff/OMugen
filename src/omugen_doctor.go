@@ -45,6 +45,8 @@ const (
 	doctorCrash    = "crash"
 	doctorTimeout  = "timeout"
 	doctorMaxWarns = 200 // per item, to keep reports readable
+
+	doctorInProgress = "(in progress)" // stoppedAt marker for partial reports
 )
 
 var doctorState struct {
@@ -334,11 +336,24 @@ func runDoctor() {
 	items := make([]*doctorItem, 0, total)
 	stopped := ""
 	n := 0
+	// progress shows an estimate in the title and saves a partial report every
+	// 25 items, so an interrupted run still leaves a useful report.
+	progress := func(name string) {
+		eta := ""
+		if n > 5 {
+			left := time.Duration(float64(time.Since(started)) / float64(n-1) * float64(total-n+1))
+			eta = fmt.Sprintf(" - about %v left", left.Round(time.Minute))
+		}
+		setTitle(fmt.Sprintf("OMugen Doctor %d/%d%s - %s", n, total, eta, name))
+		if n%25 == 0 {
+			doctorWriteReports(outDir, items[:len(items)-1], total, doctorInProgress, time.Since(started))
+		}
+	}
 	for i := range chars {
 		it := &chars[i]
 		items = append(items, it)
 		n++
-		setTitle(fmt.Sprintf("OMugen Doctor %d/%d - %s", n, total, it.Entry))
+		progress(it.Entry)
 		if it.Def = doctorResolveChar(it.Entry); it.Def == "" {
 			it.Status, it.Error = doctorMissing, "character .def not found (zip characters are not checked)"
 			continue
@@ -386,7 +401,7 @@ func runDoctor() {
 			it := &stages[i]
 			items = append(items, it)
 			n++
-			setTitle(fmt.Sprintf("OMugen Doctor %d/%d - %s", n, total, it.Entry))
+			progress(it.Entry)
 			if it.Def = doctorResolveStage(it.Entry); it.Def == "" {
 				it.Status, it.Error = doctorMissing, "stage .def not found"
 				continue
@@ -522,7 +537,11 @@ func doctorWriteReports(outDir string, items []*doctorItem, total int, stopped s
 	var t strings.Builder
 	fmt.Fprintf(&t, "OMugen Doctor report - %s\nGame: %s\nChecked %d of %d items in %v\n", rep.Generated, wd, len(items), total, took.Round(time.Second))
 	if stopped != "" {
-		fmt.Fprintf(&t, "STOPPED at %s (window closed or a load did not finish)\n", stopped)
+		if stopped == doctorInProgress {
+			t.WriteString("IN PROGRESS: partial report, the doctor is still running\n")
+		} else {
+			fmt.Fprintf(&t, "STOPPED at %s (window closed or a load did not finish)\n", stopped)
+		}
 	}
 	for _, s := range []string{doctorOK, doctorWarning, doctorMissing, doctorError, doctorCrash, doctorTimeout} {
 		fmt.Fprintf(&t, "  %-8s %d\n", s, counts[s])
@@ -559,7 +578,11 @@ pre{white-space:pre-wrap;word-break:break-word;color:var(--mut);margin:6px 0}inp
 	fmt.Fprintf(&h, `<h1><b>O</b>Mugen Doctor</h1><div class="mut">%s &middot; %s &middot; checked %d of %d in %v</div>`,
 		esc(wd), esc(rep.Generated), len(items), total, took.Round(time.Second))
 	if stopped != "" {
-		fmt.Fprintf(&h, `<p class="error">Stopped at %s (window closed or a load did not finish).</p>`, esc(stopped))
+		if stopped == doctorInProgress {
+			h.WriteString(`<p class="warning">In progress: partial report, the doctor is still running.</p>`)
+		} else {
+			fmt.Fprintf(&h, `<p class="error">Stopped at %s (window closed or a load did not finish).</p>`, esc(stopped))
+		}
 	}
 	h.WriteString(`<p class="mut"><span class="error">error / crash / missing</span>: the item cannot be used (or crashes) and needs fixing.
 <span class="warning">warning</span>: content notes such as unknown or duplicate parameters, or animation frames pointing at sprites the .sff does not have.
