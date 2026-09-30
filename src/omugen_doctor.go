@@ -7,6 +7,7 @@ package main
 // report.json and report.txt. Nothing in the game folder is modified.
 //
 // Options: -doctor chars|stages (default both), -doctorlimit N (first N items),
+// -doctorfilter a,b (only entries containing one of the texts),
 // -doctornodialog (no "finished" message box, for unattended runs).
 
 import (
@@ -133,6 +134,21 @@ func doctorEntries(path string) (chars, stages []doctorItem, err error) {
 }
 
 // doctorResolveChar finds a character's .def like Select.AddChar does.
+// doctorFilter keeps the items whose select.def entry contains one of the
+// comma-separated texts (case-insensitive).
+func doctorFilter(items []doctorItem, filter string) []doctorItem {
+	var out []doctorItem
+	for _, it := range items {
+		for _, f := range strings.Split(filter, ",") {
+			if f = strings.TrimSpace(f); f != "" && strings.Contains(strings.ToLower(it.Entry), strings.ToLower(f)) {
+				out = append(out, it)
+				break
+			}
+		}
+	}
+	return out
+}
+
 func doctorResolveChar(entry string) string {
 	p := filepath.ToSlash(entry)
 	if strings.HasSuffix(strings.ToLower(p), ".zip") {
@@ -321,6 +337,9 @@ func runDoctor() {
 		chars = nil
 	} else if mode == "chars" {
 		stages = nil
+	}
+	if f := sys.cmdFlags["-doctorfilter"]; f != "" {
+		chars, stages = doctorFilter(chars, f), doctorFilter(stages, f)
 	}
 	if limit > 0 {
 		if len(chars) > limit {

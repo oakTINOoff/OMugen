@@ -646,6 +646,13 @@ func SearchFile(file string, dirs []string, defaultDirs ...string) string {
 	if found := try(file); found != "" {
 		return found
 	}
+	// OMugen: names written in another code page than the one they were
+	// decoded with (e.g. Windows-1252 "Básicos.cns")
+	for _, v := range legacyFileNameVariants(file) {
+		if found := SearchFile(v, dirs, defaultDirs...); FileExist(found) != "" {
+			return found
+		}
+	}
 	return file
 }
 

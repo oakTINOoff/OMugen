@@ -6128,6 +6128,18 @@ func (c *CharCompiler) exprs(data string, vt ValueType,
 		var err error
 		if n < numArg {
 			be, err = c.argExpression(&data, vt)
+		} else if sys.ignoreMostErrors && !c.zssMode {
+			// OMugen: MUGEN reads the values it needs and ignores extra ones,
+			// e.g. "mul = 480,480,480" for EnvShake's single mul
+			be, err = c.typedExp(c.expBoolOr, &data, vt)
+			if err == nil && len(c.token) > 0 {
+				if c.token != "," {
+					err = Error("Invalid data: " + c.token)
+				} else {
+					LogMessage(c.charWarn() + "Extra parameter values ignored: " + strings.TrimSpace(data))
+					c.token = ""
+				}
+			}
 		} else {
 			be, err = c.fullExpression(&data, vt)
 		}
@@ -6580,7 +6592,15 @@ func (c *CharCompiler) stateDef(is IniSection, sbc *StateBytecode) error {
 			case 'u':
 				sbc.stateType = ST_U
 			default:
-				return Error("Invalid statetype: " + data)
+				// OMugen: MUGEN keeps loading, e.g. when a commented-out
+				// [State] header leaves a controller's "type = Explod" in
+				// the statedef.
+				msg := "Invalid statetype: " + data
+				if sys.ignoreMostErrors {
+					LogMessage(c.charWarn() + msg)
+					return nil
+				}
+				return Error(msg)
 			}
 			return nil
 		}); err != nil {
