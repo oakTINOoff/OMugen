@@ -311,8 +311,12 @@ func loadConfig(def string) (*Config, error) {
 	c.IniFile = iniFile
 	c.DefaultOnlyIni = defaultOnlyIni
 	c.normalize()
-	c.sysSet()
+	// Save before applying mugen.cfg so its values stay out of save/config.ini.
 	c.Save(def)
+	mc := loadGameMugenCfg()
+	c.applyMugenCfg(mc)
+	c.sysSet()
+	applyMugenInputConfig(mc)
 	return &c, nil
 }
 
@@ -451,7 +455,6 @@ func (c *Config) sysSet() {
 			}
 		}
 	}
-	applyMugenInputConfig()
 }
 
 // GetValue retrieves the value based on the query string.

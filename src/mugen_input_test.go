@@ -36,10 +36,11 @@ Start = 21
 	if err := os.WriteFile(path, []byte(cfgText), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	cfg, err := loadMugenInputConfig(path)
+	mc, err := loadMugenCfg(path)
 	if err != nil {
 		t.Fatal(err)
 	}
+	cfg := mugenInput(mc)
 	p1, p2 := cfg.players[0], cfg.players[1]
 	if !p1.useKeyboard || !p1.useJoystick || p2.useKeyboard || p2.useJoystick {
 		t.Errorf("flags wrong: p1 kb=%v joy=%v, p2 kb=%v joy=%v", p1.useKeyboard, p1.useJoystick, p2.useKeyboard, p2.useJoystick)
@@ -93,10 +94,11 @@ func TestLoadRealJumpForceConfig(t *testing.T) {
 	if _, err := os.Stat(path); err != nil {
 		t.Skip("Jump Force MUGEN not present")
 	}
-	cfg, err := loadMugenInputConfig(path)
+	mc, err := loadMugenCfg(path)
 	if err != nil {
 		t.Fatal(err)
 	}
+	cfg := mugenInput(mc)
 	p1 := cfg.players[0]
 	wantJoy := [...]int{1, 2, 3, 4, 17, 20, 19, 18, 22, 24, 21}
 	if p1.joy != wantJoy {
@@ -108,5 +110,38 @@ func TestLoadRealJumpForceConfig(t *testing.T) {
 	}
 	if !cfg.players[1].useKeyboard || cfg.players[1].useJoystick {
 		t.Errorf("P2 should be keyboard only")
+	}
+
+	var c Config
+	c.applyMugenCfg(mc)
+	if c.Config.Motif != "data/mugen1/system.def" {
+		t.Errorf("motif = %q", c.Config.Motif)
+	}
+	if c.Video.GameWidth != 1920 || c.Video.GameHeight != 1030 || c.Video.WindowWidth != 1920 || c.Video.WindowHeight != 1030 {
+		t.Errorf("video = game %dx%d window %dx%d", c.Video.GameWidth, c.Video.GameHeight, c.Video.WindowWidth, c.Video.WindowHeight)
+	}
+	if c.Video.Fullscreen {
+		t.Errorf("fullscreen should be off")
+	}
+}
+
+func TestMugenCfgParsing(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "mugen.cfg")
+	text := "[Options]\n  motif = \"data/foo/system.def\" ; quoted\n[OPTIONS]\nmotif = ignored\n[Video]\nWidth=640\nHeight = abc\n"
+	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mc, err := loadMugenCfg(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := mc.str("options", "motif"); v != "data/foo/system.def" {
+		t.Errorf("motif = %q (quotes stripped, first occurrence wins)", v)
+	}
+	if v, ok := mc.int("video", "width"); !ok || v != 640 {
+		t.Errorf("width = %d, %v", v, ok)
+	}
+	if _, ok := mc.int("video", "height"); ok {
+		t.Errorf("non-numeric height must not parse")
 	}
 }

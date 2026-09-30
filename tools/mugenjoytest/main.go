@@ -21,8 +21,13 @@ import (
 var actions = []string{"Jump", "Crouch", "Left", "Right", "A", "B", "C", "X", "Y", "Z", "Start"}
 
 func main() {
-	cfgPath := flag.String("cfg", "", "optional mugen.cfg to show what each pressed code is bound to")
+	cfgPath := flag.String("cfg", "", "mugen.cfg to show what each pressed code is bound to (default: data/mugen.cfg if present)")
 	flag.Parse()
+	if *cfgPath == "" {
+		if _, err := os.Stat("data/mugen.cfg"); err == nil {
+			*cfgPath = "data/mugen.cfg"
+		}
+	}
 
 	bindings := map[int][]string{}
 	if *cfgPath != "" {

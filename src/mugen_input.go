@@ -10,16 +10,11 @@ package main
 //     through the same WinMM API MUGEN's SDL 1.2 uses.
 
 import (
-	"bufio"
-	"os"
 	"strconv"
-	"strings"
 
 	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
 	"github.com/veandco/go-sdl2/sdl"
 )
-
-const mugenCfgPath = "data/mugen.cfg"
 
 // mugenActions is MUGEN's key order; it lines up with the first 11 slots of
 // Ikemen's [14]bool input (U, D, L, R, a, b, c, x, y, z, s).
@@ -39,15 +34,9 @@ type mugenInputConfig struct {
 // mugenJoy is created only when a mugen.cfg joystick binding is in use.
 var mugenJoy *mugenjoy.Manager
 
-// loadMugenInputConfig parses the input sections of a MUGEN mugen.cfg.
+// mugenInput reads the input sections of a MUGEN mugen.cfg.
 // Missing entries keep MUGEN 1.1's shipped defaults.
-func loadMugenInputConfig(path string) (*mugenInputConfig, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
+func mugenInput(mc mugenCfg) *mugenInputConfig {
 	cfg := &mugenInputConfig{players: [2]mugenPlayerInput{
 		{useKeyboard: true, useJoystick: true,
 			keys: [...]int{119, 115, 97, 100, 106, 107, 108, 117, 105, 111, 110},
@@ -56,72 +45,33 @@ func loadMugenInputConfig(path string) (*mugenInputConfig, error) {
 			keys: [...]int{273, 274, 276, 275, 260, 261, 262, 263, 264, 265, 266},
 			joy:  [...]int{41, 42, 43, 44, 46, 47, 52, 45, 48, 50, 54}},
 	}}
-
-	section := ""
-	sc := bufio.NewScanner(f)
-	for sc.Scan() {
-		line := sc.Text()
-		if i := strings.IndexByte(line, ';'); i >= 0 {
-			line = line[:i]
+	for p := range cfg.players {
+		pn := "p" + strconv.Itoa(p+1)
+		if v, ok := mc.int("input", pn+".usekeyboard"); ok {
+			cfg.players[p].useKeyboard = v != 0
 		}
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
+		if v, ok := mc.int("input", pn+".joystick.type"); ok {
+			cfg.players[p].useJoystick = v != 0
 		}
-		if line[0] == '[' {
-			if end := strings.IndexByte(line, ']'); end > 0 {
-				section = strings.ToLower(strings.TrimSpace(line[1:end]))
+		for i, a := range mugenActions {
+			if v, ok := mc.int(pn+" keys", a); ok {
+				cfg.players[p].keys[i] = v
 			}
-			continue
-		}
-		key, val, ok := strings.Cut(line, "=")
-		if !ok {
-			continue
-		}
-		key = strings.ToLower(strings.TrimSpace(key))
-		n, err := strconv.Atoi(strings.TrimSpace(val))
-		if err != nil {
-			continue
-		}
-		switch section {
-		case "input":
-			for p := range cfg.players {
-				prefix := "p" + strconv.Itoa(p+1) + "."
-				switch key {
-				case prefix + "usekeyboard":
-					cfg.players[p].useKeyboard = n != 0
-				case prefix + "joystick.type":
-					cfg.players[p].useJoystick = n != 0
-				}
-			}
-		case "p1 keys", "p2 keys", "p1 joystick", "p2 joystick":
-			p := int(section[1] - '1')
-			for i, a := range mugenActions {
-				if key != a {
-					continue
-				}
-				if strings.HasSuffix(section, "keys") {
-					cfg.players[p].keys[i] = n
-				} else {
-					cfg.players[p].joy[i] = n
-				}
+			if v, ok := mc.int(pn+" joystick", a); ok {
+				cfg.players[p].joy[i] = v
 			}
 		}
 	}
-	return cfg, sc.Err()
+	return cfg
 }
 
 // applyMugenInputConfig overrides players 1 and 2 with mugen.cfg bindings.
 // It does nothing when the game folder has no mugen.cfg.
-func applyMugenInputConfig() {
-	if FileExist(mugenCfgPath) == "" {
+func applyMugenInputConfig(mc mugenCfg) {
+	if mc == nil {
 		return
 	}
-	cfg, err := loadMugenInputConfig(mugenCfgPath)
-	if err != nil {
-		LogMessage("OMugen: could not read %s: %v", mugenCfgPath, err)
-		return
-	}
+	cfg := mugenInput(mc)
 	_, noJoy := sys.cmdFlags["-nojoy"]
 	for p, pc := range cfg.players {
 		if p >= len(sys.keyConfig) {

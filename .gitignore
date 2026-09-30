@@ -89,3 +89,6 @@ external/script/version
 
 # Claude Code local session settings
 .claude/
+
+# OMugen local test game folders (junctions/hard links to real games)
+/test/
