@@ -4345,12 +4345,18 @@ func (c *Char) load(def string) error {
 
 	// Load sounds
 	if len(sound) > 0 {
-		if LoadFile(&sound, []string{def, "", "data/"}, "", func(filename string) error {
+		// OMugen: the result was checked against the outer err, so a missing or
+		// broken .snd was silently ignored and left gi.snd nil. Warn and use an
+		// empty sound set so the character still loads safely.
+		if sndErr := LoadFile(&sound, []string{def, "", "data/"}, "", func(filename string) error {
 			var err error
 			gi.snd, err = LoadSnd(filename)
 			return err
-		}); err != nil {
-			return err
+		}); sndErr != nil {
+			LogMessage("WARNING: %v: could not load sound file %v: %v", def, sound, sndErr)
+		}
+		if gi.snd == nil {
+			gi.snd = newSnd()
 		}
 	} else {
 		gi.snd = newSnd()

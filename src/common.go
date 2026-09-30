@@ -870,6 +870,9 @@ func LogMessage(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	//fmt.Fprintf(os.Stderr, "[%s] %s\n", now, msg)
 	fmt.Fprintf(os.Stderr, "%s\n", msg)
+	if doctorActive() {
+		doctorNote(msg)
+	}
 }
 
 type IniSection map[string]string

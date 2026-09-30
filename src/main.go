@@ -201,6 +201,13 @@ func realMain() {
 	sys.luaLState = sys.init(int32(sys.gameWidth), int32(sys.gameHeight))
 	//defer sys.shutdown()
 
+	// OMugen Doctor: check every character and stage instead of starting the game.
+	if _, ok := sys.cmdFlags["-doctor"]; ok {
+		runDoctor()
+		handleExit()
+		return
+	}
+
 	// Begin processing game using its lua scripts
 	if err := sys.luaLState.DoFile(sys.cfg.Config.System); err != nil {
 		if strings.Contains(err.Error(), "<game end>") {

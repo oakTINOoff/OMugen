@@ -1961,6 +1961,9 @@ func (s *System) unsetGSF(gsf GlobalSpecialFlag) {
 }
 
 func (s *System) appendToConsole(str string) {
+	if doctorActive() {
+		doctorNote(str)
+	}
 	s.consoleText = append(s.consoleText, str)
 	if len(s.consoleText) > s.cfg.Debug.ConsoleRows {
 		s.consoleText = s.consoleText[len(s.consoleText)-s.cfg.Debug.ConsoleRows:]

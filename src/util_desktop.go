@@ -22,6 +22,11 @@ func ShowInfoDialog(message, title string) {
 }
 
 func ShowErrorDialog(message string) {
+	// The doctor runs unattended: record errors instead of blocking on a dialog.
+	if doctorActive() {
+		LogMessage("ERROR: %s", message)
+		return
+	}
 	dialog.Message(message).Title("OMugen Error").Error()
 }
 
