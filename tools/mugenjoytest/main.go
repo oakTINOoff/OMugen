@@ -111,8 +111,8 @@ func printDevices(devs []mugenjoy.DeviceInfo) {
 	fmt.Printf("\n%d joystick(s) visible to MUGEN-style input:\n", len(devs))
 	for _, d := range devs {
 		l := d.Layout
-		fmt.Printf("  [%c] %-32q WinMM id %d: %d axes, %d hat, %d buttons -> hat codes %d-%d, buttons from %d\n",
-			'A'+d.Index, d.Name, d.ID, l.NumAxes, l.NumHats, l.NumButtons,
+		fmt.Printf("  [%c] %-32q WinMM id %d (VID %04X PID %04X): %d axes, %d hat, %d buttons -> hat codes %d-%d, buttons from %d\n",
+			'A'+d.Index, d.Name, d.ID, d.VendorID, d.ProductID, l.NumAxes, l.NumHats, l.NumButtons,
 			d.Index*32+l.HatBase()+1, d.Index*32+l.HatBase()+4*l.NumHats, d.Index*32+l.ButtonBase()+1)
 	}
 	fmt.Println()

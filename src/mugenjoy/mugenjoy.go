@@ -137,6 +137,29 @@ func axisCodes(a int) (neg, pos int) {
 	return 2*a + 1, 2*a + 2
 }
 
+// ButtonCode returns the MUGEN code for button b (0-based) of a device,
+// or 0 when MUGEN cannot address that button (offset 32 or more).
+func ButtonCode(d DeviceInfo, b int) int {
+	off := d.Layout.ButtonBase() + b + 1
+	if b < 0 || b >= d.Layout.NumButtons || off >= CodesPerJoystick {
+		return 0
+	}
+	return d.Index*CodesPerJoystick + off
+}
+
+// MenuButton returns the 0-based button index of a controller's own
+// Start/Options-style button for known controller families, as numbered
+// by the WinMM joystick API.
+func MenuButton(d DeviceInfo) (int, bool) {
+	switch d.VendorID {
+	case 0x054C: // Sony DualShock 4 / DualSense: Square Cross Circle Triangle L1 R1 L2 R2 Share Options...
+		return 9, d.Layout.NumButtons > 9
+	case 0x045E: // Microsoft Xbox pads: A B X Y LB RB Back Start...
+		return 7, d.Layout.NumButtons > 7
+	}
+	return 0, false
+}
+
 // Label formats a code the way MUGEN's joystick config screen does ("A-17").
 func Label(code int) string {
 	if code <= 0 {

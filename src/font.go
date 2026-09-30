@@ -89,6 +89,9 @@ type Fnt struct {
 	lastPalBank int32
 	lastPalBase *uint32
 	paltexCache map[*uint32]Texture
+	// OMugen: SFF fonts whose glyphs are drawn with their own palette
+	// (BankType=sprite, or SFF v1 without a palette table), as in MUGEN 1.1.
+	glyphPals bool
 }
 
 func newFnt() *Fnt {
@@ -322,7 +325,7 @@ func loadFntV1(filename string) (*Fnt, error) {
 	}
 	for _, fci := range f.images[0] {
 		fci.img = make([]Sprite, len(f.palettes))
-		for i, p := range f.palettes {
+		for i := range f.palettes {
 			if i == 0 {
 				fci.img[0].shareCopy(spr)
 				fci.img[0].Size[0] = fci.w
@@ -335,9 +338,12 @@ func loadFntV1(filename string) (*Fnt, error) {
 				sys.mainThreadTask <- func() {
 					fci.img[i].shareCopy(&fci.img[0])
 					fci.img[i].Size[0] = fci.w
+					fci.img[i].Pal = f.palettes[i][:] // shareCopy overwrote it with bank 0's
 				}
 			}
-			fci.img[i].Offset[0], fci.img[i].Offset[1], fci.img[i].Pal = 0, 0, p[:]
+			// Point into f.palettes itself: slicing a range value variable would, under
+			// go.mod's go1.20 loop semantics, give every bank the last bank's palette.
+			fci.img[i].Offset[0], fci.img[i].Offset[1], fci.img[i].Pal = 0, 0, f.palettes[i][:]
 		}
 	}
 	return f, nil
@@ -473,6 +479,7 @@ func LoadFntSff(f *Fnt, fontfile string, filename string) {
 		f.palettes = make([][256]uint32, 1)
 		copy(f.palettes[0][:], pal_default)
 	}
+	f.glyphPals = f.BankType == "sprite" || sff.header.NumberOfPalettes == 0
 }
 
 // CharWidth returns the width that has a specified character
@@ -558,8 +565,8 @@ func (f *Fnt) drawChar(
 		// and SFF v1 fonts have no palette table (each PCX glyph carries its own).
 		// MUGEN 1.1 draws those glyphs with their own palette; using one shared
 		// palette garbles glyphs that have different palettes (e.g. full-screen
-		// menu art stored as font glyphs).
-		case len(own) > 0 && (f.BankType == "sprite" || len(f.coldepth) == 0):
+		// menu art stored as font glyphs). FNT v1 fonts keep their bank palettes.
+		case len(own) > 0 && f.glyphPals:
 			pal = own
 		// In case of mismatched color depth between bank palette and the sprite's own palette,
 		// Mugen 1.1 uses the latter, ignoring the bank

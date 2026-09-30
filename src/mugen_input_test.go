@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
+
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -154,6 +156,28 @@ func TestApplyMugenInputKeepsPerPlayerCodes(t *testing.T) {
 	}
 	if sys.keyConfig[0].dU != int(sdl.K_w) || sys.keyConfig[1].dU != int(sdl.K_UP) {
 		t.Errorf("keyboard jump: p1=%#x p2=%#x", sys.keyConfig[0].dU, sys.keyConfig[1].dU)
+	}
+}
+
+func TestMugenMenuCode(t *testing.T) {
+	ds4 := []mugenjoy.DeviceInfo{{Index: 0, VendorID: 0x054C,
+		Layout: mugenjoy.Layout{NumAxes: 6, NumHats: 1, NumButtons: 14}}}
+	// The user's Jump Force P1 bindings: stick 1-4, buttons 17-24. Options (code 26) is free.
+	p := mugenPlayerInput{menu: -1, joy: [...]int{1, 2, 3, 4, 17, 20, 19, 18, 22, 24, 21}}
+	if got := mugenMenuCode(p, ds4); got != 26 {
+		t.Errorf("DS4 default menu code = %d, want 26 (Options)", got)
+	}
+	p.menu = 27
+	if got := mugenMenuCode(p, ds4); got != 27 {
+		t.Errorf("explicit Menu = %d, want 27", got)
+	}
+	p.menu = -1
+	p.joy[10] = 26 // Start already on Options: don't double-bind it
+	if got := mugenMenuCode(p, ds4); got != 0 {
+		t.Errorf("menu must stay unbound when Options is already used, got %d", got)
+	}
+	if got := mugenMenuCode(mugenPlayerInput{menu: -1}, ds4); got != 0 {
+		t.Errorf("player without joystick bindings got menu code %d", got)
 	}
 }
 

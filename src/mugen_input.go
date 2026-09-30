@@ -25,7 +25,14 @@ type mugenPlayerInput struct {
 	useJoystick bool
 	keys        [len(mugenActions)]int // SDL 1.2 keysyms
 	joy         [len(mugenActions)]int // MUGEN joystick codes
+	// menu is an OMugen extension: the joystick code that opens the pause menu
+	// (Ikemen's "m" button). -1 = not set in mugen.cfg, pick the pad's own
+	// Start/Options button. MUGEN itself ignores this key.
+	menu int
 }
+
+// ikemenMenuSlot is the index of the "m" (menu) button in Ikemen's [14]bool input.
+const ikemenMenuSlot = 13
 
 type mugenInputConfig struct {
 	players [2]mugenPlayerInput
@@ -38,15 +45,18 @@ var mugenJoy *mugenjoy.Manager
 // Missing entries keep MUGEN 1.1's shipped defaults.
 func mugenInput(mc mugenCfg) *mugenInputConfig {
 	cfg := &mugenInputConfig{players: [2]mugenPlayerInput{
-		{useKeyboard: true, useJoystick: true,
+		{useKeyboard: true, useJoystick: true, menu: -1,
 			keys: [...]int{119, 115, 97, 100, 106, 107, 108, 117, 105, 111, 110},
 			joy:  [...]int{9, 10, 11, 12, 13, 14, 20, 15, 16, 18, 24}},
-		{useKeyboard: true, useJoystick: true,
+		{useKeyboard: true, useJoystick: true, menu: -1,
 			keys: [...]int{273, 274, 276, 275, 260, 261, 262, 263, 264, 265, 266},
 			joy:  [...]int{41, 42, 43, 44, 46, 47, 52, 45, 48, 50, 54}},
 	}}
 	for p := range cfg.players {
 		pn := "p" + strconv.Itoa(p+1)
+		if v, ok := mc.int(pn+" joystick", "menu"); ok {
+			cfg.players[p].menu = v
+		}
 		if v, ok := mc.int("input", pn+".usekeyboard"); ok {
 			cfg.players[p].useKeyboard = v != 0
 		}
@@ -92,20 +102,69 @@ func applyMugenInputConfig(mc mugenCfg) {
 		}
 		jc := KeyConfig{Joy: -1}
 		if pc.useJoystick && !noJoy {
-			// Copy: go.mod targets go1.20, where pc is one variable reused by every
-			// iteration, so slicing pc.joy would make every player share P2's codes.
-			jc.mugenCodes = append([]int(nil), pc.joy[:]...)
 			if mugenJoy == nil {
 				mugenJoy = mugenjoy.NewManager()
 				for _, d := range mugenJoy.Devices() {
-					LogMessage("OMugen: joystick %c = %q (%d axes, %d hat, %d buttons)",
-						'A'+d.Index, d.Name, d.Layout.NumAxes, d.Layout.NumHats, d.Layout.NumButtons)
+					LogMessage("OMugen: joystick %c = %q VID %04X PID %04X (%d axes, %d hat, %d buttons)",
+						'A'+d.Index, d.Name, d.VendorID, d.ProductID, d.Layout.NumAxes, d.Layout.NumHats, d.Layout.NumButtons)
 				}
 			}
+			// Build a fresh slice: go.mod targets go1.20, where pc is one variable
+			// reused by every iteration, so slicing pc.joy would alias players.
+			codes := make([]int, ikemenMenuSlot+1)
+			copy(codes, pc.joy[:])
+			codes[ikemenMenuSlot] = mugenMenuCode(pc, mugenJoy.Devices())
+			if codes[ikemenMenuSlot] > 0 {
+				LogMessage("OMugen: P%d pause menu button = joystick code %d [%s]",
+					p+1, codes[ikemenMenuSlot], mugenjoy.Label(codes[ikemenMenuSlot]))
+			}
+			jc.mugenCodes = codes
 		}
 		sys.joystickConfig[p] = jc
 	}
 	LogMessage("OMugen: players 1-2 use controls from %s", mugenCfgPath)
+}
+
+// mugenMenuCode picks the joystick code that opens the pause menu: an explicit
+// "Menu = code" in [Pn Joystick], else the Start/Options button of the pad the
+// player's bindings point at, unless that button is already bound to an action.
+func mugenMenuCode(pc mugenPlayerInput, devs []mugenjoy.DeviceInfo) int {
+	if pc.menu >= 0 {
+		return pc.menu
+	}
+	// The pad this player uses: the code block most of their bindings fall in.
+	var votes [mugenjoy.MaxJoysticks]int
+	for _, c := range pc.joy {
+		if c > 0 && c < mugenjoy.NumCodes {
+			votes[c/mugenjoy.CodesPerJoystick]++
+		}
+	}
+	joy := 0
+	for j := range votes {
+		if votes[j] > votes[joy] {
+			joy = j
+		}
+	}
+	if votes[joy] == 0 {
+		return 0
+	}
+	for _, d := range devs {
+		if d.Index != joy {
+			continue
+		}
+		b, ok := mugenjoy.MenuButton(d)
+		if !ok {
+			return 0
+		}
+		code := mugenjoy.ButtonCode(d, b)
+		for _, c := range pc.joy {
+			if c == code {
+				return 0 // already used by a MUGEN action
+			}
+		}
+		return code
+	}
+	return 0
 }
 
 // mugenJoystickState evaluates MUGEN joystick codes for one player.

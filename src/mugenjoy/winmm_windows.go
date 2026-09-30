@@ -144,10 +144,12 @@ func (b *winmmBackend) enumerate() []DeviceInfo {
 		}
 		b.trans[id] = axisTransforms(&caps)
 		out = append(out, DeviceInfo{
-			Index:  len(out),
-			ID:     id,
-			Name:   windows.UTF16ToString(caps.Pname[:]),
-			Layout: layout,
+			Index:     len(out),
+			ID:        id,
+			Name:      windows.UTF16ToString(caps.Pname[:]),
+			VendorID:  caps.Mid,
+			ProductID: caps.Pid,
+			Layout:    layout,
 		})
 	}
 	return out

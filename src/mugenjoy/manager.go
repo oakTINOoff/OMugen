@@ -7,10 +7,12 @@ import (
 
 // DeviceInfo describes an enumerated joystick.
 type DeviceInfo struct {
-	Index  int    // MUGEN joystick index (0-3), i.e. the code block
-	ID     int    // backend device ID (WinMM joystick ID on Windows)
-	Name   string // device name reported by the backend
-	Layout Layout
+	Index     int    // MUGEN joystick index (0-3), i.e. the code block
+	ID        int    // backend device ID (WinMM joystick ID on Windows)
+	Name      string // device name reported by the backend
+	VendorID  uint16 // USB vendor ID when known (WinMM wMid), else 0
+	ProductID uint16 // USB product ID when known (WinMM wPid), else 0
+	Layout    Layout
 }
 
 // backend is the platform source of raw joystick data.

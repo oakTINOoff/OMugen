@@ -106,6 +106,26 @@ func TestButtonsPastSlot31AreIgnored(t *testing.T) {
 	}
 }
 
+func TestMenuButtonCodes(t *testing.T) {
+	ds4 := DeviceInfo{Index: 0, VendorID: 0x054C, Layout: Layout{NumAxes: 6, NumHats: 1, NumButtons: 14}}
+	b, ok := MenuButton(ds4)
+	if !ok || ButtonCode(ds4, b) != 26 {
+		t.Errorf("DS4 Options: button %d ok=%v code %d, want code 26", b, ok, ButtonCode(ds4, b))
+	}
+	xbox := DeviceInfo{Index: 1, VendorID: 0x045E, Layout: Layout{NumAxes: 5, NumHats: 1, NumButtons: 10}}
+	b, ok = MenuButton(xbox)
+	if !ok || ButtonCode(xbox, b) != 32+14+7+1 {
+		t.Errorf("Xbox Start: button %d ok=%v code %d", b, ok, ButtonCode(xbox, b))
+	}
+	if _, ok := MenuButton(DeviceInfo{VendorID: 0x1234}); ok {
+		t.Error("unknown vendor should have no menu button")
+	}
+	big := DeviceInfo{Layout: Layout{NumAxes: 6, NumHats: 1, NumButtons: 20}}
+	if ButtonCode(big, 15) != 0 || ButtonCode(big, 14) != 31 {
+		t.Error("buttons past offset 31 must have no code")
+	}
+}
+
 func TestDescribe(t *testing.T) {
 	l := Layout{NumAxes: 6, NumHats: 1, NumButtons: 14}
 	cases := map[int]string{
