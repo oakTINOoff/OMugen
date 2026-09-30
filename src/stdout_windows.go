@@ -27,7 +27,7 @@ func init() {
 	//}
 	os.Stdout = os.NewFile(uintptr(hout), "/dev/stdout")
 	os.Stderr = os.NewFile(uintptr(herr), "/dev/stderr")
-	LogMessage("Ikemen, GO!")
+	LogMessage("OMugen")
 	LogMessage("Version: %v Build Time: %v", Version, BuildTime)
 	runtime.LockOSThread()
 }

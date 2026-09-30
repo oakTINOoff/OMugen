@@ -2284,7 +2284,7 @@ func captureScreen() {
 	safeTitle = strings.TrimSpace(safeTitle)
 	safeTitle = strings.ReplaceAll(safeTitle, " ", "_")
 	if safeTitle == "" {
-		safeTitle = "ikemen"
+		safeTitle = "omugen"
 	}
 
 	for i := sys.captureNum; i < 999; i++ {

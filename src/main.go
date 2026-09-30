@@ -99,7 +99,7 @@ func realMain() {
 
 		// FIX 1: Explicitly initialize os.Args before processCommandLine
 		if os.Args == nil || len(os.Args) == 0 {
-			os.Args = []string{"ikemen-go"}
+			os.Args = []string{"omugen"}
 		}
 
 		if err := os.Chdir(sys.baseDir); err != nil {
@@ -301,8 +301,8 @@ Debug Options:
 -speed <speed>          Changes game speed setting to <speed> (-9 to 9)
 -stresstest <frameskip> Stability test (AI matches at speed increased by <frameskip>)
 -speedtest              Speed test (match speed x100)`
-					//ShowInfoDialog(text, "I.K.E.M.E.N Command line options")
-					fmt.Printf("I.K.E.M.E.N Command line options\n\n" + text + "\nPress ENTER to exit")
+					//ShowInfoDialog(text, "OMugen command line options")
+					fmt.Printf("OMugen command line options\n\n" + text + "\nPress ENTER to exit")
 					var s string
 					fmt.Scanln(&s)
 					os.Exit(0)
@@ -381,7 +381,7 @@ func handlePanic(r interface{}) {
 	// Write to log file
 	logDir := filepath.Join(sys.baseDir, "save", "logs")
 	timestamp := now.Format("2006-01-02_15-04-05")
-	logPath := filepath.Join(logDir, fmt.Sprintf("Ikemen_%s.log", timestamp))
+	logPath := filepath.Join(logDir, fmt.Sprintf("OMugen_%s.log", timestamp))
 
 	os.MkdirAll(logDir, 0755)
 	if f, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644); err == nil {

@@ -1,5 +1,6 @@
 MIT License
 
+Copyright (c) 2026 OMugen contributors
 Copyright (c) 2016 Suehiro
 Copyright (c) 2018 K4thos, NeatUnsou, ShinLucho
 Copyright (c) 2019 Daniel Porto, Gacel, Nikolay Griva
@@ -30,7 +31,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-The MIT License applies to the Ikemen GO engine and the scripts in this repo.
+The MIT License applies to the OMugen engine (a fork of the Ikemen GO engine) and the scripts in this repo.
 
 ----------------------------------------------------------------------------
 

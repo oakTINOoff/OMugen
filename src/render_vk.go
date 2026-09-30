@@ -1390,8 +1390,8 @@ var appInfo = &vk.ApplicationInfo{
 	SType:              vk.StructureTypeApplicationInfo,
 	ApiVersion:         vk.MakeVersion(1, 3, 0),
 	ApplicationVersion: vk.MakeVersion(1, 0, 0),
-	PApplicationName:   "Ikemen GO\x00",
-	PEngineName:        "Ikemen GO\x00",
+	PApplicationName:   "OMugen\x00",
+	PEngineName:        "OMugen\x00",
 	EngineVersion:      vk.MakeVersion(0, 99, 0),
 }
 

@@ -17,6 +17,11 @@ import (
 	"time"
 )
 
+// netHandshake identifies OMugen peers (8 bytes). OMugen deliberately does not
+// match Ikemen GO's "IKEMENGO": its game logic differs, so mixed matches would desync.
+// Bump the version digits whenever netplay-relevant behavior changes.
+const netHandshake = "OMUGEN01"
+
 const (
 	// This defines the number of frames to store for the net buffer inputs (digital and analog)
 	NETBUF_NUM_FRAMES int32 = 32
@@ -344,7 +349,7 @@ func (nc *NetConnection) Accept(port int) error {
 		}
 
 		//Send handshake
-		if _, err := tempConn.Write([]byte("IKEMENGO")); err != nil {
+		if _, err := tempConn.Write([]byte(netHandshake)); err != nil {
 			tempConn.Close()
 			return
 		}
@@ -352,7 +357,7 @@ func (nc *NetConnection) Accept(port int) error {
 		// Wait for client acknowledgment
 		ack := make([]byte, 8) // Length of our "password"
 		_, err = io.ReadFull(tempConn, ack)
-		if err != nil || string(ack) != "IKEMENGO" {
+		if err != nil || string(ack) != netHandshake {
 			tempConn.Close()
 			return
 		}
@@ -400,14 +405,14 @@ func (nc *NetConnection) Connect(server string, port int) {
 			// Wait for host handshake
 			buf := make([]byte, 8)
 			_, err = io.ReadFull(tcpConn, buf)
-			if err != nil || string(buf) != "IKEMENGO" {
+			if err != nil || string(buf) != netHandshake {
 				tcpConn.Close()
 				time.Sleep(100 * time.Millisecond)
 				continue
 			}
 
 			// Send acknowledgment
-			if _, err := tcpConn.Write([]byte("IKEMENGO")); err != nil {
+			if _, err := tcpConn.Write([]byte(netHandshake)); err != nil {
 				tcpConn.Close()
 				time.Sleep(100 * time.Millisecond)
 				continue

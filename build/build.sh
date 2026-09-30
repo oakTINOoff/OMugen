@@ -392,7 +392,7 @@ function varWin32() {
 		export CC=i686-w64-mingw32-gcc
 		export CXX=i686-w64-mingw32-g++
 	fi
-	binName="Ikemen_GO_x86.exe"
+	binName="OMugen_x86.exe"
 }
  
 function varWin64() {
@@ -402,7 +402,7 @@ function varWin64() {
 		export CC=x86_64-w64-mingw32-gcc
 		export CXX=x86_64-w64-mingw32-g++
 	fi
-	binName="Ikemen_GO.exe"
+	binName="OMugen.exe"
 }
 
 function varMacOSARM() {
@@ -418,7 +418,7 @@ function varMacOSARM() {
 			export CXX=o64-clang++
 		;;
 	esac
-	binName="Ikemen_GO_MacOSARM"
+	binName="OMugen_MacOSARM"
 }
 function varMacOS() {
 	export GOOS=darwin
@@ -433,18 +433,18 @@ function varMacOS() {
 			export CXX=o64-clang++
 		;;
 	esac
-	binName="Ikemen_GO_MacOS"
+	binName="OMugen_MacOS"
 }
 function varLinux() {
 	export GOOS=linux
 	#export CC=gcc
 	#export CXX=g++
-	binName="Ikemen_GO_Linux"
+	binName="OMugen_Linux"
 }
 function varLinuxARM() {
 	export GOOS=linux
 	export GOARCH=arm64
-	binName="Ikemen_GO_LinuxARM"
+	binName="OMugen_LinuxARM"
 }
 function varAndroid() {
 	local host_os="linux" # default to Linux as that's what the runner will be using
@@ -1221,12 +1221,12 @@ function stage_windows_resources() {
 	SXS_VERSION="$(sanitize_sxs_version "$APP_VERSION")"
 	IFS='.' read -r VMAJ VMIN VPAT VREV <<<"$SXS_VERSION"
 	# assembly name and arch
-	local ASM_NAME="Ikemen_GO"
+	local ASM_NAME="OMugen"
 	local ASM_ARCH
 	if [[ "$GOARCH" == "amd64" ]]; then ASM_ARCH="amd64"; else ASM_ARCH="x86"; fi
 
 	# Optionally generate a minimal application manifest (or none)
-	cat > build/winres/Ikemen_GO.exe.manifest <<EOF
+	cat > build/winres/OMugen.exe.manifest <<EOF
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
   <assemblyIdentity type="win32" name="${ASM_NAME}" version="${SXS_VERSION}" processorArchitecture="${ASM_ARCH}"/>
@@ -1240,15 +1240,15 @@ function stage_windows_resources() {
 EOF
 
 COPY_START_YEAR="${COPY_START_YEAR:-2016}"
-BUILD_YEAR="${APP_BUILDTIME%%-*}"
-APP_COPYRIGHT="${APP_COPYRIGHT:-(c) ${COPY_START_YEAR}-${BUILD_YEAR} Ikemen GO team (MIT)}"
+BUILD_YEAR="${APP_BUILDTIME%%[.-]*}"  # APP_BUILDTIME is YYYY.MM.DD (or YYYY-MM-DD)
+APP_COPYRIGHT="${APP_COPYRIGHT:-(c) ${BUILD_YEAR} OMugen. Based on Ikemen GO (c) ${COPY_START_YEAR}-${BUILD_YEAR} Ikemen GO team (MIT)}"
 
 	# Generate a RC
-	cat > build/winres/Ikemen_GO.rc <<EOF
+	cat > build/winres/OMugen.rc <<EOF
 #include <windows.h>
 #include <winver.h>
-1 ICON "Ikemen_Cylia_V2.ico"
-1 RT_MANIFEST "Ikemen_GO.exe.manifest"
+1 ICON "omugen.ico"
+1 RT_MANIFEST "OMugen.exe.manifest"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION ${VMAJ},${VMIN},${VPAT},${VREV}
@@ -1263,13 +1263,13 @@ BEGIN
 	BEGIN
 		BLOCK "040904B0"
 		BEGIN
-			VALUE "CompanyName", "Ikemen GO\\0"
-			VALUE "FileDescription", "Ikemen GO\\0"
+			VALUE "CompanyName", "OMugen\\0"
+			VALUE "FileDescription", "OMugen 2D fighting game engine\\0"
 			VALUE "FileVersion", "${SXS_VERSION}\\0"
-			VALUE "ProductName", "Ikemen GO\\0"
+			VALUE "ProductName", "OMugen\\0"
 			VALUE "ProductVersion", "${SXS_VERSION}\\0"
-			VALUE "OriginalFilename", "Ikemen_GO.exe\\0"
-			VALUE "InternalName", "Ikemen_GO\\0"
+			VALUE "OriginalFilename", "OMugen.exe\\0"
+			VALUE "InternalName", "OMugen\\0"
 			VALUE "BuildDate", "${APP_BUILDTIME}\\0"
 			VALUE "LegalCopyright", "${APP_COPYRIGHT}\\0"
 		END
@@ -1295,7 +1295,7 @@ EOF
 	echo "==> Embedding Windows resources (icon + manifest) with $wr..."
 	"$wr" $targetflag \
 	  -I build/winres -I external/icons \
-	  -i build/winres/Ikemen_GO.rc \
+	  -i build/winres/OMugen.rc \
 	  -O coff -o src/rsrc_windows.syso
 }
 

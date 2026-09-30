@@ -57,32 +57,32 @@ srcFiles=src/resources/defaultConfig.ini \
 	
 
 # Windows 64-bit target
-Ikemen_GO.exe: ${srcFiles}
+OMugen.exe: ${srcFiles}
 	bash ./build/build.sh Win64
 
 # Windows 32-bit target
-Ikemen_GO_x86.exe: ${srcFiles}
+OMugen_x86.exe: ${srcFiles}
 	bash ./build/build.sh Win32
 
 # Linux target
-Ikemen_GO_Linux: ${srcFiles}
+OMugen_Linux: ${srcFiles}
 	./build/build.sh Linux
 
 # Linux ARM target
-Ikemen_GO_LinuxARM: ${srcFiles}
+OMugen_LinuxARM: ${srcFiles}
 	./build/build.sh LinuxARM
 
 # MacOS x64 target
-Ikemen_GO_MacOS: ${srcFiles}
+OMugen_MacOS: ${srcFiles}
 	bash ./build/build.sh MacOS
 	$(MAKE) clean_appbundle
-	$(MAKE) appbundle BINNAME=bin/Ikemen_GO_MacOS
+	$(MAKE) appbundle BINNAME=bin/OMugen_MacOS
 
 # MacOS Apple Silicon target
-Ikemen_GO_MacOSARM: ${srcFiles}
+OMugen_MacOSARM: ${srcFiles}
 	bash ./build/build.sh MacOSARM
 	$(MAKE) clean_appbundle
-	$(MAKE) appbundle BINNAME=bin/Ikemen_GO_MacOSARM
+	$(MAKE) appbundle BINNAME=bin/OMugen_MacOSARM
 
 # MacOS app bundle
 appbundle:
@@ -91,7 +91,7 @@ appbundle:
 	mkdir -p I.K.E.M.E.N-Go.app/Contents/MacOS
 	mkdir -p I.K.E.M.E.N-Go.app/Contents/Frameworks
 	mkdir -p I.K.E.M.E.N-Go.app/Contents/Resources
-	# BINNAME can be a full path (e.g. bin/Ikemen_GO_MacOS) or just the filename.
+	# BINNAME can be a full path (e.g. bin/OMugen_MacOS) or just the filename.
 	cp $(BINNAME) I.K.E.M.E.N-Go.app/Contents/MacOS/$(notdir $(BINNAME))
 	cp ./build/Info.plist I.K.E.M.E.N-Go.app/Contents/Info.plist
 	cp ./build/bundle_run.sh I.K.E.M.E.N-Go.app/Contents/MacOS/bundle_run.sh
@@ -99,7 +99,7 @@ appbundle:
 	chmod +x I.K.E.M.E.N-Go.app/Contents/MacOS/$(notdir $(BINNAME))
 	cp lib/*.dylib I.K.E.M.E.N-Go.app/Contents/Frameworks/ 2>/dev/null || true
 	mkdir -p build/icontmp/icon.iconset
-	cp external/icons/IkemenCylia_256.png build/icontmp/icon.iconset/icon_256x256.png
+	cp external/icons/omugen_256.png build/icontmp/icon.iconset/icon_256x256.png
 	iconutil -c icns build/icontmp/icon.iconset -o build/icontmp/icon.icns
 	cp build/icontmp/icon.icns I.K.E.M.E.N-Go.app/Contents/Resources/icon.icns
 	rm -rf build/icontmp

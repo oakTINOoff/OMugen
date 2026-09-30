@@ -22,7 +22,7 @@ func ShowInfoDialog(message, title string) {
 }
 
 func ShowErrorDialog(message string) {
-	dialog.Message(message).Title("I.K.E.M.E.N Error").Error()
+	dialog.Message(message).Title("OMugen Error").Error()
 }
 
 // TTF font loading

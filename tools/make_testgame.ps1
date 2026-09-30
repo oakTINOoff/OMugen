@@ -108,7 +108,7 @@ if (Test-Path $enginePack) {
 Link-Dir (Join-Path $Out 'external') (Join-Path $Repo 'external')
 Link-Dir (Join-Path $Out 'lib') (Join-Path $Repo 'lib')
 
-Copy-Item (Join-Path $Repo 'Ikemen_GO.exe') (Join-Path $Out 'OMugen.exe') -Force
+Copy-Item (Join-Path $Repo 'OMugen.exe') (Join-Path $Out 'OMugen.exe') -Force
 $joyTest = Join-Path $Repo 'build\mugenjoytest.exe'
 if (Test-Path $joyTest) { Copy-Item $joyTest (Join-Path $Out 'mugenjoytest.exe') -Force }
 Write-Host "Test game ready: $Out\OMugen.exe"
