@@ -104,3 +104,6 @@ external/script/version
 
 # Generated engine pack embedded by OMugen.exe (tools/packengine)
 /src/omugen_engine.zip
+
+# Backups of game files edited during content fixes
+/backups/
