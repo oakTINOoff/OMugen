@@ -197,6 +197,9 @@ options.t_itemname = {
 			modifyGameOption('Video.KeepAspect', true)
 			modifyGameOption('Video.EnableModel', true)
 			modifyGameOption('Video.EnableModelShadow', true)
+			modifyGameOption('Video.Glow', false)
+			modifyGameOption('Video.GlowIntensity', 0.8)
+			modifyGameOption('Video.GlowRadius', 2.5)
 			--modifyGameOption('Sound.SampleRate', 44100)
 			--modifyGameOption('Sound.SoundFont', "sound/soundfont.sf2")
 			modifyGameOption('Sound.StereoEffects', true)
@@ -872,6 +875,33 @@ options.t_itemname = {
 			t.items[item].vardisplay = options.t_vardisplay['msaa']()
 			options.modified = true
 			options.needReload = true
+		end
+		return true
+	end,
+	--OMugen: glow (bloom) around additive effects
+	['glow'] = function(t, item, cursorPosY, moveTxt)
+		if getInput(-1, motif.option_info.menu.add.key, motif.option_info.menu.subtract.key, motif.option_info.menu.done.key) then
+			sndPlay(motif.Snd, motif.option_info.cursor.move.snd[1], motif.option_info.cursor.move.snd[2])
+			modifyGameOption('Video.Glow', not gameOption('Video.Glow'))
+			t.items[item].vardisplay = options.t_vardisplay['glow']()
+			options.modified = true
+		end
+		return true
+	end,
+	--OMugen: glow intensity (10% steps, 10% - 300%)
+	['glowintensity'] = function(t, item, cursorPosY, moveTxt)
+		local v = gameOption('Video.GlowIntensity')
+		local step = 0
+		if getInput(-1, motif.option_info.menu.add.key) and v < 3 then
+			step = 0.1
+		elseif getInput(-1, motif.option_info.menu.subtract.key) and v > 0.1 then
+			step = -0.1
+		end
+		if step ~= 0 then
+			sndPlay(motif.Snd, motif.option_info.cursor.move.snd[1], motif.option_info.cursor.move.snd[2])
+			modifyGameOption('Video.GlowIntensity', math.floor((v + step) * 10 + 0.5) / 10)
+			t.items[item].vardisplay = options.t_vardisplay['glowintensity']()
+			options.modified = true
 		end
 		return true
 	end,
@@ -1584,6 +1614,12 @@ options.t_vardisplay = {
 	end,
 	['vsync'] = function()
 		return options.f_definedDisplay(gameOption('Video.VSync'), {[1] = motif.option_info.menu.valuename.enabled}, motif.option_info.menu.valuename.disabled)
+	end,
+	['glow'] = function()
+		return options.f_boolDisplay(gameOption('Video.Glow'))
+	end,
+	['glowintensity'] = function()
+		return math.floor(gameOption('Video.GlowIntensity') * 100 + 0.5) .. '%'
 	end,
 	['windowscalemode'] = function()
 		return options.f_boolDisplay(gameOption('Video.WindowScaleMode'), motif.option_info.menu.valuename.bilinear, motif.option_info.menu.valuename.nearest)
