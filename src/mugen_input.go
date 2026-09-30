@@ -207,6 +207,21 @@ func sdl12KeyToKeycode(sym int) sdl.Keycode {
 	return sdl.K_UNKNOWN
 }
 
+// keycodeToSdl12 converts an SDL2 keycode back to the SDL 1.2 keysym MUGEN
+// stores in mugen.cfg (0 if MUGEN has no equivalent). It inverts
+// sdl12KeyToKeycode, preferring the lowest keysym when several map to one key.
+func keycodeToSdl12(k sdl.Keycode) int {
+	if k == sdl.K_UNKNOWN {
+		return 0
+	}
+	for sym := 1; sym <= 322; sym++ {
+		if sdl12KeyToKeycode(sym) == k {
+			return sym
+		}
+	}
+	return 0
+}
+
 // sdl12Special lists SDL 1.2 keysyms whose SDL2 keycode differs.
 var sdl12Special = map[int]sdl.Keycode{
 	12:  sdl.K_CLEAR,
