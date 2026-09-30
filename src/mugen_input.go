@@ -81,48 +81,56 @@ func applyMugenInputConfig(mc mugenCfg) {
 	if mc == nil {
 		return
 	}
-	cfg := mugenInput(mc)
-	_, noJoy := sys.cmdFlags["-nojoy"]
-	for p, pc := range cfg.players {
-		if p >= len(sys.keyConfig) {
-			break
-		}
-		kc := KeyConfig{Joy: -1}
-		if pc.useKeyboard {
-			v := [14]int{}
-			for i, sym := range pc.keys {
-				v[i] = int(sdl12KeyToKeycode(sym))
-			}
-			kc.set(v)
-		}
-		sys.keyConfig[p] = kc
-
-		if p >= len(sys.joystickConfig) {
-			continue
-		}
-		jc := KeyConfig{Joy: -1}
-		if pc.useJoystick && !noJoy {
-			if mugenJoy == nil {
-				mugenJoy = mugenjoy.NewManager()
-				for _, d := range mugenJoy.Devices() {
-					LogMessage("OMugen: joystick %c = %q VID %04X PID %04X (%d axes, %d hat, %d buttons)",
-						'A'+d.Index, d.Name, d.VendorID, d.ProductID, d.Layout.NumAxes, d.Layout.NumHats, d.Layout.NumButtons)
-				}
-			}
-			// Build a fresh slice: go.mod targets go1.20, where pc is one variable
-			// reused by every iteration, so slicing pc.joy would alias players.
-			codes := make([]int, ikemenMenuSlot+1)
-			copy(codes, pc.joy[:])
-			codes[ikemenMenuSlot] = mugenMenuCode(pc, mugenJoy.Devices())
-			if codes[ikemenMenuSlot] > 0 {
-				LogMessage("OMugen: P%d pause menu button = joystick code %d [%s]",
-					p+1, codes[ikemenMenuSlot], mugenjoy.Label(codes[ikemenMenuSlot]))
-			}
-			jc.mugenCodes = codes
-		}
-		sys.joystickConfig[p] = jc
+	mugenInputActive = mugenInput(mc)
+	for p := range mugenInputActive.players {
+		applyMugenPlayer(p)
 	}
 	LogMessage("OMugen: players 1-2 use controls from %s", mugenCfgPath)
+}
+
+// mugenInputActive holds the mugen.cfg bindings in use (nil: not in MUGEN mode).
+var mugenInputActive *mugenInputConfig
+
+// applyMugenPlayer installs player p's mugen.cfg bindings into Ikemen's key configs.
+func applyMugenPlayer(p int) {
+	if mugenInputActive == nil || p < 0 || p >= len(mugenInputActive.players) || p >= len(sys.keyConfig) {
+		return
+	}
+	pc := mugenInputActive.players[p]
+	_, noJoy := sys.cmdFlags["-nojoy"]
+	kc := KeyConfig{Joy: -1}
+	if pc.useKeyboard {
+		v := [14]int{}
+		for i, sym := range pc.keys {
+			v[i] = int(sdl12KeyToKeycode(sym))
+		}
+		kc.set(v)
+	}
+	sys.keyConfig[p] = kc
+
+	if p >= len(sys.joystickConfig) {
+		return
+	}
+	jc := KeyConfig{Joy: -1}
+	if pc.useJoystick && !noJoy {
+		if mugenJoy == nil {
+			mugenJoy = mugenjoy.NewManager()
+			for _, d := range mugenJoy.Devices() {
+				LogMessage("OMugen: joystick %c = %q VID %04X PID %04X (%d axes, %d hat, %d buttons)",
+					'A'+d.Index, d.Name, d.VendorID, d.ProductID, d.Layout.NumAxes, d.Layout.NumHats, d.Layout.NumButtons)
+			}
+		}
+		// A fresh slice per player (never alias the config arrays).
+		codes := make([]int, ikemenMenuSlot+1)
+		copy(codes, pc.joy[:])
+		codes[ikemenMenuSlot] = mugenMenuCode(pc, mugenJoy.Devices())
+		if codes[ikemenMenuSlot] > 0 {
+			LogMessage("OMugen: P%d pause menu button = joystick code %d [%s]",
+				p+1, codes[ikemenMenuSlot], mugenjoy.Label(codes[ikemenMenuSlot]))
+		}
+		jc.mugenCodes = codes
+	}
+	sys.joystickConfig[p] = jc
 }
 
 // mugenMenuCode picks the joystick code that opens the pause menu: an explicit
