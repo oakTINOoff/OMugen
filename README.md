@@ -15,7 +15,16 @@ engine (MIT) and keeps its extra features, including online and LAN netplay.
 - **Fast on huge rosters.** Menus in seconds, characters loaded in the background.
 - **64-bit, modern renderers,** and no 2/4 GB memory ceiling.
 
+## Using it
+Copy `OMugen.exe` into a MUGEN 1.1 folder (next to `data`, `chars`, `stages`) and run it.
+Nothing else is needed: the engine's own files (scripts, shaders, fonts, engine data and
+runtime DLLs) are inside the exe and are unpacked once to
+`%LOCALAPPDATA%\OMugen\engine\<version>\`, never into the game folder. The only thing
+OMugen adds to the game folder is a `save` folder (settings, logs, replays).
+Files in the game folder always take priority over the engine's copies.
+
 ## What works today
+- Drop-in: a single `OMugen.exe` runs an unmodified MUGEN folder, even from a shortcut.
 - Controls come straight from `mugen.cfg`: keyboard keys (SDL 1.2 key codes) and joystick
   codes decoded from MUGEN 1.1 itself, read through the same Windows API MUGEN uses, so
   every pad button matches. The pad's own Start/Options button opens the pause menu.
@@ -32,7 +41,10 @@ engine (MIT) and keeps its extra features, including online and LAN netplay.
 
 ## Building
 Windows (MSYS2 MINGW64): see [BUILDING.md](./BUILDING.md), then run
-`build/omugen_build.sh Win64`, which produces `OMugen.exe` and its `lib/` folder.
+`build/omugen_build.sh Win64`. It builds the runtime DLLs into `lib/`, packs the engine
+files with `tools/packengine` into `src/omugen_engine.zip`, and builds the drop-in
+`OMugen.exe` with `-tags=omugen_engine`. `OMUGEN_EMBED=0` makes a quicker development
+build that uses the repository's `external/`, `data/`, `font/` and `lib/` instead.
 `build/omugen_env.sh` sets up the environment for `go test` / `go vet`.
 
 ## Credits

@@ -13,13 +13,19 @@
   Hard links share content with the original files, so never edit files in
   the test folder's data\ or font\ that came from the game.
 
+  -DropIn mirrors only the game plus OMugen.exe, exactly like dropping the
+  exe into a MUGEN folder: no engine files, no external\ or lib\. Use it
+  with drop-in builds (build\omugen_build.sh embeds the engine files).
+
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\make_testgame.ps1 -Game "D:\Jump Force Mugen" -Out "D:\OMugen\test\jf"
+  powershell -ExecutionPolicy Bypass -File tools\make_testgame.ps1 -Game "D:\Jump Force Mugen" -Out "D:\OMugen\test\dropin" -DropIn
 #>
 param(
 	[Parameter(Mandatory = $true)][string]$Game,
 	[Parameter(Mandatory = $true)][string]$Out,
-	[string]$Repo = ''
+	[string]$Repo = '',
+	[switch]$DropIn
 )
 $ErrorActionPreference = 'Stop'
 if (-not $Repo) { $Repo = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path) }
@@ -80,10 +86,16 @@ foreach ($item in Get-ChildItem -LiteralPath $Game -Force) {
 }
 
 Mirror-Folder (Join-Path $Game 'data') (Join-Path $Out 'data')
-Copy-EngineFiles (Join-Path $Repo 'data') (Join-Path $Out 'data')
-
 if (Test-Path (Join-Path $Game 'font')) { Mirror-Folder (Join-Path $Game 'font') (Join-Path $Out 'font') }
-else { New-Item -ItemType Directory (Join-Path $Out 'font') -Force | Out-Null }
+
+if ($DropIn) {
+	Copy-Item (Join-Path $Repo 'OMugen.exe') (Join-Path $Out 'OMugen.exe') -Force
+	Write-Host "Drop-in test game ready (game files + OMugen.exe only): $Out\OMugen.exe"
+	return
+}
+
+Copy-EngineFiles (Join-Path $Repo 'data') (Join-Path $Out 'data')
+if (-not (Test-Path (Join-Path $Out 'font'))) { New-Item -ItemType Directory (Join-Path $Out 'font') -Force | Out-Null }
 Copy-EngineFiles (Join-Path $Repo 'font') (Join-Path $Out 'font')
 
 # Engine assets Ikemen releases ship from the Ikemen-GO-Screenpack repo

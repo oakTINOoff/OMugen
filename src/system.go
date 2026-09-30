@@ -479,6 +479,10 @@ func (s *System) init(w, h int32) *lua.LState {
 	l := lua.NewState()
 	l.Options.IncludeGoStackTrace = true
 	l.OpenLibs()
+	// OMugen: require() also finds the engine's own scripts (embedded pack).
+	if pkg, ok := l.GetGlobal("package").(*lua.LTable); ok {
+		pkg.RawSetString("path", lua.LString(engineLuaPath(lua.LVAsString(pkg.RawGetString("path")))))
+	}
 	s.resetRemapInput()
 	for i := range s.stringPool {
 		s.stringPool[i] = *NewStringPool()
@@ -505,7 +509,7 @@ func (s *System) init(w, h int32) *lua.LState {
 			s.windowMainIcon = make([]image.Image, len(s.cfg.Config.WindowIcon))
 			// And then we load them.
 			for i, iconLocation := range s.cfg.Config.WindowIcon {
-				f[i], err = os.Open(iconLocation)
+				f[i], err = os.Open(enginePath(iconLocation))
 				if err != nil {
 					var dErr = "Icon file can not be found.\nPanic: " + err.Error()
 					ShowErrorDialog(dErr)

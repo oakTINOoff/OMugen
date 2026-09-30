@@ -530,7 +530,8 @@ func FileExist(filename string) string {
 			return filepath.ToSlash(m[0])
 		}
 	}
-	return ""
+	// OMugen: fall back to the engine's own files (embedded pack).
+	return engineAsset(filename)
 }
 
 // SearchFile searches for 'file' in 'dirs'.
@@ -1727,6 +1728,10 @@ func OpenFile(filename string) (io.ReadSeekCloser, error) {
 	// Not a zip path, open as a normal file
 	f, err := os.Open(filename)
 	if err != nil {
+		// OMugen: fall back to the engine's own files (embedded pack).
+		if p := engineAsset(filename); p != "" {
+			return os.Open(p)
+		}
 		return nil, err
 	}
 	return f, nil // *os.File implements io.ReadSeekCloser

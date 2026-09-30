@@ -20,21 +20,34 @@ func init() {
 	exeDir := filepath.Dir(exe)
 	libDir := filepath.Join(exeDir, "lib")
 
+	// OMugen: extract the embedded engine pack (runtime DLLs included) first.
+	prepareEngineDir()
+	var engineLibDir string
+	if engineDir != "" {
+		engineLibDir = filepath.Join(engineDir, "lib")
+	}
+
 	// Safe modern policy.
 	_ = windows.SetDefaultDllDirectories(
 		windows.LOAD_LIBRARY_SEARCH_DEFAULT_DIRS | windows.LOAD_LIBRARY_SEARCH_USER_DIRS,
 	)
 
-	// Our preferred user dirs (priority order: exeDir, then libDir).
-	if p, err := windows.UTF16PtrFromString(exeDir); err == nil {
-		_, _ = windows.AddDllDirectory(p)
-	}
-	if p, err := windows.UTF16PtrFromString(libDir); err == nil {
-		_, _ = windows.AddDllDirectory(p)
+	// Our preferred user dirs (priority order: exeDir, libDir, then OMugen's engine lib).
+	for _, d := range []string{exeDir, libDir, engineLibDir} {
+		if d == "" {
+			continue
+		}
+		if p, err := windows.UTF16PtrFromString(d); err == nil {
+			_, _ = windows.AddDllDirectory(p)
+		}
 	}
 
 	// Legacy fallback: ensure libDir is on PATH (exeDir is searched by default on old loaders).
-	_ = os.Setenv("PATH", libDir+";"+os.Getenv("PATH"))
+	pathDirs := libDir
+	if engineLibDir != "" {
+		pathDirs += ";" + engineLibDir
+	}
+	_ = os.Setenv("PATH", pathDirs+";"+os.Getenv("PATH"))
 
 	// Families we require.
 	wantPatterns := []string{
@@ -50,8 +63,8 @@ func init() {
 		"SDL2*.dll",
 	}
 
-	// Search order: exe dir -> lib dir -> Windows default dirs & PATH.
-	localOrder := []string{exeDir, libDir}
+	// Search order: exe dir -> lib dir -> OMugen engine lib -> Windows default dirs & PATH.
+	localOrder := []string{exeDir, libDir, engineLibDir}
 	fallbackOrder := windowsDefaultAndPathDirs()
 
 	// Pick a concrete file for each family using the specified order.
@@ -69,6 +82,13 @@ func init() {
 			chosen[pat] = full
 			continue
 		}
+		// 2b) in OMugen's extracted engine files
+		if engineLibDir != "" {
+			if full := firstMatchAcross(localOrder[2:3], pat); full != "" {
+				chosen[pat] = full
+				continue
+			}
+		}
 		// 3) Windows default dirs & PATH
 		if full := firstMatchAcross(fallbackOrder, pat); full != "" {
 			chosen[pat] = full
@@ -83,6 +103,12 @@ func init() {
 		var where strings.Builder
 		where.WriteString("  " + exeDir + "  (exe directory)\n")
 		where.WriteString("  " + libDir + "  (lib directory)\n")
+		if engineLibDir != "" {
+			where.WriteString("  " + engineLibDir + "  (OMugen engine files)\n")
+		}
+		if engineDirError != nil {
+			where.WriteString("\nOMugen could not unpack its engine files:\n  " + engineDirError.Error() + "\n\n")
+		}
 		for _, d := range fallbackOrder {
 			where.WriteString("  " + d + "\n")
 		}

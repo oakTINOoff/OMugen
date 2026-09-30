@@ -116,6 +116,9 @@ func realMain() {
 		}
 		Logcat("LOG: SDL Init SUCCESS")
 	} else {
+		// OMugen: the game folder is the exe's folder (like MUGEN), even from a shortcut.
+		useExeDirAsGameDir()
+		prepareEngineDir() // no-op if dllsearch already did it
 		sys.baseDir = "./"
 	}
 
@@ -184,7 +187,8 @@ func realMain() {
 		os.MkdirAll(filepath.Join(sys.baseDir, "debug"), permission)
 	}
 
-	// Check Lua file path
+	// Check Lua file path (the game folder first, then OMugen's engine files)
+	sys.cfg.Config.System = enginePath(sys.cfg.Config.System)
 	ftemp, err := os.Open(sys.cfg.Config.System)
 	if err != nil {
 		Logcat("LOG: LUA OPEN FAILED: " + err.Error())

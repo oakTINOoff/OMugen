@@ -101,3 +101,6 @@ external/script/version
 /test/
 # Ikemen-GO-Screenpack clone (engine assets for test folders)
 /build/screenpack/
+
+# Generated engine pack embedded by OMugen.exe (tools/packengine)
+/src/omugen_engine.zip

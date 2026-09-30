@@ -259,6 +259,10 @@ func NewModifierKey(ctrl, alt, shift bool) (mod sdl.Keymod) {
 }
 
 func (input *Input) UpdateGamepadMappings(path string) {
+	// The mappings file is optional (MUGEN folders don't have one).
+	if path = FileExist(path); path == "" {
+		return
+	}
 	b, err := os.ReadFile(path)
 	if err != nil {
 		LogMessage("%v", err)
