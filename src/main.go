@@ -304,7 +304,8 @@ Debug Options:
 -ailevel <level>        Changes game difficulty setting to <level> (1-8)
 -speed <speed>          Changes game speed setting to <speed> (-9 to 9)
 -stresstest <frameskip> Stability test (AI matches at speed increased by <frameskip>)
--speedtest              Speed test (match speed x100)`
+-speedtest              Speed test (match speed x100)
+-sessionseed <seed>     Start every (offline) match from the same random state`
 					//ShowInfoDialog(text, "OMugen command line options")
 					fmt.Printf("OMugen command line options\n\n" + text + "\nPress ENTER to exit")
 					var s string

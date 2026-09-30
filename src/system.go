@@ -336,6 +336,7 @@ type System struct {
 
 	// screenshot deferral
 	isTakingScreenshot bool
+	screenshotName     string // OMugen: explicit file for the deferred screenshot ("" = numbered)
 
 	// keepAlive profiling (debug only)
 	keepAliveProfile bool
@@ -860,8 +861,9 @@ func (s *System) await(fps int) bool {
 		}
 		s.window.UpdateDebugFPS()
 		if s.isTakingScreenshot {
-			defer captureScreen()
+			defer captureScreenTo(s.screenshotName)
 			s.isTakingScreenshot = false
+			s.screenshotName = ""
 		}
 		// Begin the next frame after events have been processed. Do not clear
 		// the screen if network input is present.
@@ -3192,6 +3194,7 @@ func (s *System) globalTick() {
 	}
 
 	s.matchTime++
+	omugenShotTick(s.matchTime)
 }
 
 func (s *System) getSlowtime() int32 {
@@ -3685,7 +3688,7 @@ func (s *System) draw(x, y, scl float32) {
 		}
 
 		// Draw character sprites with layerNo == -1
-		s.spriteList.draw(-1, false, x, y, scl*s.cam.BaseScale())
+		s.drawSpriteLayer(-1, false, x, y, scl*s.cam.BaseScale())
 
 		// Draw stage elements with layerNo == 0
 		if !s.gsf(GSF_nobg) {
@@ -3693,7 +3696,7 @@ func (s *System) draw(x, y, scl float32) {
 		}
 
 		// Draw character sprites with special under flag
-		s.spriteList.draw(0, true, x, y, scl*s.cam.BaseScale())
+		s.drawSpriteLayer(0, true, x, y, scl*s.cam.BaseScale())
 
 		// Draw fight screen layer -1
 		s.fightScreen.draw(-1)
@@ -3766,7 +3769,7 @@ func (s *System) draw(x, y, scl float32) {
 
 	// Draw character sprites in layer 0
 	if s.envcol_time == 0 || s.envcol_under {
-		s.spriteList.draw(0, false, x, y, scl*s.cam.BaseScale())
+		s.drawSpriteLayer(0, false, x, y, scl*s.cam.BaseScale())
 		if s.envcol_time == 0 && !s.gsf(GSF_nofg) {
 			s.stage.draw(1, bgx, bgy, scl)
 		}
@@ -3782,7 +3785,7 @@ func (s *System) draw(x, y, scl float32) {
 	s.motif.draw(1)
 
 	// Draw character sprites in layer 1 (old "ontop")
-	s.spriteList.draw(1, false, x, y, scl*s.cam.BaseScale())
+	s.drawSpriteLayer(1, false, x, y, scl*s.cam.BaseScale())
 
 	// Draw fight screen layer 2
 	s.fightScreen.draw(2)
@@ -3795,6 +3798,20 @@ func (s *System) draw(x, y, scl float32) {
 
 	// Draw motif layer 3
 	s.motif.draw(3)
+}
+
+// drawSpriteLayer draws gameplay sprites of one layer and, with Video.Glow on,
+// adds the glow of their additive sprites right after them (so later stage
+// foregrounds and the HUD stay on top of the glow).
+func (s *System) drawSpriteLayer(layerno int32, under bool, x, y, scl float32) {
+	gr, ok := gfx.(glowRenderer)
+	glow := ok && s.cfg.Video.Glow && gr.GlowReady()
+	glowCapturing = glow
+	s.spriteList.draw(layerno, under, x, y, scl)
+	glowCapturing = false
+	if glow {
+		gr.GlowComposite(s.cfg.Video.GlowIntensity, s.cfg.Video.GlowRadius)
+	}
 }
 
 func (s *System) drawCharTexts(layerno int16) {
@@ -3994,6 +4011,12 @@ func (s *System) runMatch() (reload bool) {
 	s.fightLoopEnd = false
 	s.aiInput = [len(s.aiInput)]AiInput{}
 	s.saveState = NewGameState()
+
+	// OMugen: -sessionseed N (as in MUGEN) makes every match start from the same
+	// random state, so AI matches are repeatable (bug reports, graphics A/B).
+	if v, ok := s.cmdFlags["-sessionseed"]; ok && v != "" && s.netConnection == nil {
+		Srand(Atoi(v))
+	}
 
 	// Disable debug during netplay (but not during replays)
 	if !s.debugModeAllowed() {

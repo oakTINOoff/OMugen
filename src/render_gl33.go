@@ -462,6 +462,7 @@ type Renderer_GL33 struct {
 	enableModel  bool
 	enableShadow bool
 	debugMode    bool
+	glow         glowGL33 // OMugen glow targets (render_gl33_glow.go)
 	GL33State
 }
 

@@ -2262,6 +2262,12 @@ func (s *Sff) cloneSpriteWithPal(g, n uint16, pl *PaletteList) *Sprite {
 }
 
 func captureScreen() {
+	captureScreenTo("")
+}
+
+// captureScreenTo saves the last presented frame as PNG; name "" picks the
+// next numbered file in Config.ScreenshotFolder.
+func captureScreenTo(name string) {
 	width, height := sys.window.GetSize()
 	pixdata := make([]uint8, 4*width*height)
 	img := image.NewNRGBA(image.Rect(0, 0, width, height))
@@ -2278,6 +2284,14 @@ func captureScreen() {
 			pixdata[i] = 255 // Set the alpha value to 255
 		}
 		img.Pix[j] = pixdata[i]
+	}
+
+	if name != "" {
+		if file, err := os.Create(name); err == nil {
+			png.Encode(file, img)
+			file.Close()
+		}
+		return
 	}
 
 	// Sanitize WindowTitle for use in filenames

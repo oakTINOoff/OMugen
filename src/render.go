@@ -19,6 +19,19 @@ type Texture interface {
 	CopyData(src *Texture)
 }
 
+// glowRenderer is implemented by renderers that support OMugen's glow
+// (currently OpenGL 3.3); others simply draw without it.
+type glowRenderer interface {
+	GlowReady() bool
+	GlowHasContent() bool
+	GlowCaptureBegin()
+	GlowCaptureEnd()
+	GlowComposite(intensity, radius float32)
+}
+
+// glowCapturing is true while gameplay sprites are drawn with glow enabled.
+var glowCapturing bool
+
 type Renderer interface {
 	GetName() string
 	DebugInfo() string
@@ -760,6 +773,25 @@ func RenderSprite(rp RenderParams) {
 		gfx.SetUniformF("alpha", a)
 
 		renderSpriteQuad(modelview, rp)
+
+		// OMugen glow: additive gameplay sprites are also drawn into the glow
+		// target; solid sprites drawn later erase the glow they cover, so a
+		// fighter standing in front of an aura stays crisp.
+		if glowCapturing && eq == BlendAdd {
+			if gr, ok := gfx.(glowRenderer); ok {
+				if dst == BlendOne {
+					gr.GlowCaptureBegin()
+					renderSpriteQuad(modelview, rp)
+					gr.GlowCaptureEnd()
+				} else if dst == BlendOneMinusSrcAlpha && src != BlendZero && gr.GlowHasContent() {
+					gr.GlowCaptureBegin()
+					gfx.EnableBlending(BlendAdd, BlendZero, BlendOneMinusSrcAlpha)
+					renderSpriteQuad(modelview, rp)
+					gfx.EnableBlending(eq, src, dst)
+					gr.GlowCaptureEnd()
+				}
+			}
+		}
 	}
 
 	renderWithBlending(renderPass, rp.blendMode, rp.blendAlpha, rp.paltex != nil, &spfx, rp.paltex == nil)

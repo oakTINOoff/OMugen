@@ -166,6 +166,10 @@ type Config struct {
 		EnableModelShadow        bool     `ini:"EnableModelShadow"`
 		ImageSuballocThresholdKB int      `ini:"ImageSuballocThresholdKB"` // ≤ this (KB) suballocated; 0 to disable
 		ImageSuballocBlockSizeMB int      `ini:"ImageSuballocBlockSizeMB"` // block size (MB) for suballocation pool
+		// OMugen graphics options (off by default: MUGEN look)
+		Glow          bool    `ini:"Glow"`
+		GlowIntensity float32 `ini:"GlowIntensity"`
+		GlowRadius    float32 `ini:"GlowRadius"`
 	} `ini:"Video"`
 	Sound struct {
 		SampleRate           int32   `ini:"SampleRate"`
@@ -383,6 +387,8 @@ func (c *Config) normalize() {
 	if c.Video.ImageSuballocBlockSizeMB < 1 {
 		c.SetValueUpdate("Video.ImageSuballocBlockSizeMB", 64)
 	}
+	c.SetValueUpdate("Video.GlowIntensity", Clamp(c.Video.GlowIntensity, 0.1, 3))
+	c.SetValueUpdate("Video.GlowRadius", Clamp(c.Video.GlowRadius, 0.5, 4))
 }
 
 // Sets system values
