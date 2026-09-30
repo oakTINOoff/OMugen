@@ -2,7 +2,8 @@ package main
 
 // OMugen: reading a MUGEN 1.1 data/mugen.cfg so OMugen.exe can be dropped
 // into an unmodified MUGEN folder. Settings found there override Ikemen's
-// save/config.ini for this run only; they are never written back to it.
+// save/config.ini; video settings changed in OMugen's options are written
+// back to mugen.cfg (syncMugenCfgVideo), like MUGEN keeps its settings there.
 
 import (
 	"bufio"
@@ -110,6 +111,61 @@ func (c *Config) applyMugenCfg(mc mugenCfg) {
 	if v, ok := mc.int("video", "fullscreen"); ok {
 		c.Video.Fullscreen = v != 0
 	}
+	mugenCfgVideo.loaded = true
+	mugenCfgVideo.gameW, mugenCfgVideo.gameH = c.Video.GameWidth, c.Video.GameHeight
+	mugenCfgVideo.winW, mugenCfgVideo.winH = c.Video.WindowWidth, c.Video.WindowHeight
+	mugenCfgVideo.fullscreen = c.Video.Fullscreen
 	LogMessage("OMugen: using %s (motif %s, game %dx%d, window %dx%d)", mugenCfgPath,
 		c.Config.Motif, c.Video.GameWidth, c.Video.GameHeight, c.Video.WindowWidth, c.Video.WindowHeight)
+}
+
+// mugenCfgVideo remembers the video settings taken from mugen.cfg at
+// startup, to find the ones changed later in OMugen's options.
+var mugenCfgVideo struct {
+	loaded       bool
+	gameW, gameH int32
+	winW, winH   int
+	fullscreen   bool
+}
+
+// syncMugenCfgVideo writes video settings changed in OMugen's options back
+// to mugen.cfg, since mugen.cfg's values override save/config.ini at every
+// start (as MUGEN's own settings file). A new resolution also becomes the
+// window size, which mugen.cfg sets separately.
+func syncMugenCfgVideo(c *Config, path string) {
+	v := &mugenCfgVideo
+	if !v.loaded {
+		return
+	}
+	var edits []mugenCfgEdit
+	if c.Video.GameWidth != v.gameW || c.Video.GameHeight != v.gameH {
+		edits = append(edits,
+			mugenCfgEdit{"Config", "GameWidth", strconv.Itoa(int(c.Video.GameWidth))},
+			mugenCfgEdit{"Config", "GameHeight", strconv.Itoa(int(c.Video.GameHeight))})
+		c.Video.WindowWidth, c.Video.WindowHeight = int(c.Video.GameWidth), int(c.Video.GameHeight)
+	}
+	if c.Video.WindowWidth != v.winW || c.Video.WindowHeight != v.winH {
+		edits = append(edits,
+			mugenCfgEdit{"Video", "Width", strconv.Itoa(c.Video.WindowWidth)},
+			mugenCfgEdit{"Video", "Height", strconv.Itoa(c.Video.WindowHeight)})
+	}
+	if c.Video.Fullscreen != v.fullscreen {
+		fs := "0"
+		if c.Video.Fullscreen {
+			fs = "1"
+		}
+		edits = append(edits, mugenCfgEdit{"Video", "FullScreen", fs})
+	}
+	if len(edits) == 0 {
+		return
+	}
+	if err := writeMugenCfgEdits(path, edits); err != nil {
+		LogMessage("OMugen: could not save video settings to %s: %v", path, err)
+		return
+	}
+	LogMessage("OMugen: saved video settings to %s (game %dx%d, window %dx%d, fullscreen %v)", path,
+		c.Video.GameWidth, c.Video.GameHeight, c.Video.WindowWidth, c.Video.WindowHeight, c.Video.Fullscreen)
+	v.gameW, v.gameH = c.Video.GameWidth, c.Video.GameHeight
+	v.winW, v.winH = c.Video.WindowWidth, c.Video.WindowHeight
+	v.fullscreen = c.Video.Fullscreen
 }

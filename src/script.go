@@ -6111,6 +6111,8 @@ func systemScriptInit(l *lua.LState) {
 		if err := sys.cfg.Save(path); err != nil {
 			l.RaiseError("\nsaveGameOption: %v\n", err.Error())
 		}
+		// OMugen: keep the game's mugen.cfg in step (it overrides config.ini)
+		syncMugenCfgVideo(&sys.cfg, mugenCfgPath)
 		return 0
 	})
 	luaRegister(l, "saveIni", func(l *lua.LState) int {
