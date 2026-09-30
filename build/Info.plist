@@ -5,11 +5,11 @@
     <key>CFBundleExecutable</key>
     <string>bundle_run.sh</string>
     <key>CFBundleName</key>
-    <string>I.K.E.M.E.N-Go</string>
+    <string>OMugen</string>
     <key>CFBundleIconFile</key>
     <string>icon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.github.ikemen-engine.ikemen-go</string>
+    <string>com.omugen.omugen</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>LSApplicationCategoryType</key>

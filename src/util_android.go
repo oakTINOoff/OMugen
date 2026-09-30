@@ -170,6 +170,6 @@ func Java_org_libsdl_app_SDLActivity_nativeOnSDLReady(env *C.JNIEnv, clazz C.jcl
 
 func Logcat(s string) {
 	cs := C.CString(s)
-	C.__android_log_write(C.ANDROID_LOG_INFO, C.CString("ikemen"), cs)
+	C.__android_log_write(C.ANDROID_LOG_INFO, C.CString("omugen"), cs)
 	C.free(unsafe.Pointer(cs))
 }

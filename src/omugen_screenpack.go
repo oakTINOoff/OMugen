@@ -205,10 +205,17 @@ func omugenMotifFallback(failed error) (*Motif, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%v (the OMugen screenpack failed too: %v)", failed, err)
 	}
-	omugenUI.notice = fmt.Sprintf("The screenpack %s could not be loaded,\nso OMugen's built-in screenpack is used.\nDetails are in the log.",
-		filepath.ToSlash(omugenUI.gameDef))
+	// The engine's old default (not shipped) is replaced quietly.
+	if !strings.EqualFold(filepath.ToSlash(omugenUI.gameDef), legacyDefaultMotif) {
+		omugenUI.notice = fmt.Sprintf("The screenpack %s could not be loaded,\nso OMugen's built-in screenpack is used.\nDetails are in the log.",
+			filepath.ToSlash(omugenUI.gameDef))
+	}
 	return m, nil
 }
+
+// legacyDefaultMotif is the default screenpack of config files written
+// before OMugen had its own.
+const legacyDefaultMotif = "data/ikemen1/system.def"
 
 // omugenFightFallback loads OMugen's own lifebars after the game's failed.
 func omugenFightFallback(def string, failed error) (*FightScreen, error) {

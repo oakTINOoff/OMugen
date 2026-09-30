@@ -188,7 +188,7 @@ overlay.alpha = 0, 60
 [Infobox Text]
 OMugen (%s - %s)
 
-* A 64-bit, MUGEN-compatible fighting game engine based on Ikemen GO.
+* A 64-bit, MUGEN-compatible fighting game engine.
 * You are using the built-in OMugen screenpack. The game's characters,
   stages, lifebars, sounds and music are used as they are.
 * Switch screenpacks in Options > Video Settings > OMugen Screenpack.

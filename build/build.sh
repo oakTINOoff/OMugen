@@ -86,7 +86,7 @@ BUILD_ANDROID_APK="${BUILD_ANDROID_APK:-1}"  # 1=yes, 0=no
 ANDROID_APK_REPO="${ANDROID_APK_REPO:-https://github.com/Jesuszilla/ikemen-droid.git}"
 ANDROID_APK_REF="${ANDROID_APK_REF:-main}"
 ANDROID_APK_DIR="$REPO_ROOT/$BUILDDIR/android-apk/ikemen-droid"
-ANDROID_APK_OUT="${ANDROID_APK_OUT:-$REPO_ROOT/bin/ikemen-go.apk}"
+ANDROID_APK_OUT="${ANDROID_APK_OUT:-$REPO_ROOT/bin/omugen.apk}"
 
 # FFmpeg config
 FFMPEG_REV="${FFMPEG_REV:-release/7.1}"
@@ -1241,7 +1241,7 @@ EOF
 
 COPY_START_YEAR="${COPY_START_YEAR:-2016}"
 BUILD_YEAR="${APP_BUILDTIME%%[.-]*}"  # APP_BUILDTIME is YYYY.MM.DD (or YYYY-MM-DD)
-APP_COPYRIGHT="${APP_COPYRIGHT:-(c) ${BUILD_YEAR} OMugen. Based on Ikemen GO (c) ${COPY_START_YEAR}-${BUILD_YEAR} Ikemen GO team (MIT)}"
+APP_COPYRIGHT="${APP_COPYRIGHT:-(c) ${BUILD_YEAR} OMugen contributors}"
 
 	# Generate a RC
 	cat > build/winres/OMugen.rc <<EOF
