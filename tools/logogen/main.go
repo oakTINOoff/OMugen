@@ -16,177 +16,32 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"golang.org/x/image/vector"
+
+	"github.com/ikemen-engine/Ikemen-GO/tools/internal/logo"
 )
-
-// Palette.
-var (
-	redTop    = color.RGBA{0xFF, 0x3A, 0x3A, 0xFF}
-	redBottom = color.RGBA{0x9E, 0x00, 0x0B, 0xFF}
-	white     = color.RGBA{0xF7, 0xF7, 0xF7, 0xFF}
-	bgDark    = color.RGBA{0x12, 0x12, 0x16, 0xFF}
-	edge      = color.RGBA{0x3A, 0x06, 0x0A, 0xFF}
-)
-
-type pt struct{ x, y float64 }
-
-// shape is a set of closed contours filled together (nonzero winding, so a
-// reversed inner contour is a hole).
-type shape struct {
-	contours [][]pt
-	fill     string // "red", "white", "bg", "edge"
-}
-
-// ---------------------------------------------------------------- geometry
-
-// Letters on an 80-unit tall grid, stroke 20, chamfered corners.
-var letters = map[rune][][]pt{
-	'O': {
-		{{10, 0}, {60, 0}, {70, 10}, {70, 70}, {60, 80}, {10, 80}, {0, 70}, {0, 10}},
-		{{20, 20}, {20, 60}, {50, 60}, {50, 20}}, // hole (reversed)
-	},
-	'M': {{{0, 80}, {0, 0}, {20, 0}, {45, 36}, {70, 0}, {90, 0}, {90, 80}, {70, 80}, {70, 38}, {45, 72}, {20, 38}, {20, 80}}},
-	'U': {{{0, 0}, {20, 0}, {20, 60}, {50, 60}, {50, 0}, {70, 0}, {70, 70}, {60, 80}, {10, 80}, {0, 70}}},
-	'G': {{{10, 0}, {70, 0}, {70, 20}, {20, 20}, {20, 60}, {50, 60}, {50, 50}, {36, 50}, {36, 32}, {70, 32}, {70, 70}, {60, 80}, {10, 80}, {0, 70}, {0, 10}}},
-	'E': {{{0, 0}, {66, 0}, {66, 18}, {20, 18}, {20, 31}, {56, 31}, {56, 49}, {20, 49}, {20, 62}, {66, 62}, {66, 80}, {0, 80}}},
-	'N': {{{0, 80}, {0, 0}, {20, 0}, {50, 46}, {50, 0}, {70, 0}, {70, 80}, {50, 80}, {20, 34}, {20, 80}}},
-}
-
-var letterWidth = map[rune]float64{'O': 70, 'M': 90, 'U': 70, 'G': 70, 'E': 66, 'N': 70}
-
-const italic = 0.22 // x shift per unit of height above the baseline
-
-// place scales and italicizes a letter's contours.
-func place(c [][]pt, ox, oy, s float64) [][]pt {
-	out := make([][]pt, len(c))
-	for i, contour := range c {
-		for _, p := range contour {
-			x := ox + (p.x+(80-p.y)*italic)*s
-			y := oy + p.y*s
-			out[i] = append(out[i], pt{x, y})
-		}
-	}
-	return out
-}
-
-func circle(cx, cy, r float64, reverse bool) []pt {
-	const n = 96
-	var c []pt
-	for i := 0; i < n; i++ {
-		a := 2 * math.Pi * float64(i) / n
-		if reverse {
-			a = -a
-		}
-		c = append(c, pt{cx + r*math.Cos(a), cy + r*math.Sin(a)})
-	}
-	return c
-}
-
-func roundRect(x0, y0, x1, y1, r float64) []pt {
-	var c []pt
-	corner := func(cx, cy, a0 float64) {
-		for i := 0; i <= 12; i++ {
-			a := a0 + math.Pi/2*float64(i)/12
-			c = append(c, pt{cx + r*math.Cos(a), cy + r*math.Sin(a)})
-		}
-	}
-	corner(x1-r, y0+r, -math.Pi/2)
-	corner(x1-r, y1-r, 0)
-	corner(x0+r, y1-r, math.Pi/2)
-	corner(x0+r, y0+r, math.Pi)
-	return c
-}
-
-// slash is a thin band across the ring from lower-left to upper-right.
-func slash(size, width float64) []pt {
-	a := -math.Pi / 3 // 60 degrees up to the right
-	dx, dy := math.Cos(a), math.Sin(a)
-	nx, ny := -dy*width/2, dx*width/2
-	c := size / 2
-	l := size
-	return []pt{
-		{c - dx*l + nx, c - dy*l + ny}, {c + dx*l + nx, c + dy*l + ny},
-		{c + dx*l - nx, c + dy*l - ny}, {c - dx*l - nx, c - dy*l - ny},
-	}
-}
-
-// iconShapes is the app icon on a 256x256 canvas.
-func iconShapes() []shape {
-	const s = 256.0
-	m := place(letters['M'], 0, 0, 1)
-	// Center the M inside the ring.
-	minX, maxX, minY, maxY := bounds(m)
-	sc := 94 / (maxX - minX)
-	ox := s/2 - (minX+(maxX-minX)/2)*sc
-	oy := s/2 - (minY+(maxY-minY)/2)*sc
-	m = place(letters['M'], 0, 0, sc)
-	for _, c := range m {
-		for i := range c {
-			c[i].x += ox
-			c[i].y += oy
-		}
-	}
-	return []shape{
-		{contours: [][]pt{roundRect(0, 0, s, s, 52)}, fill: "bg"},
-		{contours: [][]pt{circle(s/2, s/2, 112, false), circle(s/2, s/2, 76, true)}, fill: "red"},
-		{contours: [][]pt{slash(s, 11)}, fill: "bg"},
-		{contours: m, fill: "white"},
-	}
-}
-
-// wordmarkShapes is "OMUGEN" with a red O; returns shapes and canvas size.
-func wordmarkShapes() ([]shape, int, int) {
-	const sc, gap, pad = 2.4, 14.0, 40.0
-	x := pad
-	var shapes []shape
-	for i, r := range "OMUGEN" {
-		fill := "white"
-		if i == 0 {
-			fill = "red"
-		}
-		c := place(letters[r], x, pad, sc)
-		shapes = append(shapes, shape{contours: c, fill: fill})
-		x += (letterWidth[r] + gap) * sc
-	}
-	w := int(x - gap*sc + 80*italic*sc + pad)
-	h := int(80*sc + 2*pad)
-	return shapes, w, h
-}
-
-func bounds(cs [][]pt) (minX, maxX, minY, maxY float64) {
-	minX, minY = math.Inf(1), math.Inf(1)
-	maxX, maxY = math.Inf(-1), math.Inf(-1)
-	for _, c := range cs {
-		for _, p := range c {
-			minX, maxX = math.Min(minX, p.x), math.Max(maxX, p.x)
-			minY, maxY = math.Min(minY, p.y), math.Max(maxY, p.y)
-		}
-	}
-	return
-}
 
 // ---------------------------------------------------------------- raster
 
 func fillImage(fill string, w, h int) image.Image {
 	switch fill {
 	case "white":
-		return image.NewUniform(white)
+		return image.NewUniform(logo.White)
 	case "bg":
-		return image.NewUniform(bgDark)
+		return image.NewUniform(logo.BgDark)
 	case "edge":
-		return image.NewUniform(edge)
+		return image.NewUniform(logo.Edge)
 	}
 	// Vertical red gradient.
 	g := image.NewRGBA(image.Rect(0, 0, 1, h))
 	for y := 0; y < h; y++ {
 		t := float64(y) / float64(h-1)
 		lerp := func(a, b uint8) uint8 { return uint8(float64(a) + (float64(b)-float64(a))*t) }
-		g.SetRGBA(0, y, color.RGBA{lerp(redTop.R, redBottom.R), lerp(redTop.G, redBottom.G), lerp(redTop.B, redBottom.B), 255})
+		g.SetRGBA(0, y, color.RGBA{lerp(logo.RedTop.R, logo.RedBottom.R), lerp(logo.RedTop.G, logo.RedBottom.G), lerp(logo.RedTop.B, logo.RedBottom.B), 255})
 	}
 	return &stretchX{g, w}
 }
@@ -203,20 +58,20 @@ func (s *stretchX) Bounds() image.Rectangle {
 }
 func (s *stretchX) At(x, y int) color.Color { return s.img.At(0, y) }
 
-func render(shapes []shape, srcW, srcH, outW, outH int) *image.RGBA {
+func render(shapes []logo.Shape, srcW, srcH, outW, outH int) *image.RGBA {
 	dst := image.NewRGBA(image.Rect(0, 0, outW, outH))
 	sx, sy := float64(outW)/float64(srcW), float64(outH)/float64(srcH)
 	for _, sh := range shapes {
 		z := vector.NewRasterizer(outW, outH)
-		for _, c := range sh.contours {
-			z.MoveTo(float32(c[0].x*sx), float32(c[0].y*sy))
+		for _, c := range sh.Contours {
+			z.MoveTo(float32(c[0].X*sx), float32(c[0].Y*sy))
 			for _, p := range c[1:] {
-				z.LineTo(float32(p.x*sx), float32(p.y*sy))
+				z.LineTo(float32(p.X*sx), float32(p.Y*sy))
 			}
 			z.ClosePath()
 		}
 		z.DrawOp = draw.Over
-		z.Draw(dst, dst.Bounds(), fillImage(sh.fill, outW, outH), image.Point{})
+		z.Draw(dst, dst.Bounds(), fillImage(sh.Fill, outW, outH), image.Point{})
 	}
 	return dst
 }
@@ -311,19 +166,19 @@ func writeICO(path string, imgs []*image.RGBA) {
 	fmt.Println("wrote", path)
 }
 
-func writeSVG(path string, shapes []shape, w, h int) {
+func writeSVG(path string, shapes []logo.Shape, w, h int) {
 	var b strings.Builder
 	fmt.Fprintf(&b, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="%d" height="%d">`+"\n", w, h, w, h)
 	fmt.Fprintf(&b, `  <defs><linearGradient id="red" x1="0" y1="0" x2="0" y2="1">`+
 		`<stop offset="0" stop-color="#%02X%02X%02X"/><stop offset="1" stop-color="#%02X%02X%02X"/>`+
-		`</linearGradient></defs>`+"\n", redTop.R, redTop.G, redTop.B, redBottom.R, redBottom.G, redBottom.B)
+		`</linearGradient></defs>`+"\n", logo.RedTop.R, logo.RedTop.G, logo.RedTop.B, logo.RedBottom.R, logo.RedBottom.G, logo.RedBottom.B)
 	fills := map[string]string{"red": "url(#red)", "white": "#F7F7F7", "bg": "#121216", "edge": "#3A060A"}
 	for _, sh := range shapes {
-		b.WriteString(`  <path fill-rule="nonzero" fill="` + fills[sh.fill] + `" d="`)
-		for _, c := range sh.contours {
-			fmt.Fprintf(&b, "M%.2f %.2f", c[0].x, c[0].y)
+		b.WriteString(`  <path fill-rule="nonzero" fill="` + fills[sh.Fill] + `" d="`)
+		for _, c := range sh.Contours {
+			fmt.Fprintf(&b, "M%.2f %.2f", c[0].X, c[0].Y)
 			for _, p := range c[1:] {
-				fmt.Fprintf(&b, "L%.2f %.2f", p.x, p.y)
+				fmt.Fprintf(&b, "L%.2f %.2f", p.X, p.Y)
 			}
 			b.WriteString("Z")
 		}
@@ -345,7 +200,7 @@ func main() {
 	src := filepath.Join(dir, "icon-src", "omugen")
 	check(os.MkdirAll(src, 0o755))
 
-	icon := iconShapes()
+	icon := logo.IconShapes()
 	var icoImgs []*image.RGBA
 	for _, n := range []int{16, 24, 32, 48, 64, 128, 256} {
 		icoImgs = append(icoImgs, render(icon, 256, 256, n, n))
@@ -356,7 +211,7 @@ func main() {
 	}
 	writeSVG(filepath.Join(src, "omugen_icon.svg"), icon, 256, 256)
 
-	word, w, h := wordmarkShapes()
+	word, w, h := logo.WordmarkShapes()
 	writePNG(filepath.Join(dir, "omugen_logo.png"), render(word, w, h, w, h))
 	writeSVG(filepath.Join(src, "omugen_logo.svg"), word, w, h)
 }

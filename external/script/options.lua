@@ -200,6 +200,7 @@ options.t_itemname = {
 			modifyGameOption('Video.Glow', false)
 			modifyGameOption('Video.GlowIntensity', 0.8)
 			modifyGameOption('Video.GlowRadius', 2.5)
+			modifyGameOption('Config.OMugenScreenpack', 0)
 			--modifyGameOption('Sound.SampleRate', 44100)
 			--modifyGameOption('Sound.SoundFont', "sound/soundfont.sf2")
 			modifyGameOption('Sound.StereoEffects', true)
@@ -902,6 +903,17 @@ options.t_itemname = {
 			modifyGameOption('Video.GlowIntensity', math.floor((v + step) * 10 + 0.5) / 10)
 			t.items[item].vardisplay = options.t_vardisplay['glowintensity']()
 			options.modified = true
+		end
+		return true
+	end,
+	--OMugen: built-in screenpack (applies after a restart)
+	['omugenscreenpack'] = function(t, item, cursorPosY, moveTxt)
+		if getInput(-1, motif.option_info.menu.add.key, motif.option_info.menu.subtract.key, motif.option_info.menu.done.key) then
+			sndPlay(motif.Snd, motif.option_info.cursor.move.snd[1], motif.option_info.cursor.move.snd[2])
+			modifyGameOption('Config.OMugenScreenpack', gameOption('Config.OMugenScreenpack') == 1 and 0 or 1)
+			t.items[item].vardisplay = options.t_vardisplay['omugenscreenpack']()
+			options.modified = true
+			options.needReload = true
 		end
 		return true
 	end,
@@ -1620,6 +1632,9 @@ options.t_vardisplay = {
 	end,
 	['glowintensity'] = function()
 		return math.floor(gameOption('Video.GlowIntensity') * 100 + 0.5) .. '%'
+	end,
+	['omugenscreenpack'] = function()
+		return options.f_boolDisplay(gameOption('Config.OMugenScreenpack') == 1)
 	end,
 	['windowscalemode'] = function()
 		return options.f_boolDisplay(gameOption('Video.WindowScaleMode'), motif.option_info.menu.valuename.bilinear, motif.option_info.menu.valuename.nearest)

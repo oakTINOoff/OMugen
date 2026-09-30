@@ -4754,9 +4754,11 @@ func loadFightScreen(def string) (*FightScreen, error) {
 
 	// Pre-scan [info] to initialize fight screen localcoord/scale before any FightFX load
 	pre := 0
+	// OMugen: the game's screenpack localcoord when the OMugen one replaces it
+	defaultLocalcoord := omugenFightLocalcoord()
 	for pre < len(lines) {
 		// If fight screen doesn't have localcoord assigned we're using screenpack localcoord
-		fs.localcoord[0], fs.localcoord[1] = sys.motif.Info.Localcoord[0], sys.motif.Info.Localcoord[1]
+		fs.localcoord[0], fs.localcoord[1] = defaultLocalcoord[0], defaultLocalcoord[1]
 		is, name, _ := ReadIniSection(lines, &pre)
 		if name == "info" {
 			is.ReadI32("localcoord", &fs.localcoord[0], &fs.localcoord[1])

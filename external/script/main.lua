@@ -1679,6 +1679,105 @@ for k, v in ipairs(main.t_selStoryMode) do
 	main.t_unlockLua.modes[v.name] = v.unlock
 end
 
+--OMugen: [Select Info] compact = 1 leaves out select.def's empty slots and
+--extra random select boxes, which other screenpacks use to shape their grids
+if motif.select_info.compact then
+	local t = {}
+	local random = false
+	for _, cell in ipairs(main.t_selGrid) do
+		for _, idx in ipairs(cell.chars) do
+			local char = main.t_selChars[idx].char
+			if char == 'randomselect' and #cell.chars == 1 then
+				if not random then
+					random = true
+					table.insert(t, cell)
+				end
+				break
+			elseif char ~= nil then
+				table.insert(t, cell)
+				break
+			end
+		end
+	end
+	main.t_selGrid = t
+end
+
+--OMugen: [Select Info] autolayout.area sizes the grid to the roster: the
+--biggest cells that fit everyone in the area, or the smallest allowed cells
+--and a scrolling grid
+function main.f_autoLayout(si, n)
+	local al = si.autolayout
+	local x1, y1, x2, y2 = al.area[1], al.area[2], al.area[3], al.area[4]
+	if x2 <= x1 or y2 <= y1 then
+		return false
+	end
+	n = math.max(1, n)
+	local minSize = math.max(8, al.cellsize[1])
+	local maxSize = math.max(minSize, al.cellsize[2])
+	local function fit(size, w)
+		local gap = math.max(2, math.floor(size * al.gap + 0.5))
+		local pitch = size + gap
+		local cols = math.max(1, math.floor((w + gap) / pitch))
+		return gap, pitch, cols, math.ceil(n / cols)
+	end
+	local w, h = x2 - x1, y2 - y1
+	local size = nil
+	for s = math.floor(maxSize), math.ceil(minSize), -1 do
+		local gap, pitch, cols, rows = fit(s, w)
+		if rows * pitch - gap <= h then
+			size = s
+			break
+		end
+	end
+	local scrolls = size == nil
+	if scrolls then
+		size = minSize
+		w = w - 16 --room for the scrollbar
+	end
+	local gap, pitch, cols, rows = fit(size, w)
+	local visible = math.max(1, math.floor((h + gap) / pitch))
+	if not scrolls then
+		--same rows, fewer empty cells in the last one
+		cols = math.ceil(n / rows)
+	end
+	si.columns = cols
+	si.rows = rows
+	si.visiblerows = scrolls and visible or 0
+	si.cell.size = {size, size}
+	si.cell.spacing = {gap, gap}
+	si.pos = {
+		x1 + math.floor((w - (cols * pitch - gap)) / 2),
+		y1 + math.floor((h - (math.min(rows, visible) * pitch - gap)) / 2),
+	}
+	--cell and cursor sprites are drawn for refsize cells
+	local k = size / (al.refsize > 0 and al.refsize or 100)
+	local function rescale(t)
+		if t ~= nil and t.scale ~= nil then
+			t.scale = {t.scale[1] * k, t.scale[2] * k}
+		end
+	end
+	--P2 starts at the other end of the first row
+	si.p2.cursor.startcell = {0, cols - 1}
+	rescale(si.cell.bg)
+	rescale(si.cell.random)
+	rescale(si.cell.slot)
+	rescale(si.portrait.loading)
+	for pn = 1, 2 do
+		local c = si['p' .. pn].cursor
+		for _, param in ipairs({'active', 'done', 'preview'}) do
+			if c[param] ~= nil then
+				rescale(c[param].default)
+			end
+		end
+	end
+	return true
+end
+
+if not main.f_autoLayout(motif.select_info, #main.t_selGrid) and motif.select_info.autorows then
+	--OMugen: [Select Info] autorows = 1 sizes the grid to the whole roster
+	motif.select_info.rows = math.max(1, math.ceil(#main.t_selGrid / motif.select_info.columns))
+end
+
 --add excluded characters once all slots are filled
 for i = #main.t_selGrid, motif.select_info.rows * motif.select_info.columns - 1 do
 	table.insert(main.t_selChars, {})
@@ -4037,6 +4136,12 @@ if getCommandLineValue("-p1") ~= nil and getCommandLineValue("-p2") ~= nil and g
 end
 
 main.f_loadingRefresh()
+
+--OMugen: say once that the built-in screenpack replaced one that failed to load
+local omugenNotice = omugenScreenpackNotice()
+if omugenNotice ~= '' then
+	main.f_warning(omugenNotice, motif.title_info, motif.titlebgdef)
+end
 
 if motif.attract_mode.enabled then
 	main.f_attractMode()

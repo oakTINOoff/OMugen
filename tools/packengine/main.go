@@ -47,6 +47,14 @@ var sources = []source{
 	{glob: "build/screenpack/data/gofx/*", dest: "data/gofx", required: true},
 	{glob: "build/screenpack/data/glyphs.sff", dest: "data", required: true},
 	{glob: "build/screenpack/font/Open_Sans.def", dest: "font", required: true},
+	// The OMugen screenpack (system.sff comes from tools/screenpackgen).
+	{glob: "screenpack/omugen/*", dest: "data/omugen", required: true},
+	{glob: "screenpack/omugen/fonts/*", dest: "data/omugen/fonts", required: true},
+	// Its fallback lifebars, for games whose own lifebars fail to load.
+	{glob: "build/screenpack/data/fight.*", dest: "data/omugen/lifebars", required: true},
+	{glob: "build/screenpack/data/fightfx.*", dest: "data/omugen/lifebars", required: true},
+	{glob: "build/screenpack/data/common.snd", dest: "data/omugen/lifebars", required: true},
+	{glob: "build/screenpack/data/ikemen1/fonts/*", dest: "data/omugen/lifebars/ikemen1/fonts", required: true},
 	// Runtime DLLs (SDL2, FFmpeg, libxmp, MinGW runtime).
 	{glob: "lib/*.dll", required: true},
 	// Licenses.

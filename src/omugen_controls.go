@@ -136,6 +136,7 @@ func omugenCaptureJoystick(reset bool) int {
 }
 
 func omugenScriptInit(l *lua.LState) {
+	omugenScreenpackScriptInit(l)
 	luaRegister(l, "omugenControlsActive", func(l *lua.LState) int {
 		/*Whether players 1-2 use MUGEN controls from data/mugen.cfg.
 		@function omugenControlsActive

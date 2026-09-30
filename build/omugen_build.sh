@@ -46,6 +46,12 @@ else
 		run_build
 		status=$?
 	fi
+	# The OMugen screenpack's sprites are generated (tools/screenpackgen).
+	if [[ $status -eq 0 ]] && { [[ ! -f screenpack/omugen/system.sff ]] || [[ -n "$(find tools/screenpackgen tools/internal -newer screenpack/omugen/system.sff -name '*.go')" ]]; }; then
+		echo "==> Generating the OMugen screenpack sprites" | tee -a "$LOG"
+		go run ./tools/screenpackgen 2>&1 | tee -a "$LOG"
+		status=${PIPESTATUS[0]}
+	fi
 	if [[ $status -eq 0 ]]; then
 		echo "==> Packing engine files" | tee -a "$LOG"
 		go run ./tools/packengine 2>&1 | tee -a "$LOG"

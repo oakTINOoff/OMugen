@@ -1,0 +1,13 @@
+; OMugen screenpack font: Open Sans SemiBold (SIL Open Font License)
+[FNT v2]
+fntversion = 2,00
+name = "Open Sans SemiBold"
+author = "Steve Matteson"
+
+[Def]
+Type = truetype
+Size = 0,28
+Spacing = 0,0
+Offset = 0,0
+File = Open_Sans/OpenSans-SemiBold.ttf
+Blend = 1

@@ -102,6 +102,7 @@ type Config struct {
 	} `ini:"Options"`
 	Config struct {
 		Motif             string   `ini:"Motif" sync:"strict"`
+		OMugenScreenpack  int32    `ini:"OMugenScreenpack" sync:"strict"`
 		Players           int      `ini:"Players" sync:"host"`
 		Language          string   `ini:"Language"`
 		AfterImageMax     int32    `ini:"AfterImageMax" sync:"host"`

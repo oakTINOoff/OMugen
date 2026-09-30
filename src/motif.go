@@ -426,6 +426,11 @@ type FaceProperties struct {
 	Num      int32               `ini:"num"`     // only used by P1-P2
 	Spacing  [2]float32          `ini:"spacing"` // only used by P1-P2
 	Padding  bool                `ini:"padding"` // only used by P1-P2
+	// OMugen: fit = w, h scales every portrait to fill a w x h box whose
+	// top-left corner is the portrait position; fitalign places it inside the
+	// box (-1 left/top, 0 center, 1 right/bottom).
+	Fit      [2]float32 `ini:"fit"`
+	FitAlign [2]float32 `ini:"fitalign" default:"0,1"`
 }
 
 type PlayerSelectProperties struct {
@@ -665,13 +670,26 @@ type SelectInfoProperties struct {
 	FadeOut              FadeProperties `ini:"fadeout"`
 	Rows                 int32          `ini:"rows" default:"2"`
 	Columns              int32          `ini:"columns" default:"5"`
+	AutoRows             bool           `ini:"autorows"`    // OMugen: rows = enough for the whole roster
+	VisibleRows          int32          `ini:"visiblerows"` // OMugen: >0 shows this many rows and scrolls the grid
+	Compact              bool           `ini:"compact"`     // OMugen: leave out select.def's empty slots
 	Wrapping             bool           `ini:"wrapping"`
 	Pos                  [2]float32     `ini:"pos"`
 	ShowEmptyBoxes       bool           `ini:"showemptyboxes"`
 	MoveOverEmptyBoxes   bool           `ini:"moveoveremptyboxes"`
 	SearchEmptyBoxesUp   bool           `ini:"searchemptyboxesup"`
 	SearchEmptyBoxesDown bool           `ini:"searchemptyboxesdown"`
-	Cell                 struct {
+	// OMugen: autolayout.area = x1, y1, x2, y2 sizes the grid to the roster:
+	// the biggest cells within autolayout.cellsize = min, max that fit the
+	// whole roster in the area, or the smallest ones and a scrolling grid.
+	// Cell and cursor sprites are drawn for cells of autolayout.refsize.
+	AutoLayout struct {
+		Area     [4]float32 `ini:"area"`
+		CellSize [2]float32 `ini:"cellsize" default:"48,128"`
+		Gap      float32    `ini:"gap" default:"0.08"`
+		RefSize  float32    `ini:"refsize" default:"100"`
+	} `ini:"autolayout"`
+	Cell struct {
 		Size    [2]int32   `ini:"size"`
 		Spacing [2]float32 `ini:"spacing"`
 		Up      struct {
@@ -751,6 +769,7 @@ type SelectInfoProperties struct {
 	Portrait struct {
 		AnimationCharPreloadProperties `skipinit:"true"`
 		Loading                        AnimationProperties `ini:"loading"`
+		Fit                            bool                `ini:"fit"` // OMugen: scale portraits to fill their cell
 	} `ini:"portrait"`
 	Title    TextMapProperties `ini:"title"`
 	Record   TextMapProperties `ini:"record"`
@@ -1829,6 +1848,7 @@ func loadMotif(def string) (*Motif, error) {
 	sys.keepAlive()
 
 	// Proceed with the regular heavyweight loads.
+	omugenScreenpackFiles(&m)
 	m.loadFiles()
 	sys.keepAlive()
 
@@ -1845,6 +1865,7 @@ func loadMotif(def string) (*Motif, error) {
 	m.Music = parseMusicSection(pickLangSectionMerged(iniFile, "Music"))
 	m.Music.DebugDump("Motif [Music]")
 
+	omugenScreenpackMusic(&m)
 	return &m, nil
 }
 
@@ -2556,6 +2577,22 @@ func (m *Motif) populateDataPointers() {
 }
 
 func (m *Motif) resolvePath() {
+	m.Def = gameMotifPath()
+	// OMugen: the built-in screenpack replaces the game's when chosen
+	// (an explicit -r always wins).
+	_, r := sys.cmdFlags["-r"]
+	_, rubric := sys.cmdFlags["-rubric"]
+	if omugenScreenpackWanted() && !r && !rubric {
+		if p := omugenScreenpackPath(); p != "" {
+			omugenUI.gameDef = m.Def
+			m.Def = p
+		}
+	}
+}
+
+// gameMotifPath resolves the motif set in the config, mugen.cfg or on the
+// command line.
+func gameMotifPath() string {
 	v := sys.cfg.Config.Motif
 	if x, ok := sys.cmdFlags["-r"]; ok {
 		v = x
@@ -2568,25 +2605,22 @@ func (m *Motif) resolvePath() {
 
 	if strings.HasPrefix(lower, "data/") {
 		if FileExist(v) != "" {
-			m.Def = v
-			return
+			return v
 		}
 	}
 
 	if strings.HasSuffix(lower, ".def") {
 		if cand := SearchFile(v, []string{"data/"}); FileExist(cand) != "" {
-			m.Def = filepath.ToSlash(cand)
-			return
+			return filepath.ToSlash(cand)
 		}
 	}
 
 	dir := filepath.ToSlash(filepath.Join("data", v)) + "/"
 	if cand := SearchFile("system.def", []string{dir}); FileExist(cand) != "" {
-		m.Def = filepath.ToSlash(cand)
-		return
+		return filepath.ToSlash(cand)
 	}
 
-	m.Def = v
+	return v
 }
 
 func (m *Motif) applyPostParsePosAdjustments() {

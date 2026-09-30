@@ -250,6 +250,7 @@ func processCommandLine() {
 			"-nojoy":          true,
 			"-nomusic":        true,
 			"-nosound":        true,
+			"-omugenui":       true,
 		}
 		key := ""
 		player := 1
@@ -312,7 +313,9 @@ Debug Options:
 -speed <speed>          Changes game speed setting to <speed> (-9 to 9)
 -stresstest <frameskip> Stability test (AI matches at speed increased by <frameskip>)
 -speedtest              Speed test (match speed x100)
--sessionseed <seed>     Start every (offline) match from the same random state`
+-sessionseed <seed>     Start every (offline) match from the same random state
+-inputscript <file>     Play scripted key presses (wait/tap/down/up/shot/quit)
+-omugenui               Use the OMugen screenpack (Config.OMugenScreenpack = 1)`
 					//ShowInfoDialog(text, "OMugen command line options")
 					fmt.Printf("OMugen command line options\n\n" + text + "\nPress ENTER to exit")
 					var s string

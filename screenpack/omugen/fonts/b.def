@@ -1,0 +1,13 @@
+; OMugen screenpack font: Open Sans Bold (SIL Open Font License)
+[FNT v2]
+fntversion = 2,00
+name = "Open Sans Bold"
+author = "Steve Matteson"
+
+[Def]
+Type = truetype
+Size = 0,32
+Spacing = 0,0
+Offset = 0,0
+File = Open_Sans/OpenSans-Bold.ttf
+Blend = 1

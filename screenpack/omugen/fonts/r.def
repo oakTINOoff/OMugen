@@ -1,0 +1,13 @@
+; OMugen screenpack font: Open Sans Regular (SIL Open Font License)
+[FNT v2]
+fntversion = 2,00
+name = "Open Sans"
+author = "Steve Matteson"
+
+[Def]
+Type = truetype
+Size = 0,26
+Spacing = 0,0
+Offset = 0,0
+File = Open_Sans/OpenSans-Regular.ttf
+Blend = 1

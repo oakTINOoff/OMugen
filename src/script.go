@@ -4452,7 +4452,15 @@ func systemScriptInit(l *lua.LState) {
 		if !nilArg(l, 1) {
 			def = strArg(l, 1)
 		}
-		fs, err := loadFightScreen(def)
+		fs, err := loadFightScreenSafe(def)
+		if err != nil {
+			// OMugen: fall back to the built-in lifebars
+			if fs2, err2 := omugenFightFallback(def, err); err2 == nil {
+				fs, err = fs2, nil
+			} else {
+				err = err2
+			}
+		}
 		if err != nil {
 			l.RaiseError("\nCan't load fight screen %v: %v\n", def, err.Error())
 		}
@@ -4469,7 +4477,11 @@ func systemScriptInit(l *lua.LState) {
 		if !nilArg(l, 1) {
 			def = strArg(l, 1)
 		}
-		m, err := loadMotif(def)
+		m, err := loadMotifSafe(def)
+		if err != nil && def == "" {
+			// OMugen: fall back to the built-in screenpack
+			m, err = omugenMotifFallback(err)
+		}
 		if err != nil {
 			l.RaiseError("\nCan't load motif %v: %v\n", def, err.Error())
 		}

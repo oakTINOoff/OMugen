@@ -744,6 +744,16 @@ function start.f_animGet(ref, side, member, params, velParams, loop, srcAnim)
 				animSetProjection(a, params.projection)
 				animSetFocalLength(a, params.focallength)
 				animSetWindow(a, params.window[1], params.window[2], params.window[3], params.window[4])
+				-- OMugen: face.fit = w, h scales any portrait to fill that box
+				-- (done faces use their face's box)
+				local fitP = params.fit ~= nil and params or velParams
+				if fitP.fit ~= nil and fitP.fit[1] > 0 and fitP.fit[2] > 0 then
+					local s, dx, dy = start.f_fitSprite(a, fitP.fit[1], fitP.fit[2], params.facing, fitP.fitalign[1], fitP.fitalign[2], v[1], v[2])
+					if s ~= nil then
+						animSetScale(a, s, s)
+						animSetPos(a, dx, dy)
+					end
+				end
 				if srcAnim ~= nil then
 					animApplyVel(a, srcAnim)
 				end
@@ -1165,6 +1175,124 @@ function getCellOffset(col, row)
 	return {0, 0}
 end
 
+--OMugen: scrolling select grid. With [Select Info] visiblerows = N (fewer
+--than rows), only N rows are shown and the grid scrolls to keep the cursor
+--in view, so rosters of any size fit on screen.
+start.gridScroll = 0 -- first visible row (0-based)
+start.gridFocus = nil -- player whose cursor the grid follows
+
+function start.f_gridVisibleRows()
+	local v = motif.select_info.visiblerows or 0
+	if v > 0 and v < motif.select_info.rows then
+		return v
+	end
+	return motif.select_info.rows
+end
+
+function start.f_gridScrolls()
+	return start.f_gridVisibleRows() < motif.select_info.rows
+end
+
+function start.f_gridRowPitch()
+	if start.t_grid[2] ~= nil and start.t_grid[1] ~= nil then
+		return start.t_grid[2][1].y - start.t_grid[1][1].y
+	end
+	return motif.select_info.cell.size[2] + motif.select_info.cell.spacing[2]
+end
+
+--vertical offset (in motif pixels) applied to every grid element
+function start.f_gridScrollY()
+	return start.gridScroll * start.f_gridRowPitch()
+end
+
+function start.f_gridRowVisible(row)
+	return row >= start.gridScroll and row < start.gridScroll + start.f_gridVisibleRows()
+end
+
+--scroll just enough to show 0-based row
+function start.f_gridFollow(row)
+	if not start.f_gridScrolls() or row == nil then
+		return
+	end
+	local vis = start.f_gridVisibleRows()
+	local s = start.gridScroll
+	if row < s then
+		s = row
+	elseif row >= s + vis then
+		s = row - vis + 1
+	end
+	s = math.max(0, math.min(s, motif.select_info.rows - vis))
+	if s ~= start.gridScroll then
+		start.gridScroll = s
+		start.needUpdateDrawList = true
+	end
+end
+
+--OMugen: scale that fits an anim's sprite into a w x h box, snapped to a whole
+--number when upscaling by nearly whole factors so pixel art stays sharp.
+--Also returns the offset from the box's top-left corner to the draw position
+--(halign/valign: -1 left/top, 0 center, 1 right/bottom). Returns nil while
+--the sprite isn't loaded.
+function start.f_fitSprite(anim, w, h, facing, halign, valign, group, number)
+	if anim == nil or w <= 0 or h <= 0 then
+		return nil
+	end
+	local info = animGetSpriteInfo(anim)
+	if info == nil and group ~= nil and number ~= nil and group >= 0 and number >= 0 then
+		info = animGetSpriteInfo(anim, group, number)
+	end
+	if info == nil or info.Size[1] <= 0 or info.Size[2] <= 0 then
+		return nil
+	end
+	local sw, sh = info.Size[1], info.Size[2]
+	local s = math.min(w / sw, h / sh)
+	if s > 1 then
+		local whole = math.floor(s)
+		if whole / s >= 0.85 then
+			s = whole
+		end
+	end
+	local ax = info.Offset[1]
+	if (facing or 1) < 0 then
+		ax = sw - ax
+	end
+	local dx = (w - sw * s) * ((halign or 0) + 1) / 2 + ax * s
+	local dy = (h - sh * s) * ((valign or 0) + 1) / 2 + info.Offset[2] * s
+	return s, dx, dy
+end
+
+local gridScrollbar = nil
+--thin scrollbar to the right of the grid
+function start.f_gridDrawScrollbar()
+	if not start.f_gridScrolls() then
+		return
+	end
+	if gridScrollbar == nil then
+		gridScrollbar = {track = rectNew(), thumb = rectNew()}
+		for _, r in pairs(gridScrollbar) do
+			rectSetLocalcoord(r, motif.info.localcoord[1], motif.info.localcoord[2])
+			rectSetLayerno(r, 1)
+		end
+		rectSetColor(gridScrollbar.track, 255, 255, 255)
+		rectSetAlpha(gridScrollbar.track, 40, 255)
+		rectSetColor(gridScrollbar.thumb, 230, 40, 40)
+		rectSetAlpha(gridScrollbar.thumb, 230, 25)
+	end
+	local pitchX = motif.select_info.cell.size[1] + motif.select_info.cell.spacing[1]
+	local x = motif.select_info.pos[1] + motif.select_info.columns * pitchX + 6
+	local y = motif.select_info.pos[2]
+	local h = start.f_gridVisibleRows() * start.f_gridRowPitch() - motif.select_info.cell.spacing[2]
+	local rows = motif.select_info.rows
+	local thumbH = math.max(12, h * start.f_gridVisibleRows() / rows)
+	local thumbY = y + (h - thumbH) * start.gridScroll / math.max(1, rows - start.f_gridVisibleRows())
+	rectSetWindow(gridScrollbar.track, x, y, x + 4, y + h)
+	rectSetWindow(gridScrollbar.thumb, x, thumbY, x + 4, thumbY + thumbH)
+	for _, r in pairs({gridScrollbar.track, gridScrollbar.thumb}) do
+		rectUpdate(r)
+		rectDraw(r)
+	end
+end
+
 function getCellSpacing(col, row)
 	local override = getCellOverride(col, row)
 	if override ~= nil and override.spacing ~= nil then
@@ -1234,7 +1362,11 @@ function start.f_drawCursor(pn, x, y, param, done)
 	if cellData then
 		-- cellData already includes all spacing and offsets
 		baseX = motif.select_info.pos[1] + cellData.x
-		baseY = motif.select_info.pos[2] + cellData.y
+		baseY = motif.select_info.pos[2] + cellData.y - start.f_gridScrollY()
+	end
+	-- OMugen: cursors on rows scrolled out of view are not drawn
+	if not start.f_gridRowVisible(y) then
+		return
 	end
 	-- initialization or snap: set cursor directly
 	if not cd.init or done or cd.snap then
@@ -2492,11 +2624,16 @@ end
 
 function start.updateDrawList()
 	local drawList = {}
+	start.gridFitPending = false
+	-- OMugen: only the visible rows of a scrolling grid, shifted by the scroll
+	local firstRow = start.gridScroll + 1
+	local lastRow = math.min(motif.select_info.rows, start.gridScroll + start.f_gridVisibleRows())
+	local scrollY = start.f_gridScrollY()
 
-	for row = 1, motif.select_info.rows do
+	for row = firstRow, lastRow do
 		for col = 1, motif.select_info.columns do
 			local cellIndex = (row - 1) * motif.select_info.columns + col
-			local t = start.t_grid[row][col]
+			local t = {x = start.t_grid[row][col].x, y = start.t_grid[row][col].y - scrollY, skip = start.t_grid[row][col].skip}
 			local c = col - 1
 			local r = row - 1
 
@@ -2546,9 +2683,22 @@ function start.updateDrawList()
 						item.x = item.x + portrait.offset[1]
 						item.y = item.y + portrait.offset[2]
 					end
+					-- OMugen: portrait.fit scales every portrait to fill its cell
+					local fitted = false
+					if motif.select_info.portrait.fit and not loadingPortrait then
+						local s, dx, dy = start.f_fitSprite(item.anim, motif.select_info.cell.size[1], motif.select_info.cell.size[2], item.facing, 0, 0)
+						if s ~= nil then
+							item.scale = {s, s}
+							item.x = motif.select_info.pos[1] + t.x + dx
+							item.y = motif.select_info.pos[2] + t.y + dy
+							fitted = true
+						else
+							start.gridFitPending = true
+						end
+					end
 					-- apply cell scale override while preserving portrait resolution factor
 					-- loading portrait comes from system.sff, so don't apply character localcoord scaling to it
-					if item.scale ~= nil and not loadingPortrait then
+					if item.scale ~= nil and not loadingPortrait and not fitted then
 						local charInfo = main.t_selChars[charData.char_ref + 1]
 						if charInfo then
 							local portraitScale = charInfo.portraitscale or 1
@@ -2689,6 +2839,12 @@ function start.f_selectScreen()
 	textImgReset(motif.select_info.record.TextSpriteData)
 	textImgSetText(motif.select_info.record.TextSpriteData, start.f_getRecordText())
 
+	-- OMugen: start a scrolling grid at the first player's cursor
+	start.gridScroll = 0
+	start.gridFocus = nil
+	if start.c[1] ~= nil then
+		start.f_gridFollow(start.c[1].selY)
+	end
 	local staticDrawList = start.updateDrawList()
 	start.needUpdateDrawList = false
 
@@ -2709,14 +2865,23 @@ function start.f_selectScreen()
 			end
 		end
 		--draw cell art
+		-- OMugen: keep the cursor that moved last in view on scrolling grids
+		if start.gridFocus ~= nil and start.c[start.gridFocus] ~= nil then
+			start.f_gridFollow(start.c[start.gridFocus].selY)
+		end
+		-- OMugen: fit portraits whose sprites have loaded since the last build
+		if start.gridFitPending and counter % 10 == 0 then
+			start.needUpdateDrawList = true
+		end
 		if start.needUpdateDrawList then
 			staticDrawList = start.updateDrawList()
-			start.needUpdateDrawList = false 
+			start.needUpdateDrawList = false
 		end
 		for _, item in ipairs(staticDrawList) do
 			animUpdate(item.anim)
 		end
 		batchDraw(staticDrawList)
+		start.f_gridDrawScrollbar()
 		--team and select menu
 		if blinkCount < motif.select_info.p2.cursor.switchtime then
 			blinkCount = blinkCount + 1
@@ -3522,7 +3687,11 @@ function start.f_selectMenu(side, cmd, player, member, selectState)
 				end
 			end
 			--calculate current position
+			local prevX, prevY = start.c[player].selX, start.c[player].selY
 			start.c[player].selX, start.c[player].selY = start.f_cellMovement(start.c[player].selX, start.c[player].selY, cmd, side, start.f_getCursorData(player).cursor.move.snd)
+			if start.gridFocus == nil or prevX ~= start.c[player].selX or prevY ~= start.c[player].selY then
+				start.gridFocus = player -- OMugen: scrolling grid follows this cursor
+			end
 			start.c[player].cell = start.c[player].selX + motif.select_info.columns * start.c[player].selY
 			start.c[player].selRef = start.f_selGrid(start.c[player].cell + 1).char_ref
 			main.f_preloadSetCharHighlight(player, start.c[player].selRef)
