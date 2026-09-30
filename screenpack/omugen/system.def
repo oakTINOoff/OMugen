@@ -38,16 +38,16 @@ title.font = 3, 0, 1, 255, 70, 84, 255, 24
 title.offset = 176, 514
 title.text = MAIN MENU
 
-menu.pos = 176, 590
+menu.pos = 176, 572
 menu.tween.factor = 0.35
 menu.item.font = 1, 0, 1, 132, 132, 146, 255, 40
 menu.item.active.font = 1, 0, 1, 255, 255, 255, 255, 40
-menu.item.spacing = 0, 60
+menu.item.spacing = 0, 54
 menu.item.active.bg.spr = 20, 0
 menu.item.active.bg.offset = -36, -15
-menu.item.active.bg.spacing = 0, 60
+menu.item.active.bg.spacing = 0, 54
 menu.window.margins.y = 40, 40
-menu.window.visibleitems = 7
+menu.window.visibleitems = 8
 menu.boxcursor.visible = 0
 
 cursor.move.snd = 100, 0
