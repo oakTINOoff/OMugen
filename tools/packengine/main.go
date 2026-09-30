@@ -51,10 +51,10 @@ var sources = []source{
 	{glob: "screenpack/omugen/*", dest: "data/omugen", required: true},
 	{glob: "screenpack/omugen/fonts/*", dest: "data/omugen/fonts", required: true},
 	// Its fallback lifebars, for games whose own lifebars fail to load.
-	{glob: "build/screenpack/data/fight.*", dest: "data/omugen/lifebars", required: true},
-	{glob: "build/screenpack/data/fightfx.*", dest: "data/omugen/lifebars", required: true},
-	{glob: "build/screenpack/data/common.snd", dest: "data/omugen/lifebars", required: true},
-	{glob: "build/screenpack/data/ikemen1/fonts/*", dest: "data/omugen/lifebars/ikemen1/fonts", required: true},
+	{glob: "build/screenpack/data/fight.*", dest: "data/omugen/omugen-fallback-lifebars", required: true},
+	{glob: "build/screenpack/data/fightfx.*", dest: "data/omugen/omugen-fallback-lifebars", required: true},
+	{glob: "build/screenpack/data/common.snd", dest: "data/omugen/omugen-fallback-lifebars", required: true},
+	{glob: "build/screenpack/data/ikemen1/fonts/*", dest: "data/omugen/omugen-fallback-lifebars/ikemen1/fonts", required: true},
 	// Runtime DLLs (SDL2, FFmpeg, libxmp, MinGW runtime).
 	{glob: "lib/*.dll", required: true},
 	// Licenses.

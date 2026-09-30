@@ -1261,6 +1261,41 @@ function start.f_fitSprite(anim, w, h, facing, halign, valign, group, number)
 	return s, dx, dy
 end
 
+--OMugen: places a small portrait in a cell of any size. Every portrait gets
+--the scale that makes MUGEN's standard 25x25 portrait fill the cell (a whole
+--number when close, so pixel art stays sharp), adjusted for the character's
+--localcoord and portraitscale like MUGEN does. Portraits that fit are
+--centered; bigger or oddly shaped ones keep their author's axis placement
+--and are cut to the cell. Returns scale and draw position, or nil while the
+--sprite isn't loaded.
+function start.f_cellPortrait(anim, charInfo, x0, y0, facing)
+	local info = animGetSpriteInfo(anim)
+	if info == nil or info.Size[1] <= 0 or info.Size[2] <= 0 then
+		return nil
+	end
+	local cw, ch = motif.select_info.cell.size[1], motif.select_info.cell.size[2]
+	local base = math.min(cw, ch) / 25
+	if base > 1 then
+		local whole = math.floor(base)
+		if whole / base >= 0.85 then
+			base = whole
+		end
+	end
+	local lc = (charInfo and charInfo.localcoord) or 320
+	local ps = (charInfo and charInfo.portraitscale) or 1
+	local s = base * ps * 320 / lc
+	local w, h = info.Size[1] * s, info.Size[2] * s
+	local ax = info.Offset[1]
+	if (facing or 1) < 0 then
+		ax = info.Size[1] - ax
+	end
+	animSetWindow(anim, x0, y0, x0 + cw, y0 + ch)
+	if w <= cw and h <= ch then
+		return s, x0 + (cw - w) / 2 + ax * s, y0 + (ch - h) / 2 + info.Offset[2] * s
+	end
+	return s, x0, y0
+end
+
 local gridScrollbar = nil
 --thin scrollbar to the right of the grid
 function start.f_gridDrawScrollbar()
@@ -2683,14 +2718,15 @@ function start.updateDrawList()
 						item.x = item.x + portrait.offset[1]
 						item.y = item.y + portrait.offset[2]
 					end
-					-- OMugen: portrait.fit scales every portrait to fill its cell
+					-- OMugen: portrait.fit sizes portraits to the cell
 					local fitted = false
 					if motif.select_info.portrait.fit and not loadingPortrait then
-						local s, dx, dy = start.f_fitSprite(item.anim, motif.select_info.cell.size[1], motif.select_info.cell.size[2], item.facing, 0, 0)
+						local x0 = motif.select_info.pos[1] + t.x
+						local y0 = motif.select_info.pos[2] + t.y
+						local s, x, y = start.f_cellPortrait(item.anim, main.t_selChars[charData.char_ref + 1], x0, y0, item.facing)
 						if s ~= nil then
 							item.scale = {s, s}
-							item.x = motif.select_info.pos[1] + t.x + dx
-							item.y = motif.select_info.pos[2] + t.y + dy
+							item.x, item.y = x, y
 							fitted = true
 						else
 							start.gridFitPending = true

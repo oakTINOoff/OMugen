@@ -16,8 +16,20 @@ import (
 
 const (
 	omugenMotifDef = "data/omugen/system.def"
-	omugenFightDef = "data/omugen/lifebars/fight.def"
+	// A folder name no game uses, so game paths looked up relative to the
+	// OMugen screenpack (like "LIFEBARS/fight.sff") can't land in it.
+	omugenFightDef = "data/omugen/omugen-fallback-lifebars/fight.def"
 )
+
+// fightMotifDef is the motif that lifebar files are looked up next to: the
+// game's own screenpack, also when the OMugen screenpack replaces it, as
+// MUGEN looks next to the game's motif.
+func fightMotifDef() string {
+	if omugenUI.gameDef != "" && isOMugenMotif(sys.motif.Def) {
+		return omugenUI.gameDef
+	}
+	return sys.motif.Def
+}
 
 var omugenUI struct {
 	gameDef string // the game's own motif when the OMugen screenpack replaces it
