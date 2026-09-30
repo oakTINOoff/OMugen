@@ -3,6 +3,7 @@
 package mugenjoy
 
 import (
+	"fmt"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -80,9 +81,36 @@ func newBackend() backend {
 }
 
 func joyGetPosEx(id int, info *joyInfoEx) bool {
+	return joyGetPosExCode(id, info) == 0
+}
+
+func joyGetPosExCode(id int, info *joyInfoEx) uintptr {
 	info.Size = uint32(unsafe.Sizeof(*info))
 	r, _, _ := procJoyGetPosEx.Call(uintptr(id), uintptr(unsafe.Pointer(info)))
-	return r == 0
+	return r
+}
+
+// RawDump reports what WinMM returns for every joystick ID, for diagnostics.
+func RawDump() []string {
+	if procJoyGetNumDevs.Find() != nil {
+		return []string{"winmm.dll not available"}
+	}
+	n, _, _ := procJoyGetNumDevs.Call()
+	var out []string
+	for id := 0; id < int(n); id++ {
+		var info joyInfoEx
+		info.Flags = joyReturnAll | joyReturnPOVCTS
+		r := joyGetPosExCode(id, &info)
+		if r != 0 {
+			if r != 167 { // JOYERR_UNPLUGGED is the normal answer for empty IDs
+				out = append(out, fmt.Sprintf("id %2d: error %d", id, r))
+			}
+			continue
+		}
+		out = append(out, fmt.Sprintf("id %2d: X=%5d Y=%5d Z=%5d R=%5d U=%5d V=%5d buttons=%08x pov=%d",
+			id, info.Xpos, info.Ypos, info.Zpos, info.Rpos, info.Upos, info.Vpos, info.Buttons, info.POV))
+	}
+	return out
 }
 
 // enumerate mirrors SDL_SYS_JoystickInit: every WinMM ID that answers

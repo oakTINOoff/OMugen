@@ -11,3 +11,6 @@ func newBackend() backend { return nullBackend{} }
 func (nullBackend) enumerate() []DeviceInfo { return nil }
 
 func (nullBackend) read(DeviceInfo) (Snapshot, bool) { return Snapshot{}, false }
+
+// RawDump reports raw joystick data for diagnostics (none on this platform).
+func RawDump() []string { return []string{"no MUGEN-style joystick backend on this platform"} }

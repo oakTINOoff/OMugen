@@ -22,7 +22,17 @@ var actions = []string{"Jump", "Crouch", "Left", "Right", "A", "B", "C", "X", "Y
 
 func main() {
 	cfgPath := flag.String("cfg", "", "mugen.cfg to show what each pressed code is bound to (default: data/mugen.cfg if present)")
+	raw := flag.Bool("raw", false, "print raw WinMM data for every joystick ID twice per second")
 	flag.Parse()
+	if *raw {
+		for {
+			fmt.Println(time.Now().Format("15:04:05.0"))
+			for _, line := range mugenjoy.RawDump() {
+				fmt.Println("  " + line)
+			}
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
 	if *cfgPath == "" {
 		if _, err := os.Stat("data/mugen.cfg"); err == nil {
 			*cfgPath = "data/mugen.cfg"
