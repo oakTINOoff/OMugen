@@ -1788,10 +1788,12 @@ func preloadSff(filename string, char bool, preloadSpr map[[2]uint16]bool) (*Sff
 	sff := newSff()
 	sff.filename = filename
 
-	f, err := OpenFile(filename)
+	raw, err := OpenFile(filename)
 	if err != nil {
 		return nil, nil, err
 	}
+	// OMugen: buffer the many small header reads of the sprite walk.
+	f := newBufReadSeeker(raw, 64<<10)
 
 	defer func() {
 		chk(f.Close())

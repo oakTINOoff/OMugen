@@ -4712,6 +4712,8 @@ type Select struct {
 	preloadCond        *sync.Cond
 	preloadWorkerRun   bool
 	preloadOrder       int64
+	preloadBatchStart  time.Time // OMugen: timing of a background loading run
+	preloadBatchCount  int
 	charPreload        []PreloadEntry
 	stagePreload       []PreloadEntry
 }
@@ -4786,9 +4788,22 @@ func (s *Select) ensurePreloadWorker() {
 	}
 	s.preloadWorkerRun = true
 	s.preloadMu.Unlock()
-	SafeGo(func() {
-		s.preloadWorkerLoop()
-	})
+	// OMugen: several workers; each claims a queued entry under preloadMu.
+	for i := 0; i < preloadWorkerCount(); i++ {
+		SafeGo(func() {
+			s.preloadWorkerLoop()
+		})
+	}
+}
+
+// preloadWorkerCount is how many background asset loaders run: half the CPU
+// threads (leaving room for rendering and the OS), capped at 12.
+// OMUGEN_PRELOAD_WORKERS overrides it.
+func preloadWorkerCount() int {
+	if v := Atoi(os.Getenv("OMUGEN_PRELOAD_WORKERS")); v > 0 {
+		return int(v)
+	}
+	return int(Clamp(int32(runtime.NumCPU()/2), 1, 12))
 }
 
 func (s *Select) ensureCharPreloadSlot(ref int) {
@@ -4973,6 +4988,9 @@ func (s *Select) preloadWorkerLoop() {
 					s.stagePreload[ref-1].State = PS_Loading
 					//s.stagePreload[ref-1].Err = ""
 				}
+				if s.preloadBatchCount == 0 {
+					s.preloadBatchStart = time.Now()
+				}
 				s.preloadMu.Unlock()
 
 				var err error
@@ -4991,6 +5009,12 @@ func (s *Select) preloadWorkerLoop() {
 				} else {
 					s.stagePreload[ref-1].State = PS_Ready
 				}
+				s.preloadBatchCount++
+				if s.preloadIdleLocked() {
+					LogMessage("OMugen: background loading finished: %d characters/stages in %v (%d workers)",
+						s.preloadBatchCount, time.Since(s.preloadBatchStart).Round(time.Millisecond), preloadWorkerCount())
+					s.preloadBatchCount = 0
+				}
 				s.preloadCond.Broadcast()
 				break
 			}
@@ -5000,11 +5024,29 @@ func (s *Select) preloadWorkerLoop() {
 	}
 }
 
+// preloadIdleLocked reports whether nothing is queued or loading. Caller holds preloadMu.
+func (s *Select) preloadIdleLocked() bool {
+	for _, e := range s.charPreload {
+		if e.State == PS_Queued || e.State == PS_Loading {
+			return false
+		}
+	}
+	for _, e := range s.stagePreload {
+		if e.State == PS_Queued || e.State == PS_Loading {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *Select) preloadCharAssets(ref int) error {
+	s.preloadMu.Lock()
 	if ref < 0 || ref >= len(s.charlist) {
+		s.preloadMu.Unlock()
 		return nil
 	}
 	sc := s.charlist[ref]
+	s.preloadMu.Unlock()
 	localAnims := NewPreloadedAnims()
 	listSpr := make(map[[2]uint16]bool)
 	for k := range s.charSpritePreload {
@@ -5253,7 +5295,10 @@ func getDefaultDefPathInZip(zipFilePathOnDisk string) (path1 string, path2 strin
 func (s *Select) AddChar(def string) *SelectChar {
 	tnow := time.Now()
 	defer loadProfChar()
+	// Growing charlist can move it; preload workers access it under preloadMu.
+	s.preloadMu.Lock()
 	s.charlist = append(s.charlist, *newSelectChar())
+	s.preloadMu.Unlock()
 	sc := &s.charlist[len(s.charlist)-1]
 
 	parts := strings.Split(def, ",")
@@ -5465,11 +5510,12 @@ func (s *Select) AddChar(def string) *SelectChar {
 	tphase = time.Now()
 	LoadFile(&cns_orig, []string{sc.def, "", "data/"}, "", func(filename string) error {
 		defer loadProfAdd("3cns", tphase)
-		str, err := LoadText(filename)
+		// OMugen: only [Size] is needed here; stop reading the .cns after it.
+		lines, err := loadFirstIniSection(filename, "size")
 		if err != nil {
 			return err
 		}
-		lines, lnidx := SplitAndTrim(str, "\n"), 0
+		lnidx := 0
 		for lnidx < len(lines) {
 			is, name, _ := ReadIniSection(lines, &lnidx)
 			switch name {
