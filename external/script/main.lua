@@ -220,7 +220,7 @@ end
 if getCommandLineValue("-framerate") ~= nil then
 	local target_framerate = gameOption('Video.Framerate')
 	custom_framerate = tonumber(getCommandLineValue("-framerate"))
-	if custom_framerate ~= nil and custom_framerate > 0 then
+	if custom_framerate ~= nil and custom_framerate >= 0 then -- 0: the monitor
 		target_framerate = custom_framerate
 	end
 	modifyGameOption('Video.Framerate', target_framerate)

@@ -2802,6 +2802,7 @@ func (s *System) screenright() float32 {
 // Core game logic. Chars, stage, projectiles, etc
 // The part that can rewind and fast forward during rollbacks
 func (s *System) action() {
+	camSmooth.show, camSmooth.frac = false, 1
 	if s.matchPaused() {
 		return
 	}
@@ -2900,8 +2901,17 @@ func (s *System) action() {
 		s.globalTick()
 	}
 
-	// Run camera
-	x, y, scl = s.cam.action(x, y, scl, s.supertime > 0 || s.pausetime > 0)
+	// Run camera. OMugen: its logic runs once per game tick, on the tick's
+	// last frame, so the screen edges don't depend on the frame rate; the
+	// frames before it are drawn with a blended camera (omugen_smoothcam.go).
+	camPause := s.supertime > 0 || s.pausetime > 0
+	if s.tickNextFrame() {
+		x, y, scl = s.cam.action(x, y, scl, camPause)
+		camSmooth.valid = false
+		omugenTickLog()
+	} else if s.tickFrame() {
+		s.camSmoothPrepare(x, y, scl, camPause)
+	}
 
 	// Character intro skipping
 	if s.tickNextFrame() {
@@ -2926,6 +2936,7 @@ func (s *System) action() {
 		s.xmin = s.cam.minLeft
 	}
 	s.charList.xScreenBound()
+	s.camSmoothFrame()
 
 	// Note: Explod update must happen after hit detection. Because hit sparks are also explods
 	s.explodUpdate()
@@ -4231,8 +4242,10 @@ func (s *System) runMatch() (reload bool) {
 		}
 
 		// Cue sprites, then render
+		restoreCam := s.camSmoothBegin()
 		s.cueDraw()
 		s.renderFrame()
+		restoreCam()
 
 		// Update system. Break if update returns false (engine shutdown).
 		if !s.update() {
@@ -4467,6 +4480,9 @@ func (s *System) gameRenderSpeed() int {
 		spd = 60
 	} else {
 		spd = int32(s.cfg.Video.Framerate)
+		if spd <= 0 { // OMugen: 0 = the monitor's refresh rate
+			spd = int32(monitorRefreshRate())
+		}
 	}
 	return int(Max(1, spd))
 }

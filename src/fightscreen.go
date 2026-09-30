@@ -3449,7 +3449,9 @@ func (ro *FightScreenRound) act() bool {
 	} else if ro.fadeIn.isActive() {
 		ro.fadeIn.step()
 	}
-	if ro.shutterTimer > 0 && sys.tickNextFrame() {
+	// OMugen: stepped with the round state on the tick's first frame (the same
+	// frame at 60 fps), so the round state doesn't depend on the frame rate.
+	if ro.shutterTimer > 0 && sys.tickFrame() {
 		// Signal system to skip intros when shutter is about to be fully closed
 		// This ensures the intros will skip even if/when the shutter updates at a different rate than characters
 		// https://github.com/ikemen-engine/Ikemen-GO/issues/2720
@@ -3485,7 +3487,7 @@ func (ro *FightScreenRound) act() bool {
 		ro.fightDisplayPhase = 0
 		ro.roundDisplayTimer = 0
 		ro.fightDisplayTimer = 0
-	} else if (sys.intro >= 0 && !sys.tickNextFrame()) || sys.motif.di.active || ro.shutterTimer > 0 {
+	} else if (sys.intro >= 0 && !sys.tickFrame()) || sys.motif.di.active || ro.shutterTimer > 0 {
 		// Skip announcements during the middle of the round, "shuttertime" or dialogues
 		// Mugen ignores the "shuttertime" here, but that makes the round/fight announcement too abrupt
 		return false

@@ -20,6 +20,7 @@ screenpack for any roster size, and tools to find what's broken in a game.
 | Rosters of any size | Fixed grid from the screenpack | OMugen screenpack sizes and scrolls its grid to the roster |
 | Checking a whole game | — | `OMugen.exe -doctor`: loads every character and stage, writes a report |
 | Content MUGEN tolerates | Some characters refused (bad statedef types, extra values, Windows-1252 file names) | Loaded with a warning, as in MUGEN |
+| High refresh rate monitors | Frame rate only in the config file; above 60 fps the camera moves faster and can change gameplay | Options > Video > Frame Rate (up to 240, or the monitor's rate): the game still runs at 60 ticks per second and plays identically (checked tick by tick at 60, 144 and 240 fps), with the characters, camera and stage scrolling drawn smoothly between ticks |
 | Effects | — | Optional glow (bloom) on additive effects |
 | Making your own game | Start from an empty folder | `OMugen.exe -newgame "My Game"`: a playable game with a template fighter and stage, all generated from code |
 
@@ -46,6 +47,9 @@ reports). Files in the game folder always take priority over the engine's copies
   (errors, crashes, missing sprites and warnings, grouped by how common they are).
   Options: `-doctor chars|stages`, `-doctorlimit N`, `-doctorfilter name1,name2`.
 - **Glow:** Options > Video Settings > Glow Effects (off by default, like MUGEN).
+- **Frame rate:** Options > Video Settings > Frame Rate: 60 (default, like MUGEN), 120, 144, 165, 240
+  or Monitor. Game logic always runs at 60 ticks per second; `OMUGEN_TICKLOG=file` logs the
+  game state of every tick to check that a match plays the same at any frame rate.
 
 ## Making your own game
 `OMugen.exe -newgame "My Game"` creates a folder with everything a new fighting game needs,

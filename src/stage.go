@@ -113,6 +113,7 @@ type backGround struct {
 	palfx                 *PalFX
 	anim                  *Animation
 	bga                   bgAction
+	prevOffset            [2]float32 // OMugen: bga.offset at the previous game tick
 	video                 *bgVideo
 	id                    int32
 	start                 [2]float32
@@ -529,6 +530,11 @@ func (bg *backGround) changeAnim(animNo int32, table AnimationTable) {
 
 func (bg backGround) draw(pos [2]float32, drawscl, bgscl, stglscl float32,
 	stgscl [2]float32, shakeY float32, isStage bool) {
+
+	// OMugen: between game ticks, scroll smoothly (bg is a copy)
+	if isStage {
+		bg.bga.offset = bg.smoothOffset()
+	}
 
 	// Handle parallax scaling (type = 2)
 	scalestartX := bg.scalestart[0]
@@ -1817,6 +1823,9 @@ func (s *Stage) action() {
 
 	// Update animations and controllers
 	if canStep {
+		for i := range s.bg {
+			s.bg[i].prevOffset = s.bg[i].bga.offset
+		}
 		s.bgCtrlAction()
 		s.bga.action(true)
 
@@ -1829,7 +1838,10 @@ func (s *Stage) action() {
 	// This prevents the decoder clock from advancing during pause.
 	for i := range s.bg {
 		if s.bg[i]._type == BG_Video && s.bg[i].video != nil {
-			shouldPlay := s.bg[i].enabled && canStep
+			// OMugen: not canStep, which is false between game ticks when
+			// drawing faster than 60 fps (the video played at a fraction of
+			// its speed).
+			shouldPlay := s.bg[i].enabled && !s.paused()
 			// Apply visibility first so there's no frame-0 audio when Visible=0.
 			s.bg[i].video.SetVisible(s.bg[i].visible)
 			s.bg[i].video.SetPlaying(shouldPlay)

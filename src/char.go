@@ -12261,6 +12261,16 @@ func (c *Char) actionFinish() {
 }
 
 func (c *Char) track() {
+	c.trackCamera(false)
+}
+
+// trackCamera adds the character to the camera's tracking bounds, from its
+// drawn (interpolated) position or, with usePos, its game position.
+func (c *Char) trackCamera(usePos bool) {
+	p := c.interPos
+	if usePos {
+		p = c.pos
+	}
 	if c.trackableByCamera() {
 
 		// This doesn't seem necessary currently. Handled by xScreenBound()
@@ -12275,8 +12285,8 @@ func (c *Char) track() {
 				edgeleft, edgeright = -edgeright, -edgeleft
 			}
 
-			charleft := c.interPos[0]*c.localscl + edgeleft*c.localscl
-			charright := c.interPos[0]*c.localscl + edgeright*c.localscl
+			charleft := p[0]*c.localscl + edgeleft*c.localscl
+			charright := p[0]*c.localscl + edgeright*c.localscl
 			canmove := c.acttmp > 0 && !c.csf(CSF_posfreeze) && (c.bindTime == 0 || math.IsNaN(float64(c.bindPos[0])))
 			bindToCharacter := sys.playerID(c.bindToId)
 			if charleft < sys.cam.leftest {
@@ -12307,8 +12317,8 @@ func (c *Char) track() {
 
 		// Y axis
 		if c.csf(CSF_movecamera_y) && !c.scf(SCF_standby) && !math.IsInf(float64(c.pos[1]), 0) {
-			sys.cam.highest = Min(c.interPos[1]*c.localscl, sys.cam.highest)
-			sys.cam.lowest = Max(c.interPos[1]*c.localscl, sys.cam.lowest)
+			sys.cam.highest = Min(p[1]*c.localscl, sys.cam.highest)
+			sys.cam.lowest = Max(p[1]*c.localscl, sys.cam.lowest)
 			//sys.cam.Pos[1] = 0 // This doesn't seem necessary in the current state of the code
 			// Mugen ignores characters that have infinite position
 			// https://github.com/ikemen-engine/Ikemen-GO/issues/1917

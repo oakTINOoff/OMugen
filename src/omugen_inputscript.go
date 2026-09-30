@@ -4,8 +4,9 @@ package main
 // frame by frame, for automated testing of menus and screenpacks. It never
 // touches the real keyboard or other windows. Commands, one per line:
 //
-//	wait N          wait N frames
+//	wait N          wait N frames (in a match: N game ticks, at any frame rate)
 //	sleep MS        wait MS milliseconds (loading screens render faster than 60 fps)
+//	waitmatch       wait until a match is running (then waits count its ticks)
 //	tap KEY [N]     hold KEY for N frames (default 4), then release it
 //	down KEY        press KEY (until "up KEY")
 //	up KEY          release KEY
@@ -35,6 +36,7 @@ var omugenInput struct {
 	wait     int
 	until    time.Time
 	releases map[Key]int // key -> frames left before release
+	lastTick int
 }
 
 func omugenInputScriptLoad() {
@@ -77,6 +79,14 @@ func omugenInputScriptTick() {
 	if omugenInput.releases == nil {
 		return
 	}
+	// In a match, count game ticks, not frames, so a script plays the same at
+	// any frame rate.
+	if sys.gameRunning && !sys.matchPaused() {
+		if sys.tickCount == omugenInput.lastTick {
+			return
+		}
+		omugenInput.lastTick = sys.tickCount
+	}
 	for k, left := range omugenInput.releases {
 		if left <= 1 {
 			OnKeyReleased(k, 0)
@@ -100,6 +110,11 @@ func omugenInputScriptTick() {
 		case "wait":
 			omugenInput.wait = c.n
 			return
+		case "waitmatch":
+			if !sys.gameRunning {
+				omugenInput.pc-- // until a match is running
+				return
+			}
 		case "sleep":
 			omugenInput.until = time.Now().Add(time.Duration(Atoi(c.arg)) * time.Millisecond)
 			return

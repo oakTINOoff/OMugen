@@ -193,7 +193,7 @@ options.t_itemname = {
 			modifyGameOption('Video.Fullscreen', false)
 			--modifyGameOption('Video.Borderless', false)
 			--modifyGameOption('Video.RGBSpriteBilinearFilter', true)
-			--modifyGameOption('Video.Framerate', 60)
+			modifyGameOption('Video.Framerate', 60)
 			modifyGameOption('Video.VSync', 1)
 			modifyGameOption('Video.MSAA', 0)
 			--modifyGameOption('Video.WindowCentered', true)
@@ -857,6 +857,31 @@ options.t_itemname = {
 			end
 			toggleVSync(gameOption('Video.VSync'))
 			t.items[item].vardisplay = options.t_vardisplay['vsync']()
+			options.modified = true
+		end
+		return true
+	end,
+	--OMugen: frame rate. The game still runs at 60 ticks per second; frames
+	--between ticks are drawn smoothly. 0 = the monitor's refresh rate.
+	['framerate'] = function(t, item, cursorPosY, moveTxt)
+		local rates = {60, 120, 144, 165, 240, 0}
+		local cur = 1
+		for i, v in ipairs(rates) do
+			if v == gameOption('Video.Framerate') then
+				cur = i
+			end
+		end
+		local step = 0
+		if getInput(-1, motif.option_info.menu.add.key, motif.option_info.menu.done.key) then
+			step = 1
+		elseif getInput(-1, motif.option_info.menu.subtract.key) then
+			step = -1
+		end
+		if step ~= 0 then
+			sndPlay(motif.Snd, motif.option_info.cursor.move.snd[1], motif.option_info.cursor.move.snd[2])
+			cur = (cur - 1 + step) % #rates + 1
+			modifyGameOption('Video.Framerate', rates[cur])
+			t.items[item].vardisplay = options.t_vardisplay['framerate']()
 			options.modified = true
 		end
 		return true
@@ -1632,6 +1657,13 @@ options.t_vardisplay = {
 	end,
 	['turnsrecoverybonus'] = function()
 		return gameOption('Options.Turns.Recovery.Bonus') .. '%'
+	end,
+	['framerate'] = function()
+		local v = gameOption('Video.Framerate')
+		if v == 0 then
+			return 'Monitor (' .. getMonitorRefreshRate() .. ')'
+		end
+		return v .. ' fps'
 	end,
 	['vsync'] = function()
 		return options.f_definedDisplay(gameOption('Video.VSync'), {[1] = motif.option_info.menu.valuename.enabled}, motif.option_info.menu.valuename.disabled)

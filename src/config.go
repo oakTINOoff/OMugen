@@ -341,7 +341,7 @@ func (c *Config) normalize() {
 	c.SetValueUpdate("Options.Simul.Min", int(Clamp(int32(c.Options.Simul.Min), 2, int32(MaxSimul))))
 	c.SetValueUpdate("Options.Tag.Max", int(Clamp(int32(c.Options.Tag.Max), int32(c.Options.Tag.Min), int32(MaxSimul))))
 	c.SetValueUpdate("Options.Tag.Min", int(Clamp(int32(c.Options.Tag.Min), 2, int32(MaxSimul))))
-	c.SetValueUpdate("Video.Framerate", int(Clamp(int32(c.Video.Framerate), 1, 840)))
+	c.SetValueUpdate("Video.Framerate", int(Clamp(int32(c.Video.Framerate), 0, 840))) // 0: monitor
 	c.SetValueUpdate("Netplay.ListenPort", int(Clamp(int32(c.Netplay.ListenPort), 1, 65535)))
 
 	// Options that determine allocation sizes should not be negative

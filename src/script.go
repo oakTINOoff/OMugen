@@ -7743,6 +7743,11 @@ func systemScriptInit(l *lua.LState) {
 		}
 		return 0
 	})
+	// OMugen: refresh rate of the window's display (Frame Rate = Monitor)
+	luaRegister(l, "getMonitorRefreshRate", func(*lua.LState) int {
+		l.Push(lua.LNumber(monitorRefreshRate()))
+		return 1
+	})
 	luaRegister(l, "toggleVSync", func(*lua.LState) int {
 		/*Toggle vertical sync (VSync).
 		@function toggleVSync
