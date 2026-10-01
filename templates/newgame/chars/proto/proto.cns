@@ -98,11 +98,25 @@ type = ChangeState
 trigger1 = AnimTime = 0
 value = 0
 
+; The engine puts the round's winner in state 180: start the win pose.
+[Statedef 180]
+type = S
+
+[State 180, Win pose]
+type = ChangeState
+trigger1 = Time = 0
+value = 181
+
 [Statedef 181]
 type = S
 ctrl = 0
 anim = 181
 velset = 0,0
+
+[State 181, Finish the pose]
+type = AssertSpecial
+trigger1 = Time < 70        ;the round waits until the pose is done
+flag = RoundNotOver
 
 ;===========================================================================
 ; Taunt (Start)

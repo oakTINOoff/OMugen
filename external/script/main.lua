@@ -1078,6 +1078,33 @@ function main.f_commandLine()
 				break
 			end
 		end
+	elseif not main.f_fileExists(stage) then
+		--OMugen: a game without the default stage (such as one made with
+		---newgame) uses the first stage of its select.def
+		local selectDef = 'data/select.def' -- the screenpack isn't loaded here
+		if motif ~= nil and motif.files ~= nil and motif.files.select ~= nil then
+			selectDef = motif.files.select
+		end
+		local content = main.f_fileRead(selectDef, nil, true) or ''
+		local section = ''
+		for line in content:gmatch('[^\r\n]+') do
+			line = line:gsub('%s*;.*$', '')
+			local header = line:lower():match('^%s*%[%s*([^%]]-)%s*%]')
+			if header ~= nil then
+				section = header
+			else
+				local tok = nil
+				if section == 'extrastages' then
+					tok = line:match('^%s*([^,]-)%s*$') or line:match('^%s*([^,]-)%s*,')
+				elseif section == 'characters' then
+					tok = line:match('^[^,]*,%s*([^,=]-)%s*$') or line:match('^[^,]*,%s*([^,=]-)%s*,')
+				end
+				if tok ~= nil and tok ~= '' and main.f_fileExists(tok) then
+					stage = tok
+					break
+				end
+			end
+		end
 	end
 	local stageKey = stage:lower()
 	local stageRef = main.t_stageDef[stageKey]
