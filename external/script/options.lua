@@ -1992,6 +1992,11 @@ end
 --controller id used to group bindings for conflict checks
 local function f_keyCfgJoy(cfgType, pn)
 	if f_mugenPlayer(pn) then
+		--OMugen: players share the keyboard, but in MUGEN each player has their
+		--own pad, so the same button on two pads is not a conflict
+		if cfgType == 'Joystick' then
+			return 'mugenJoystick' .. pn
+		end
 		return 'mugen' .. cfgType
 	end
 	return gameOption(cfgType .. '_P' .. pn .. '.Joystick')
