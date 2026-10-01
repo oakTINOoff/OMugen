@@ -7743,6 +7743,20 @@ func systemScriptInit(l *lua.LState) {
 		}
 		return 0
 	})
+	// OMugen: read the roster's files in parallel (cold starts), see omugen_prefetch.go
+	luaRegister(l, "prefetchRoster", func(*lua.LState) int {
+		toList := func(t *lua.LTable) []string {
+			var out []string
+			t.ForEach(func(_, v lua.LValue) {
+				if s, ok := v.(lua.LString); ok {
+					out = append(out, string(s))
+				}
+			})
+			return out
+		}
+		prefetchRoster(toList(l.CheckTable(1)), toList(l.CheckTable(2)))
+		return 0
+	})
 	// OMugen: refresh rate of the window's display (Frame Rate = Monitor)
 	luaRegister(l, "getMonitorRefreshRate", func(*lua.LState) int {
 		l.Push(lua.LNumber(monitorRefreshRate()))

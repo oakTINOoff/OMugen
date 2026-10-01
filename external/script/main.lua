@@ -1530,6 +1530,32 @@ local content = main.f_fileRead(motif.files.select)
 content = content:gsub('([^\r\n;]*)%s*;[^\r\n]*', '%1')
 content = content:gsub('\n%s*\n', '\n')
 
+-- OMugen: read the roster's files in parallel ahead of the loop below, so a
+-- cold start (files not yet in Windows' cache) doesn't read them one by one
+do
+	local t_chars, t_stages, section = {}, {}, ''
+	for line in content:gmatch('[^\r\n]+') do
+		local header = line:lower():match('^%s*%[%s*([^%]]-)%s*%]')
+		if header ~= nil then
+			section = header
+		elseif section:match('characters$') or section:match('extrastages$') then
+			local n = 0
+			for tok in line:gmatch('[^,]+') do
+				n = n + 1
+				tok = tok:match('^%s*(.-)%s*$')
+				if n == 1 then
+					table.insert(section:match('characters$') and t_chars or t_stages, tok)
+				elseif n == 2 and section:match('characters$') and not tok:find('=') then
+					table.insert(t_stages, tok) -- the character's own stage
+				else
+					break
+				end
+			end
+		end
+	end
+	prefetchRoster(t_chars, t_stages)
+end
+
 lanChars = false
 lanStages = false
 lanOptions = false

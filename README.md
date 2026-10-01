@@ -15,7 +15,7 @@ screenpack for any roster size, and tools to find what's broken in a game.
 | Controls | Its own `config.ini` | `data/mugen.cfg`, with MUGEN 1.1's exact keyboard and joystick codes |
 | Changing controls / video in Options | Written to its own config | Written back to `mugen.cfg`, like MUGEN |
 | MUGEN screenpacks | Font art, grids and glyphs can render wrong | MUGEN 1.1 behavior (per-glyph palettes, `cell.spacing`, old `.fnt` banks) |
-| Loading a 1,580-character roster | Minutes before the menu (6 min 28 s measured) | Menu in about 2.5 s; every portrait ready 1.6 s later (from the second start, thanks to a cache of the sprite-file headers in `save/cache`) |
+| Loading a 1,580-character roster | Minutes before the menu (6 min 28 s measured) | Menu in about 2.5 s; every portrait ready 1.6 s later (from the second start, thanks to a cache of the sprite-file headers in `save/cache`). Right after a reboot or an antivirus update, the roster's files are read in parallel (8x faster than one by one) |
 | A game's screenpack is broken or missing | The game closes | Falls back to the OMugen screenpack and says so |
 | Rosters of any size | Fixed grid from the screenpack | OMugen screenpack sizes and scrolls its grid to the roster |
 | Checking a whole game | — | `OMugen.exe -doctor`: loads every character and stage, writes a report |
