@@ -1977,12 +1977,22 @@ local function f_mugenPlayer(pn)
 	return omugenControlsActive() and pn >= 1 and pn <= 2
 end
 
+--OMugen: in MUGEN mode, players 3-4 (which mugen.cfg doesn't have) play with
+--player 1's pad layout on the other controllers; their joystick rows show
+--those codes and can't be changed
+local function f_mugenAutoPad(cfgType, pn)
+	return cfgType == 'Joystick' and omugenControlsActive() and pn >= 3
+end
+
 local function f_nokey()
 	return tostring(motif.option_info.menu.valuename.nokey)
 end
 
 --whether a row can be changed for this player
 local function f_keyCfgSettable(cfgType, pn, action)
+	if f_mugenAutoPad(cfgType, pn) then
+		return false
+	end
 	if not f_mugenPlayer(pn) then
 		return true
 	end
@@ -1991,7 +2001,7 @@ end
 
 --controller id used to group bindings for conflict checks
 local function f_keyCfgJoy(cfgType, pn)
-	if f_mugenPlayer(pn) then
+	if f_mugenPlayer(pn) or f_mugenAutoPad(cfgType, pn) then
 		return 'mugen' .. cfgType
 	end
 	return gameOption(cfgType .. '_P' .. pn .. '.Joystick')
@@ -1999,6 +2009,10 @@ end
 
 --binding shown for a row
 local function f_keyCfgGet(cfgType, pn, action)
+	if f_mugenAutoPad(cfgType, pn) then
+		local text = omugenGetBinding(pn, cfgType, action)
+		return text ~= '' and text or f_nokey()
+	end
 	if not f_mugenPlayer(pn) then
 		return gameOption(cfgType .. '_P' .. pn .. '.' .. action)
 	end
@@ -2373,7 +2387,10 @@ function options.f_keyCfg(cfgType, controller, bg, skipClear)
 					side = main.f_playerSide(player)
 					joyNum = f_keyCfgJoy(cfgType, player)
 				end
-				if cfgType == 'Joystick' and not f_mugenPlayer(player) and getJoystickPresent(joyNum) == false then
+				if f_mugenAutoPad(cfgType, player) then
+					-- OMugen: plays with player 1's pad layout
+					sndPlay(motif.Snd, motif.option_info.cancel.snd[1], motif.option_info.cancel.snd[2])
+				elseif cfgType == 'Joystick' and not f_mugenPlayer(player) and getJoystickPresent(joyNum) == false then
 					main.f_warning(motif.warning_info.text.text.pad, motif.option_info, motif.optionbgdef)
 					item = configall_start
 					cursorPosY = configall_start

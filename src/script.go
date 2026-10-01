@@ -6453,6 +6453,10 @@ func systemScriptInit(l *lua.LState) {
 		if mugenInputActive != nil && pn <= len(mugenInputActive.players) {
 			return 0
 		}
+		// and players 3-4 play with player 1's pad layout (mugen_input.go)
+		if joy >= 0 && mugenAutoPlayer(pn-1) {
+			return 0
+		}
 		tableArg(l, 3).ForEach(func(key, value lua.LValue) {
 			if joy == -1 {
 				btn := int(StringToKey(lua.LVAsString(value)))
@@ -6785,6 +6789,7 @@ func systemScriptInit(l *lua.LState) {
 				}
 			}
 		}
+		applyMugenAutoPlayers() // OMugen: players 3-4 on player 1's pad layout
 		sys.uiResetTokenGuard()
 		return 0
 	})

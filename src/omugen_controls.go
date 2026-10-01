@@ -46,11 +46,27 @@ func omugenAddEdit(e mugenCfgEdit) {
 
 // omugenBinding returns the display text and raw value of a binding.
 func omugenBinding(player int, kind, action string) (string, int) {
-	if mugenInputActive == nil || player < 1 || player > len(mugenInputActive.players) {
+	if mugenInputActive == nil || player < 1 {
+		return "", 0
+	}
+	action = strings.ToLower(action)
+	// Players on player 1's pad layout show the codes they play with, but
+	// have no binding of their own (value 0): nothing is saved for them.
+	if !strings.EqualFold(kind, "Keys") && mugenAutoPlayer(player-1) {
+		i, ok := omugenActionIndex[action]
+		if action == "menu" {
+			i, ok = ikemenMenuSlot, true
+		}
+		codes := mugenAutoCodes(player - 1)
+		if !ok || i >= len(codes) || codes[i] <= 0 {
+			return "", 0
+		}
+		return mugenjoy.Label(codes[i]), 0
+	}
+	if player > len(mugenInputActive.players) {
 		return "", 0
 	}
 	pc := mugenInputActive.players[player-1]
-	action = strings.ToLower(action)
 	if strings.EqualFold(kind, "Keys") {
 		i, ok := omugenActionIndex[action]
 		if !ok || pc.keys[i] == 0 {
@@ -99,6 +115,24 @@ func omugenSetBinding(player int, kind, action, value string) bool {
 		code := int(Atoi(value))
 		if code < 0 || code >= mugenjoy.NumCodes {
 			return false
+		}
+		if code > 0 {
+			// Changing one button of a player on player 1's layout keeps the
+			// rest of that layout as their own bindings.
+			if mugenAutoPlayer(player - 1) {
+				if auto := mugenAutoCodes(player - 1); auto != nil {
+					for i := range pc.joy {
+						pc.joy[i] = auto[i]
+						omugenAddEdit(mugenCfgEdit{section, mugenCfgKeyNames[i], strconv.Itoa(auto[i])})
+					}
+				}
+			}
+			// A binding is useless while mugen.cfg turns the player's
+			// joystick off (P2.Joystick.type = 0 in a fresh mugen.cfg).
+			if !pc.useJoystick {
+				pc.useJoystick = true
+				omugenAddEdit(mugenCfgEdit{"Input", "P" + strconv.Itoa(player) + ".Joystick.type", "1"})
+			}
 		}
 		if action == "menu" {
 			pc.menu = code

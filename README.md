@@ -35,6 +35,10 @@ reports). Files in the game folder always take priority over the engine's copies
   joystick codes decoded from MUGEN 1.1 itself, read through the same Windows API MUGEN
   uses, so every pad button matches. Options > Input Settings shows and edits them in
   MUGEN's own notation (`A-17`...). The pad's Start/Options button opens the pause menu.
+- **Same layout on every pad:** players 2-4 without joystick codes of their own (a fresh
+  `mugen.cfg` has none for P2, and MUGEN has no P3-P4) play with player 1's layout on the
+  other controllers of the same kind, up to 4 at once, as they are plugged in. Virtual copies
+  of a pad (DS4Windows) are skipped. Binding P2 in Joystick Config overrides it.
 - **Screenpack, resolution, window size and fullscreen** come from `mugen.cfg`; changes
   made in Options are saved back to it (a backup goes to `save/backups` first).
 - **OMugen screenpack:** Options > Video Settings > OMugen Screenpack (or `-omugenui`).

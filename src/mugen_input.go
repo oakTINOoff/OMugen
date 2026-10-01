@@ -85,7 +85,134 @@ func applyMugenInputConfig(mc mugenCfg) {
 	for p := range mugenInputActive.players {
 		applyMugenPlayer(p)
 	}
-	LogMessage("OMugen: players 1-2 use controls from %s", mugenCfgPath)
+	applyMugenAutoPlayers()
+	LogMessage("OMugen: players 1-2 use controls from %s; players without joystick codes of their own use player 1's on the other controllers", mugenCfgPath)
+}
+
+// applyMugenAutoPlayers gives players 3-4 (MUGEN has none) player 1's pad
+// layout on the other controllers.
+func applyMugenAutoPlayers() {
+	if _, noJoy := sys.cmdFlags["-nojoy"]; mugenInputActive == nil || noJoy {
+		return
+	}
+	for p := len(mugenInputActive.players); p < mugenMaxPlayers && p < len(sys.joystickConfig); p++ {
+		mugenEnsureJoy()
+		sys.joystickConfig[p] = KeyConfig{Joy: -1, mugenAuto: p}
+	}
+}
+
+func mugenEnsureJoy() {
+	if mugenJoy != nil {
+		return
+	}
+	mugenJoy = mugenjoy.NewManager()
+	for _, d := range mugenJoy.Devices() {
+		LogMessage("OMugen: joystick %c = %q VID %04X PID %04X (%d axes, %d hat, %d buttons)",
+			'A'+d.Index, d.Name, d.VendorID, d.ProductID, d.Layout.NumAxes, d.Layout.NumHats, d.Layout.NumButtons)
+	}
+}
+
+// Shared pad layout. MUGEN gives a player a controller only through their own
+// [Pn Joystick] codes, and its config has no players 3 and 4. OMugen gives
+// players 2-4 without joystick codes of their own (a fresh mugen.cfg has all
+// 0 for P2) player 1's layout on the other connected controllers, so a
+// friend's pad works at once with the same buttons. Controllers are matched to
+// player 1's by vendor and layout, which leaves out the virtual twin of a pad
+// that tools like DS4Windows add, and are handed out in the order Windows
+// numbers them, following controllers as they are plugged in. Nothing is
+// written to mugen.cfg.
+const mugenMaxPlayers = 4
+
+// mugenAutoPlayer reports whether player p (0-based) uses the shared layout.
+func mugenAutoPlayer(p int) bool {
+	if mugenInputActive == nil || p < 1 || p >= mugenMaxPlayers {
+		return false
+	}
+	if p >= len(mugenInputActive.players) {
+		return true
+	}
+	pc := mugenInputActive.players[p]
+	if pc.menu > 0 {
+		return false
+	}
+	for _, c := range pc.joy {
+		if c > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// mugenHomePad is the controller most of the codes point at (-1: none).
+func mugenHomePad(codes []int) int {
+	var votes [mugenjoy.MaxJoysticks]int
+	for _, c := range codes {
+		if c > 0 && c < mugenjoy.NumCodes {
+			votes[c/mugenjoy.CodesPerJoystick]++
+		}
+	}
+	pad := -1
+	for j := range votes {
+		if votes[j] > 0 && (pad < 0 || votes[j] > votes[pad]) {
+			pad = j
+		}
+	}
+	return pad
+}
+
+// mugenAutoCodes returns the joystick codes of shared-layout player p: player
+// 1's codes (pause menu button included) moved to that player's controller,
+// or nil when there is no controller for them.
+func mugenAutoCodes(p int) []int {
+	if !mugenAutoPlayer(p) || mugenJoy == nil || len(sys.joystickConfig) == 0 {
+		return nil
+	}
+	src := sys.joystickConfig[0].mugenCodes
+	if len(src) <= ikemenMenuSlot {
+		return nil
+	}
+	home := mugenHomePad(src[:len(mugenActions)])
+	if home < 0 {
+		return nil
+	}
+	devs := mugenJoy.Devices()
+	homeIdx := -1
+	for i, d := range devs {
+		if d.Index == home {
+			homeIdx = i
+		}
+	}
+	if homeIdx < 0 {
+		return nil
+	}
+	taken := map[int]bool{home: true}
+	if !mugenAutoPlayer(1) && len(sys.joystickConfig) > 1 && len(sys.joystickConfig[1].mugenCodes) > ikemenMenuSlot {
+		if pad := mugenHomePad(sys.joystickConfig[1].mugenCodes[:len(mugenActions)]); pad >= 0 {
+			taken[pad] = true
+		}
+	}
+	var pads []int // devices are listed in index order
+	for _, d := range devs {
+		if !taken[d.Index] && d.VendorID == devs[homeIdx].VendorID && d.Layout == devs[homeIdx].Layout {
+			pads = append(pads, d.Index)
+		}
+	}
+	k := 0 // this player's place among the shared-layout players
+	for q := 1; q < p; q++ {
+		if mugenAutoPlayer(q) {
+			k++
+		}
+	}
+	if k >= len(pads) {
+		return nil
+	}
+	codes := make([]int, len(src))
+	for i, c := range src {
+		if c > 0 && c/mugenjoy.CodesPerJoystick == home {
+			codes[i] = pads[k]*mugenjoy.CodesPerJoystick + c%mugenjoy.CodesPerJoystick
+		}
+	}
+	return codes
 }
 
 // mugenInputActive holds the mugen.cfg bindings in use (nil: not in MUGEN mode).
@@ -112,14 +239,13 @@ func applyMugenPlayer(p int) {
 		return
 	}
 	jc := KeyConfig{Joy: -1}
-	if pc.useJoystick && !noJoy {
-		if mugenJoy == nil {
-			mugenJoy = mugenjoy.NewManager()
-			for _, d := range mugenJoy.Devices() {
-				LogMessage("OMugen: joystick %c = %q VID %04X PID %04X (%d axes, %d hat, %d buttons)",
-					'A'+d.Index, d.Name, d.VendorID, d.ProductID, d.Layout.NumAxes, d.Layout.NumHats, d.Layout.NumButtons)
-			}
-		}
+	if noJoy {
+		// no joysticks at all
+	} else if mugenAutoPlayer(p) {
+		mugenEnsureJoy()
+		jc.mugenAuto = p
+	} else if pc.useJoystick {
+		mugenEnsureJoy()
 		// A fresh slice per player (never alias the config arrays).
 		codes := make([]int, ikemenMenuSlot+1)
 		copy(codes, pc.joy[:])
