@@ -12,6 +12,7 @@ package main
 import (
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
 	"github.com/veandco/go-sdl2/sdl"
@@ -107,11 +108,18 @@ func mugenEnsureJoy() {
 	if mugenJoy != nil {
 		return
 	}
+	// Controllers come from SDL, laid out as WinMM numbers them
+	// (omugen_sdljoy.go); OMUGEN_JOY=winmm reads WinMM like MUGEN does.
 	// OMUGEN_FAKEPADS=n: n simulated DS4s instead of the real controllers,
 	// pressed by input scripts (padtap), for screen tests without hardware.
 	if n := int(Atoi(os.Getenv("OMUGEN_FAKEPADS"))); n <= 0 {
-		mugenJoy = mugenjoy.NewManager()
+		if strings.EqualFold(os.Getenv("OMUGEN_JOY"), "winmm") {
+			mugenJoy, mugenJoyBackendName = mugenjoy.NewManager(), "WinMM"
+		} else {
+			mugenJoy = mugenjoy.NewManagerWith(sdlJoyBackend{})
+		}
 	} else {
+		mugenJoyBackendName = "simulated"
 		var devs []mugenjoy.DeviceInfo
 		for i := 0; i < n && i < mugenjoy.MaxJoysticks; i++ {
 			devs = append(devs, mugenjoy.DeviceInfo{Index: i, ID: i, Name: "Fake DS4", VendorID: 0x054C, ProductID: 0x05C4,
@@ -265,6 +273,7 @@ func mugenAssignPads() {
 			}
 		}
 	}
+	mugenWriteControllerReport()
 }
 
 // mugenPlayerPad is the device index player p plays with (-1: none yet).

@@ -35,7 +35,10 @@ reports). Files in the game folder always take priority over the engine's copies
   joystick codes decoded from MUGEN 1.1 itself, read through the same Windows API MUGEN
   uses, so every pad button matches. Options > Input Settings shows and edits them in
   MUGEN's own notation (`A-17`...). The pad's Start/Options button opens the pause menu.
-- **Controllers that just work:** players get the controllers that actually send input,
+- **Controllers that just work:** controllers are read through SDL (DualShock 4 and DualSense,
+  also over Bluetooth, Xbox pads, DS4Windows), laid out the way MUGEN numbers them so
+  `mugen.cfg` codes keep their meaning (`OMUGEN_JOY=winmm` reads WinMM like MUGEN).
+  Players get the controllers that actually send input,
   in the order they are first pressed (up to 4); a player keeps the controller their own
   codes name when it sends input. Controllers Windows lists but that send nothing, and
   copies that only mirror another pad (DS4Windows), are skipped. Players 2-4 without

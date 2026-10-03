@@ -157,6 +157,10 @@ func MenuButton(d DeviceInfo) (int, bool) {
 	case 0x045E: // Microsoft Xbox pads: A B X Y LB RB Back Start...
 		return 7, d.Layout.NumButtons > 7
 	}
+	// Other pads read through SDL are laid out as an Xbox pad (OMugen).
+	if d.Layout == (Layout{NumAxes: 5, NumHats: 1, NumButtons: 10}) {
+		return 7, true
+	}
 	return 0, false
 }
 

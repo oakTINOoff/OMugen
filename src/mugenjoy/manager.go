@@ -145,3 +145,23 @@ func (m *Manager) Devices() []DeviceInfo {
 	defer m.mu.Unlock()
 	return append([]DeviceInfo(nil), m.infos...)
 }
+
+// Backend is a source of joysticks for NewManagerWith: it lists devices and
+// reports each one's state already in SDL 1.2 / WinMM terms (Snapshot), so
+// MUGEN's codes stay the same whatever the source.
+type Backend interface {
+	Enumerate() []DeviceInfo
+	Read(info DeviceInfo) (snap Snapshot, ok bool)
+}
+
+type externalBackend struct{ b Backend }
+
+func (e externalBackend) enumerate() []DeviceInfo               { return e.b.Enumerate() }
+func (e externalBackend) read(info DeviceInfo) (Snapshot, bool) { return e.b.Read(info) }
+
+// NewManagerWith returns a Manager reading joysticks from b.
+func NewManagerWith(b Backend) *Manager {
+	m := &Manager{be: externalBackend{b}, now: time.Now}
+	m.rescan(m.now())
+	return m
+}
