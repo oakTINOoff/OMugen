@@ -13,6 +13,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
 	"github.com/veandco/go-sdl2/sdl"
@@ -274,6 +275,7 @@ func mugenAssignPads() {
 		}
 	}
 	mugenWriteControllerReport()
+	mugenSetPadLights()
 }
 
 // mugenPlayerPad is the device index player p plays with (-1: none yet).
@@ -283,6 +285,9 @@ func mugenPlayerPad(p int) int {
 	}
 	mugenJoy.Poll() // so a first press assigns a controller at once
 	mugenAssignPads()
+	if time.Since(mugenPadLightsAt) > 3*time.Second {
+		mugenSetPadLights()
+	}
 	return mugenPads.idx[p]
 }
 

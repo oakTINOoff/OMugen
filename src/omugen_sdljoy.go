@@ -169,3 +169,37 @@ func mugenWriteControllerReport() {
 		_ = os.WriteFile(filepath.Join(dir, "controllers.txt"), []byte(b.String()), 0o644)
 	}
 }
+
+// mugenPadColors are the players' colors (those of the controller indicator,
+// omugen_hud.lua), shown on controllers with a light bar (DualShock 4,
+// DualSense).
+var mugenPadColors = [mugenMaxPlayers][3]uint8{{232, 52, 63}, {47, 123, 234}, {45, 190, 108}, {242, 182, 48}}
+
+var mugenPadLightsAt time.Time
+
+// mugenSetPadLights colors each controller's light bar with its player's
+// color, dim white while it has no player. SDL sets them by connection order
+// when a controller opens, so they are set again now and then.
+func mugenSetPadLights() {
+	if mugenJoyBackendName != "SDL" {
+		return
+	}
+	mugenPadLightsAt = time.Now()
+	owner := map[int]int{} // device ID -> player
+	for p, id := range mugenPads.id {
+		if id >= 0 {
+			owner[id] = p
+		}
+	}
+	for _, c := range input.controllers {
+		if c == nil || !c.Attached() || c.Joystick() == nil || !c.HasLED() {
+			continue
+		}
+		col := [3]uint8{40, 40, 40}
+		if p, ok := owner[int(c.Joystick().InstanceID())]; ok {
+			col = mugenPadColors[p]
+		}
+		// go-sdl2's SetLED hands its last two arguments to SDL swapped.
+		_ = c.SetLED(col[0], col[2], col[1])
+	}
+}

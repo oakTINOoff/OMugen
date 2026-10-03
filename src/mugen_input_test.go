@@ -122,11 +122,19 @@ func TestLoadRealJumpForceConfig(t *testing.T) {
 	if c.Config.Motif != "data/mugen1/system.def" {
 		t.Errorf("motif = %q", c.Config.Motif)
 	}
-	if c.Video.GameWidth != 1920 || c.Video.GameHeight != 1030 || c.Video.WindowWidth != 1920 || c.Video.WindowHeight != 1030 {
-		t.Errorf("video = game %dx%d window %dx%d", c.Video.GameWidth, c.Video.GameHeight, c.Video.WindowWidth, c.Video.WindowHeight)
+	// The player changes these in Options (saved back to mugen.cfg): compare
+	// with what the file says now.
+	gw, _ := mc.int("config", "gamewidth")
+	gh, _ := mc.int("config", "gameheight")
+	ww, _ := mc.int("video", "width")
+	wh, _ := mc.int("video", "height")
+	fs, _ := mc.int("video", "fullscreen")
+	if int(c.Video.GameWidth) != gw || int(c.Video.GameHeight) != gh || int(c.Video.WindowWidth) != ww || int(c.Video.WindowHeight) != wh {
+		t.Errorf("video = game %dx%d window %dx%d, mugen.cfg says %dx%d %dx%d",
+			c.Video.GameWidth, c.Video.GameHeight, c.Video.WindowWidth, c.Video.WindowHeight, gw, gh, ww, wh)
 	}
-	if c.Video.Fullscreen {
-		t.Errorf("fullscreen should be off")
+	if c.Video.Fullscreen != (fs != 0) {
+		t.Errorf("fullscreen = %v, mugen.cfg says %d", c.Video.Fullscreen, fs)
 	}
 }
 
