@@ -3,8 +3,10 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
 
@@ -203,14 +205,16 @@ func TestMugenCfgParsing(t *testing.T) {
 	}
 }
 
-// Players 2-4 without joystick codes of their own play with player 1's pad
-// layout on the other controllers of the same kind.
-func TestSharedPadLayout(t *testing.T) {
+// Two DS4s over Bluetooth with DS4Windows: Windows lists four pads, the
+// originals (A, C) send nothing, the virtual copies (B, D) send everything.
+// Players get the pads that send input, in the order they are pressed, and
+// play with player 1's layout moved to their pad.
+func TestControllersByPressOrder(t *testing.T) {
 	ds4 := mugenjoy.Layout{NumAxes: 6, NumHats: 1, NumButtons: 14}
 	devs := []mugenjoy.DeviceInfo{
-		{Index: 0, ID: 0, VendorID: 0x054C, ProductID: 0x05C4, Layout: ds4},                                                     // player 1's DS4
-		{Index: 1, ID: 1, VendorID: 0x045E, ProductID: 0x028E, Layout: mugenjoy.Layout{NumAxes: 5, NumHats: 1, NumButtons: 10}}, // DS4Windows' virtual twin
-		{Index: 2, ID: 2, VendorID: 0x054C, ProductID: 0x09CC, Layout: ds4},                                                     // a friend's DS4 (v2)
+		{Index: 0, ID: 0, VendorID: 0x054C, ProductID: 0x05C4, Layout: ds4},
+		{Index: 1, ID: 1, VendorID: 0x054C, ProductID: 0x05C4, Layout: ds4},
+		{Index: 2, ID: 2, VendorID: 0x054C, ProductID: 0x09CC, Layout: ds4},
 		{Index: 3, ID: 3, VendorID: 0x054C, ProductID: 0x05C4, Layout: ds4},
 	}
 	mc := mugenCfg{
@@ -219,65 +223,80 @@ func TestSharedPadLayout(t *testing.T) {
 		"p2 joystick": {"jump": "0", "crouch": "0", "left": "0", "right": "0", "a": "0", "b": "0", "c": "0", "x": "0", "y": "0", "z": "0", "start": "0"},
 	}
 	savedKeys, savedJoy, savedFlags := sys.keyConfig, sys.joystickConfig, sys.cmdFlags
-	savedMJ, savedActive, savedEdits := mugenJoy, mugenInputActive, omugenPendingEdits
+	savedMJ, savedActive, savedEdits, savedPads := mugenJoy, mugenInputActive, omugenPendingEdits, mugenPads
 	defer func() {
 		sys.keyConfig, sys.joystickConfig, sys.cmdFlags = savedKeys, savedJoy, savedFlags
-		mugenJoy, mugenInputActive, omugenPendingEdits = savedMJ, savedActive, savedEdits
+		mugenJoy, mugenInputActive, omugenPendingEdits, mugenPads = savedMJ, savedActive, savedEdits, savedPads
 	}()
 	sys.keyConfig = make([]KeyConfig, 4)
 	sys.joystickConfig = make([]KeyConfig, 4)
 	sys.cmdFlags = map[string]string{}
 	omugenPendingEdits = nil
 	mugenJoy = mugenjoy.NewFakeManager(devs)
-
+	press := func(id int) {
+		mugenJoy.SetFakeInput(id, mugenjoy.Snapshot{Buttons: 1})
+		mugenJoy.AdvanceFakeClock(20 * time.Millisecond)
+		mugenJoy.Poll()
+		mugenJoy.SetFakeInput(id, mugenjoy.Snapshot{})
+		mugenJoy.AdvanceFakeClock(200 * time.Millisecond)
+		mugenJoy.Poll()
+	}
 	applyMugenInputConfig(mc)
+	mugenJoy.AdvanceFakeClock(20 * time.Millisecond)
+	mugenJoy.Poll() // resting position
+	mugenPads.joined = nil
 
-	for p := 1; p <= 3; p++ {
-		if sys.joystickConfig[p].mugenAuto != p {
-			t.Fatalf("player %d should use player 1's layout: %+v", p+1, sys.joystickConfig[p])
-		}
+	if codes := mugenPlayerCodes(0); codes != nil {
+		t.Fatalf("no controller has sent input yet, P1 codes = %v", codes)
 	}
-	// P2 gets the next DS4 (C, skipping the virtual twin B), P3 the one after.
-	p2, p3 := mugenAutoCodes(1), mugenAutoCodes(2)
-	if len(p2) < 14 || p2[0] != 2*32+1 || p2[4] != 2*32+17 || p2[ikemenMenuSlot] != 2*32+26 {
-		t.Errorf("P2 codes = %v, want player 1's on controller C (jump %d, a %d, menu %d)", p2, 65, 81, 90)
+	press(1) // the first DS4 (its virtual copy B)
+	press(3) // the second DS4 (D)
+
+	p1, p2 := mugenPlayerCodes(0), mugenPlayerCodes(1)
+	if len(p1) < 14 || p1[0] != 32+1 || p1[4] != 32+17 || p1[ikemenMenuSlot] != 32+26 {
+		t.Errorf("P1 codes = %v, want player 1's layout on B (jump 33, a 49, menu 58)", p1)
 	}
-	if len(p3) < 14 || p3[0] != 3*32+1 || p3[10] != 3*32+21 {
-		t.Errorf("P3 codes = %v, want player 1's on controller D", p3)
+	if len(p2) < 14 || p2[0] != 96+1 || p2[10] != 96+21 {
+		t.Errorf("P2 codes = %v, want player 1's layout on D", p2)
 	}
-	if p4 := mugenAutoCodes(3); p4 != nil {
-		t.Errorf("P4 has no DS4 left, got %v", p4)
+	if mugenPlayerCodes(2) != nil || mugenPlayerCodes(3) != nil {
+		t.Errorf("P3/P4 have no controller left")
 	}
-	if text, v := omugenBinding(2, "Joystick", "a"); text != "C-17" || v != 0 {
-		t.Errorf("P2 'a' shows %q/%d, want C-17 with no binding of its own", text, v)
+	if text, v := omugenBinding(1, "Joystick", "a"); text != "B-17" || v != 17 {
+		t.Errorf("P1 'a' = %q/%d, want B-17 shown, 17 kept as the binding", text, v)
 	}
-	if text, _ := omugenBinding(3, "Joystick", "start"); text != "D-21" {
-		t.Errorf("P3 'start' shows %q, want D-21", text)
+	if text, v := omugenBinding(2, "Joystick", "a"); text != "D-17" || v != 0 {
+		t.Errorf("P2 'a' = %q/%d, want D-17 with no binding of its own", text, v)
+	}
+	if len(mugenPads.joined) != 2 || mugenPads.joined[0] != (mugenJoin{0, 1}) || mugenPads.joined[1] != (mugenJoin{1, 3}) {
+		t.Errorf("joins = %+v, want P1<-B then P2<-D", mugenPads.joined)
 	}
 
-	// Changing one P2 button keeps the rest of the layout and turns on P2's
-	// joystick in mugen.cfg.
-	if !omugenSetBinding(2, "Joystick", "b", "86") { // C-22 (R1) instead of C-20
+	// One P2 button changed: the rest of the layout becomes P2's own (on D)
+	// and P2's joystick is turned on in mugen.cfg.
+	if !omugenSetBinding(2, "Joystick", "b", strconv.Itoa(96+22)) {
 		t.Fatal("omugenSetBinding failed")
 	}
-	if mugenAutoPlayer(1) {
-		t.Fatal("P2 should have bindings of its own now")
-	}
-	got := sys.joystickConfig[1].mugenCodes
-	if len(got) < 14 || got[0] != 65 || got[4] != 81 || got[5] != 86 {
-		t.Errorf("P2 codes after one change = %v, want the layout kept with b = 86", got)
+	if got := mugenPlayerCodes(1); len(got) < 14 || got[0] != 97 || got[5] != 118 {
+		t.Errorf("P2 codes after one change = %v, want D's layout with b = 118", got)
 	}
 	typeOn := false
 	for _, e := range omugenPendingEdits {
-		if strings.EqualFold(e.section, "Input") && strings.EqualFold(e.key, "P2.Joystick.type") && e.value == "1" {
-			typeOn = true
-		}
+		typeOn = typeOn || (strings.EqualFold(e.key, "P2.Joystick.type") && e.value == "1")
 	}
 	if !typeOn {
 		t.Errorf("P2.Joystick.type = 1 not queued: %+v", omugenPendingEdits)
 	}
-	// P3 now gets the first DS4 nobody uses (C is P2's): D.
-	if p3 := mugenAutoCodes(2); len(p3) < 14 || p3[0] != 3*32+1 {
-		t.Errorf("P3 codes after P2 took C = %v, want controller D", p3)
+
+	// Reassign: P2 keeps the pad its own codes name (D) even when D is
+	// pressed first; P1 takes the next one.
+	mugenResetPads()
+	press(3)
+	press(1)
+	if pad := mugenPlayerPad(1); pad != 3 {
+		t.Errorf("P2 pad after reassign = %d, want D (its own codes)", pad)
+	}
+	if pad := mugenPlayerPad(0); pad != 1 {
+		t.Errorf("P1 pad after reassign = %d, want B", pad)
 	}
 }

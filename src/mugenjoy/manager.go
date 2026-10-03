@@ -32,6 +32,11 @@ type Manager struct {
 	state    State
 	lastPoll time.Time
 	lastScan time.Time
+	// activity.go: which devices are live, by backend device ID
+	acts map[int]*activity
+	seq  int
+	gen  int
+	now  func() time.Time
 }
 
 // rescanInterval controls how often new or unplugged devices are picked up.
@@ -44,8 +49,8 @@ const minPollInterval = time.Millisecond
 
 // NewManager enumerates devices using the platform backend.
 func NewManager() *Manager {
-	m := &Manager{be: newBackend()}
-	m.rescan(time.Now())
+	m := &Manager{be: newBackend(), now: time.Now}
+	m.rescan(m.now())
 	return m
 }
 
@@ -65,6 +70,7 @@ func (m *Manager) rescan(now time.Time) {
 	}
 	m.state = State{}
 	m.lastScan = now
+	m.forgetMissing()
 }
 
 func sameDevices(a, b []DeviceInfo) bool {
@@ -83,7 +89,7 @@ func sameDevices(a, b []DeviceInfo) bool {
 func (m *Manager) Poll() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	now := time.Now()
+	now := m.now()
 	if now.Sub(m.lastPoll) < minPollInterval {
 		return
 	}
@@ -98,8 +104,22 @@ func (m *Manager) Poll() {
 			lost = true
 			continue
 		}
+		base := i * CodesPerJoystick
+		var before [CodesPerJoystick]bool
+		copy(before[:], m.state[base:base+CodesPerJoystick])
 		m.devs[i].apply(i, snap, &m.state)
+		a := m.activityFor(m.infos[i].ID)
+		if !a.primed {
+			a.primed = true // the first poll is the resting position
+			continue
+		}
+		for off := 1; off < CodesPerJoystick; off++ {
+			if !before[off] && m.state[base+off] {
+				m.freshPress(a, off, now)
+			}
+		}
 	}
+	m.checkTwins(now)
 	if lost {
 		m.rescan(now)
 	}

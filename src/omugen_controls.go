@@ -7,6 +7,7 @@ package main
 import (
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
 	lua "github.com/yuin/gopher-lua"
@@ -44,48 +45,52 @@ func omugenAddEdit(e mugenCfgEdit) {
 	omugenPendingEdits = append(omugenPendingEdits, e)
 }
 
-// omugenBinding returns the display text and raw value of a binding.
+// omugenBinding returns the display text and raw value of a binding. For a
+// joystick, the text is the code the player plays with on the controller
+// they have now (mugenPlayerCodes) and the value is their own binding in
+// mugen.cfg (0 for players on player 1's layout, who have none).
 func omugenBinding(player int, kind, action string) (string, int) {
 	if mugenInputActive == nil || player < 1 {
 		return "", 0
 	}
 	action = strings.ToLower(action)
-	// Players on player 1's pad layout show the codes they play with, but
-	// have no binding of their own (value 0): nothing is saved for them.
-	if !strings.EqualFold(kind, "Keys") && mugenAutoPlayer(player-1) {
-		i, ok := omugenActionIndex[action]
-		if action == "menu" {
-			i, ok = ikemenMenuSlot, true
-		}
-		codes := mugenAutoCodes(player - 1)
-		if !ok || i >= len(codes) || codes[i] <= 0 {
+	p := player - 1
+	if strings.EqualFold(kind, "Keys") {
+		if p >= len(mugenInputActive.players) {
 			return "", 0
 		}
-		return mugenjoy.Label(codes[i]), 0
-	}
-	if player > len(mugenInputActive.players) {
-		return "", 0
-	}
-	pc := mugenInputActive.players[player-1]
-	if strings.EqualFold(kind, "Keys") {
+		pc := mugenInputActive.players[p]
 		i, ok := omugenActionIndex[action]
 		if !ok || pc.keys[i] == 0 {
 			return "", 0
 		}
 		return KeyToString(sdl12KeyToKeycode(pc.keys[i])), pc.keys[i]
 	}
-	code := 0
+	i, ok := omugenActionIndex[action]
 	if action == "menu" {
-		if p := player - 1; p < len(sys.joystickConfig) && len(sys.joystickConfig[p].mugenCodes) > ikemenMenuSlot {
-			code = sys.joystickConfig[p].mugenCodes[ikemenMenuSlot]
-		}
-	} else if i, ok := omugenActionIndex[action]; ok {
-		code = pc.joy[i]
+		i, ok = ikemenMenuSlot, true
 	}
-	if code <= 0 {
+	if !ok {
 		return "", 0
 	}
-	return mugenjoy.Label(code), code
+	value := 0
+	if !mugenAutoPlayer(p) && p < len(mugenInputActive.players) {
+		if i == ikemenMenuSlot {
+			if p < len(sys.joystickConfig) && len(sys.joystickConfig[p].mugenCodes) > ikemenMenuSlot {
+				value = sys.joystickConfig[p].mugenCodes[ikemenMenuSlot]
+			}
+		} else {
+			value = mugenInputActive.players[p].joy[i]
+		}
+	}
+	shown := value
+	if codes := mugenPlayerCodes(p); codes != nil {
+		shown = codes[i]
+	}
+	if shown <= 0 {
+		return "", value
+	}
+	return mugenjoy.Label(shown), value
 }
 
 // omugenSetBinding changes a binding in memory, applies it at once and queues
@@ -120,7 +125,7 @@ func omugenSetBinding(player int, kind, action, value string) bool {
 			// Changing one button of a player on player 1's layout keeps the
 			// rest of that layout as their own bindings.
 			if mugenAutoPlayer(player - 1) {
-				if auto := mugenAutoCodes(player - 1); auto != nil {
+				if auto := mugenPlayerCodes(player - 1); auto != nil {
 					for i := range pc.joy {
 						pc.joy[i] = auto[i]
 						omugenAddEdit(mugenCfgEdit{section, mugenCfgKeyNames[i], strconv.Itoa(auto[i])})
@@ -169,8 +174,142 @@ func omugenCaptureJoystick(reset bool) int {
 	return 0
 }
 
+// omugenKeyActivity is when each player last pressed one of their keys.
+var omugenKeyActivity [mugenMaxPlayers]time.Time
+
+// omugenNoteKey records which players a pressed key belongs to.
+func omugenNoteKey(key Key) {
+	for p := 0; p < mugenMaxPlayers && p < len(sys.keyConfig); p++ {
+		kc := &sys.keyConfig[p]
+		for _, k := range [...]int{kc.dU, kc.dD, kc.dL, kc.dR, kc.bA, kc.bB, kc.bC, kc.bX, kc.bY, kc.bZ, kc.bS, kc.bD, kc.bW, kc.bM} {
+			if k != 0 && k == int(key) {
+				omugenKeyActivity[p] = time.Now()
+				break
+			}
+		}
+	}
+}
+
+// omugenControllersTable describes players 1-4 for the controller indicator
+// (omugen_hud.lua): their controller, whether they want one, whether they
+// just pressed something, and which player pressed last.
+func omugenControllersTable(l *lua.LState) *lua.LTable {
+	t := l.NewTable()
+	if mugenInputActive == nil || mugenJoy == nil {
+		return t
+	}
+	now := time.Now()
+	t.RawSetString("devices", lua.LNumber(len(mugenJoy.Devices())))
+	active, best := 0, time.Time{}
+	for p := 0; p < mugenMaxPlayers && p < len(sys.joystickConfig); p++ {
+		e := l.NewTable()
+		last := omugenKeyActivity[p]
+		if pad := mugenPlayerPad(p); pad >= 0 {
+			e.RawSetString("pad", lua.LString(string(rune('A'+pad))))
+			if lp := mugenJoy.LastPress(pad); lp.After(last) {
+				last = lp
+			}
+		}
+		e.RawSetString("wants", lua.LBool(mugenWantsPad(p)))
+		e.RawSetString("recent", lua.LBool(now.Sub(last) < 250*time.Millisecond))
+		if last.After(best) {
+			best, active = last, p+1
+		}
+		t.RawSetInt(p+1, e)
+	}
+	t.RawSetString("active", lua.LNumber(active))
+	return t
+}
+
 func omugenScriptInit(l *lua.LState) {
 	omugenScreenpackScriptInit(l)
+	luaRegister(l, "omugenControllers", func(l *lua.LState) int {
+		/*Players 1-4 and their controllers, for the controller indicator.
+		@function omugenControllers
+		@treturn table info `devices` (connected controllers), `active` (player who pressed last),
+		  and per player `[1..4]`: `pad` (controller letter, "" if none), `wants`, `recent`*/
+		l.Push(omugenControllersTable(l))
+		return 1
+	})
+	luaRegister(l, "omugenTakeJoins", func(l *lua.LState) int {
+		/*Controllers given to players since the last call.
+		@function omugenTakeJoins
+		@treturn table joins array of `{player = n, pad = "B"}`*/
+		t := l.NewTable()
+		for _, j := range mugenPads.joined {
+			e := l.NewTable()
+			e.RawSetString("player", lua.LNumber(j.player+1))
+			e.RawSetString("pad", lua.LString(string(rune('A'+j.pad))))
+			t.Append(e)
+		}
+		mugenPads.joined = nil
+		l.Push(t)
+		return 1
+	})
+	luaRegister(l, "omugenTextBounds", func(l *lua.LState) int {
+		/*Where a text sprite draws a text, in the engine's 320x240 space (the
+		same for every localcoord: draw over it with localcoord 320, 240).
+		@function omugenTextBounds
+		@tparam TextSprite ts Text sprite userdata (position already set).
+		@tparam string text Text to measure.
+		@treturn number left Left edge.
+		@treturn number baseline Baseline Y.
+		@treturn number width Width.
+		@treturn number height Font height.*/
+		ts, ok := toUserData(l, 1).(*TextSprite)
+		if !ok {
+			userDataError(l, 1, ts)
+		}
+		x := ts.x
+		w := float32(ts.TextWidth(strArg(l, 2))) * ts.xscl
+		h := float32(0)
+		if ts.fnt != nil {
+			h = float32(ts.fnt.Size[1]) * ts.yscl
+		}
+		switch {
+		case ts.align == 0:
+			x -= w / 2
+		case ts.align < 0:
+			x -= w
+		}
+		for _, v := range []float32{x, ts.y, w, h} {
+			l.Push(lua.LNumber(v))
+		}
+		return 4
+	})
+	luaRegister(l, "omugenAnimBounds", func(l *lua.LState) int {
+		/*Where an animation draws its current sprite, in the engine's 320x240 space.
+		@function omugenAnimBounds
+		@tparam Anim anim Animation userdata (position already set).
+		@treturn number left Left edge (nothing if there is no sprite).
+		@treturn number top Top edge.
+		@treturn number width Width.
+		@treturn number height Height.*/
+		a, ok := toUserData(l, 1).(*Anim)
+		if !ok {
+			userDataError(l, 1, a)
+		}
+		if a.anim == nil || a.anim.spr == nil {
+			return 0
+		}
+		spr := a.anim.spr
+		x := a.x - float32(spr.Offset[0])*a.xscl
+		y := a.y - float32(spr.Offset[1])*a.yscl
+		if f := a.anim.curFrame(); f != nil {
+			x += float32(f.Xoffset) * a.xscl
+			y += float32(f.Yoffset) * a.yscl
+		}
+		for _, v := range []float32{x, y, float32(spr.Size[0]) * a.xscl, float32(spr.Size[1]) * a.yscl} {
+			l.Push(lua.LNumber(v))
+		}
+		return 4
+	})
+	luaRegister(l, "omugenResetControllers", func(l *lua.LState) int {
+		/*Forget which controller each player has: the next presses hand them out again, in order.
+		@function omugenResetControllers*/
+		mugenResetPads()
+		return 0
+	})
 	luaRegister(l, "omugenControlsActive", func(l *lua.LState) int {
 		/*Whether players 1-2 use MUGEN controls from data/mugen.cfg.
 		@function omugenControlsActive

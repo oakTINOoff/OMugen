@@ -1225,6 +1225,14 @@ options.t_itemname = {
 		end
 		return true
 	end,
+	--OMugen: players take controllers again, in the order they are pressed next
+	['reassignpads'] = function(t, item, cursorPosY, moveTxt)
+		if getInput(-1, motif.option_info.menu.done.key) then
+			sndPlay(motif.Snd, motif.option_info.cursor.done.snd[1], motif.option_info.cursor.done.snd[2])
+			omugenResetControllers()
+		end
+		return true
+	end,
 	--Default
 	['inputdefault'] = function(t, item, cursorPosY, moveTxt)
 		if getInput(-1, motif.option_info.menu.done.key) then

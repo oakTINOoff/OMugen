@@ -639,6 +639,14 @@ end
 main.pauseMenuActive = false
 require('external.script.debug')
 
+--OMugen: controller indicator, drawn on top of every menu frame
+main.hud = require('external.script.omugen_hud')
+local refreshFrame = refresh
+function refresh()
+	main.hud.draw()
+	refreshFrame()
+end
+
 loadDebugFont(gameOption('Debug.Font'), gameOption('Debug.FontScale'))
 
 main.t_stageDef = {['random'] = 0}
@@ -3979,6 +3987,9 @@ function main.f_menuCommonDraw(t, item, cursorPosY, moveTxt, sec, bg, skipClear,
 		textImgAddPos(labelSprite, posX, posY)
 		textImgSetText(labelSprite, displayname)
 		textImgDraw(labelSprite)
+		if isActive then
+			main.hud.noteActiveItem(labelSprite, displayname, params.AnimData)
+		end
 		-- value / info sprites
 		if itemData.vardisplay ~= nil then
 			if itemData.conflict and m.item.value.conflict and m.item.value.conflict.TextSpriteData then
@@ -4087,6 +4098,10 @@ function main.f_menuCommonDraw(t, item, cursorPosY, moveTxt, sec, bg, skipClear,
 		textImgDraw(sec.footer.title.TextSpriteData)
 		textImgDraw(sec.footer.info.TextSpriteData)
 		textImgDraw(sec.footer.version.TextSpriteData)
+	end
+	--OMugen: which player is driving this menu (the key config draws its own panes)
+	if opts.offx == nil and not forceInactive then
+		main.hud.menuBadge()
 	end
 	--frame transition
 	if not skipClear then

@@ -129,6 +129,7 @@ func OnKeyPressed(key Key, mk ModifierKey) {
 		}
 		sys.keyState[key] = true
 		sys.keyInput = key
+		omugenNoteKey(key) // OMugen: who is driving the menus
 		escPressed := key == KeyEscape && (mk&ModCtrlAlt) == 0
 		sys.esc = sys.esc || escPressed
 		sys.escPending = sys.escPending || (sys.gameRunning && escPressed)
@@ -196,11 +197,8 @@ func GetKeyboardState(kc KeyConfig) [14]bool {
 // values from a shared state for both buttons and axes.
 // All XInput axes and digital buttons are supported.
 func GetJoystickState(kc KeyConfig) [14]bool {
-	if kc.mugenAuto > 0 {
-		return mugenJoystickState(mugenAutoCodes(kc.mugenAuto))
-	}
-	if kc.mugenCodes != nil {
-		return mugenJoystickState(kc.mugenCodes)
+	if kc.mugenPlayer > 0 {
+		return mugenJoystickState(mugenPlayerCodes(kc.mugenPlayer - 1))
 	}
 	var out [14]bool
 	joy := kc.Joy
@@ -289,7 +287,7 @@ type KeyConfig struct {
 	rumbleOn                                               bool
 	GUID                                                   string
 	mugenCodes                                             []int // OMugen: MUGEN joystick codes from mugen.cfg
-	mugenAuto                                              int   // OMugen: player index using player 1's pad layout (mugen_input.go)
+	mugenPlayer                                            int   // OMugen: 1-based player whose mugen.cfg layout and controller this is (mugen_input.go)
 }
 
 func (kc *KeyConfig) set(v [14]int) {
@@ -3011,7 +3009,7 @@ func (cl *CommandList) IsControllerButtonPressed(token string, controllerIdx int
 				in = m
 			}
 		}
-		if in >= 0 && in < len(sys.joystickConfig) && (sys.joystickConfig[in].mugenCodes != nil || sys.joystickConfig[in].mugenAuto > 0) {
+		if in >= 0 && in < len(sys.joystickConfig) && sys.joystickConfig[in].mugenPlayer > 0 {
 			// OMugen: players bound through mugen.cfg only use MUGEN joystick codes.
 			return false
 		}
