@@ -100,6 +100,16 @@ screenpack art, packs the engine files with `tools/packengine` into
 `external/`, `data/`, `font/` and `lib/` instead. `build/omugen_env.sh` sets up the
 environment for `go test` / `go vet`.
 
+Linux: `build/omugen_build.sh Linux` builds `OMugen_Linux`, with the engine files
+embedded as on Windows. Its libraries stay in `lib/` next to it, because Linux loads
+them before OMugen starts.
+
+GitHub Actions (`.github/workflows/builds.yml`) builds both. Pushing a version tag
+(`git tag v0.1.0 && git push origin v0.1.0`) makes a Release with
+`OMugen-<version>-windows.zip` and `OMugen-<version>-linux.tar.gz`. Pushing the `ci`
+branch, or starting the workflow by hand, gives the same builds as downloads on the
+run's page, kept for a week.
+
 ## Credits
 OMugen's engine core comes from [Ikemen GO](https://github.com/ikemen-engine/Ikemen-GO)
 by the Ikemen GO team and contributors (itself a rewrite of Suehiro's Ikemen); OMugen

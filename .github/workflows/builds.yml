@@ -1,0 +1,156 @@
+# Builds OMugen for Windows and Linux.
+#
+# Runs when a version tag is pushed (v1.2.3: the builds become a GitHub
+# Release of this repository), when the `ci` branch is pushed, or by hand
+# (Actions > builds > Run workflow). Builds that are not releases are kept
+# for a week as downloads on the run's page.
+#
+# Not on every push to main: this repository is private, so Actions minutes
+# are limited (Windows minutes count double).
+
+name: builds
+
+on:
+  push:
+    tags: [ 'v*' ]
+    branches: [ ci ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: builds-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-2022
+            target: Win64
+          - name: linux
+            os: ubuntu-22.04
+            target: Linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Version
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            version="$GITHUB_REF_NAME"
+          else
+            version="dev-${GITHUB_SHA::7}"
+          fi
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+          echo "APP_BUILDTIME=$(date -u '+%Y.%m.%d')" >> "$GITHUB_ENV"
+
+      # The same Go as local builds (go.mod's "go 1.20" is only the language level).
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.x'
+          cache: true
+
+      - name: Set up MSYS2
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          path-type: inherit
+          install: >-
+            git
+            make
+            diffutils
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-bzip2
+            mingw-w64-x86_64-nasm
+            mingw-w64-x86_64-yasm
+            mingw-w64-x86_64-tools-git
+            mingw-w64-x86_64-SDL2
+            mingw-w64-x86_64-libxmp
+
+      - name: Install Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config yasm nasm \
+            libasound2-dev libgl1-mesa-dev xorg-dev libgtk-3-dev libxmp-dev libsdl2-dev
+
+      # build.sh compiles a small FFmpeg (with libvpx, for WebM alpha) into
+      # build/ffmpeg once; these files are what it checks to skip that.
+      - name: Cache FFmpeg
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/ffmpeg
+            build/ffmpeg-src/config_components.h
+          key: ffmpeg-${{ matrix.target }}-${{ hashFiles('build/build.sh') }}
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: bash ./build/omugen_build.sh Win64
+
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: bash ./build/omugen_build.sh Linux
+
+      - name: Package
+        shell: bash
+        run: |
+          mkdir dist
+          if [ "$RUNNER_OS" = Windows ]; then
+            cp OMugen.exe dist/
+          else
+            # The libraries load before OMugen starts, so they ship next to it.
+            tar -czf "dist/OMugen-$APP_VERSION-linux.tar.gz" OMugen_Linux lib
+          fi
+          ls -la dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: OMugen-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Tests
+        if: runner.os == 'Linux'
+        run: |
+          source build/omugen_env.sh
+          go test -vet=off -count=1 ./src ./src/mugenjoy
+
+  release:
+    name: release
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: OMugen-*
+          path: dist
+
+      - name: Prepare files
+        run: |
+          mkdir release
+          (cd dist/OMugen-windows && zip -9 "../../release/OMugen-$GITHUB_REF_NAME-windows.zip" OMugen.exe)
+          cp dist/OMugen-linux/*.tar.gz release/
+          (cd release && sha256sum * > SHA256SUMS.txt)
+          ls -la release
+
+      - uses: ncipollo/release-action@v1.21.0
+        with:
+          artifacts: release/*
+          artifactErrorsFailBuild: true
+          generateReleaseNotes: true
+          allowUpdates: true
+          replacesArtifacts: true

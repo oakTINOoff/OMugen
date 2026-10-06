@@ -12,6 +12,7 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,6 +26,7 @@ type source struct {
 	glob     string
 	dest     string // directory inside the pack, or "" for the glob's own directory
 	required bool
+	dlls     bool // a Windows runtime DLL
 }
 
 var sources = []source{
@@ -61,8 +63,9 @@ var sources = []source{
 	{glob: "templates/newgame/data/*", required: true},
 	{glob: "templates/newgame/chars/proto/*", required: true},
 	{glob: "templates/newgame/stages/*", required: true},
-	// Runtime DLLs (SDL2, FFmpeg, libxmp, MinGW runtime).
-	{glob: "lib/*.dll", required: true},
+	// Runtime DLLs (SDL2, FFmpeg, libxmp, MinGW runtime); -dlls=false leaves
+	// them out (Linux builds ship their libraries in lib/ next to the binary).
+	{glob: "lib/*.dll", required: true, dlls: true},
 	// Licenses.
 	{glob: "LICENCE.txt", dest: "licenses", required: true},
 	{glob: "build/screenpack/LICENCE.txt", dest: "licenses/ikemen-go-screenpack"},
@@ -70,15 +73,20 @@ var sources = []source{
 
 const ffmpegNotice = `OMugen dynamically links FFmpeg (avcodec, avformat, avutil, avfilter,
 avdevice, swscale, swresample), licensed under the GNU LGPL v2.1.
-The DLLs in lib/ may be replaced with compatible builds.
+The libraries in lib/ may be replaced with compatible builds.
 build/build.sh in the OMugen sources builds the exact FFmpeg configuration
 from the official FFmpeg sources (https://ffmpeg.org).
 `
 
 func main() {
+	dlls := flag.Bool("dlls", true, "pack the Windows runtime DLLs from lib/")
+	flag.Parse()
 	out := filepath.Join("src", "omugen_engine.zip")
 	files := map[string]string{} // pack path -> disk path
 	for _, s := range sources {
+		if s.dlls && !*dlls {
+			continue
+		}
 		matches, err := filepath.Glob(filepath.FromSlash(s.glob))
 		check(err)
 		var n int
