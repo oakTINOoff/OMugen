@@ -1,0 +1,14 @@
+<#ffc93c>Special move</>
+Proto Blast		_D_DF_F_+^X/^Y
+
+<#ffc93c>Super move (needs 1 power level)</>
+Proto Overdrive		_D_DF_F_D_DF_F_+^X/^Y
+
+<#ffc93c>Movement</>
+Dash		_F_F
+Back step		_B_B
+Air recovery (when knocked into the air)		^X_+^Y
+
+<#ffc93c>Normals (standing, crouching _D, in the air _^)</>
+Punches		^X ^Y ^Z
+Kicks		^A ^B ^C

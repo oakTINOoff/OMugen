@@ -1,0 +1,14 @@
+; OMugen's default menu font: Open Sans Regular (SIL Open Font License),
+; drawn from the TrueType file in font/Open_Sans.
+[FNT v2]
+fntversion = 2,00
+name = "Open Sans"
+author = "Steve Matteson"
+
+[Def]
+Type = truetype
+Size = 13,27
+Spacing = 1,1
+Offset = 0,0
+File = Open_Sans/OpenSans-Regular.ttf
+Blend = 1

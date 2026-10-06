@@ -7,6 +7,7 @@
 ;   proto.cmd  button commands, and which state each command starts
 ;   proto.air  animations: sprite frames, timings and collision boxes
 ;   proto.sff  sprites and palettes (6 color schemes)
+;   movelist.dat  the move list shown in the pause menu
 ; The engine's common states (standing, walking, jumping, guarding, getting
 ; hit...) come from common1.cns and use the animation numbers in proto.air.
 
@@ -26,6 +27,7 @@ st = proto.cns
 stcommon = common1.cns    ;the engine's common states
 sprite = proto.sff
 anim = proto.air
+movelist = movelist.dat   ;the pause menu's command list (glyphs: _D _F ^X...)
 
 ; Button pressed on the select screen -> palette used
 [Palette Keymap]

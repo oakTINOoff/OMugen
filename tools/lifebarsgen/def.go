@@ -99,6 +99,32 @@ func powerbar(d *def, p int, left bool) {
 	d.line("%scounter.font = 4,0,%d", pre, align)
 }
 
+// gaugeBar is a guard or stun bar (fill sprite 26,0 or 27,0) above the
+// power bar.
+func gaugeBar(d *def, p int, left bool, y, fill int) {
+	pre := fmt.Sprintf("p%d.", p)
+	side, x := 0, powerX
+	if !left {
+		side, x = 1, mirrorX(powerX)
+	}
+	d.line("%spos = %d,%d", pre, x, y)
+	el := func(name string, g, n int) {
+		d.line("%s%s.spr = %d,%d", pre, name, g, n)
+		facing(d, pre+name, left)
+	}
+	el("bg0", 24, side)
+	el("mid", 28, 0)
+	el("front", fill, 0)
+	el("top", 25, 0)
+	reach := int(gauge.l + gauge.slant + gauge.pad)
+	if left {
+		d.line("%srange.x = %d,%d", pre, -int(gauge.pad), reach)
+	} else {
+		d.line("%srange.x = %d,%d", pre, int(gauge.pad), -reach)
+	}
+	d.line("%sscalefill = 1", pre)
+}
+
 func faceElems(d *def, p int, left bool, x, y int, scale float64) {
 	pre := fmt.Sprintf("p%d.", p)
 	side := 0
@@ -176,6 +202,7 @@ func fightDef() string {
 	d.line("; fight.snd, fonts in fonts/. Positions use a 1920x1080 screen.")
 	d.line(";   10-13  life bar: frame (P1, P2), top, damage, fill (full, 50%%+, 25%%+, low)")
 	d.line(";   20-23  power bar: frame (P1, P2), top, mid, fill (P1, P2)")
+	d.line(";   24-28  guard and stun bars: frame (P1, P2), top, guard fill, stun fill, mid")
 	d.line(";   30-31  portrait frame: back and top (P1, P2)")
 	d.line(";   40     timer badge     50  win icons (win, perfect)")
 	d.line(";   500    ROUND 1-9, FINAL ROUND (500,10)   520 FIGHT!   530 K.O.")
@@ -230,6 +257,14 @@ func fightDef() string {
 	d.section("Powerbar", "")
 	powerbar(&d, 1, true)
 	powerbar(&d, 2, false)
+
+	// Shown when Options > Game turns on guard break or dizzy.
+	d.section("Guardbar", "")
+	gaugeBar(&d, 1, true, guardY, 26)
+	gaugeBar(&d, 2, false, guardY, 26)
+	d.section("Stunbar", "")
+	gaugeBar(&d, 1, true, stunY, 27)
+	gaugeBar(&d, 2, false, stunY, 27)
 
 	// Portraits.
 	d.section("Face", "")

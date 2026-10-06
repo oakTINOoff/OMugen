@@ -36,11 +36,6 @@ if [[ "${OMUGEN_EMBED:-1}" == "0" ]]; then
 	run_build
 	status=$?
 else
-	# Engine assets that Ikemen GO releases ship from a separate repo.
-	if [[ ! -d build/screenpack/data/gofx ]]; then
-		echo "==> Cloning Ikemen-GO-Screenpack (engine assets)" | tee -a "$LOG"
-		git clone --depth=1 https://github.com/ikemen-engine/Ikemen-GO-Screenpack.git build/screenpack 2>&1 | tee -a "$LOG"
-	fi
 	# The runtime DLLs land in lib/ after a regular build. (Only Windows
 	# builds pack them; elsewhere the libraries ship in lib/ next to the
 	# binary, since the system loads them before OMugen starts.)
@@ -62,8 +57,9 @@ else
 		go run ./tools/templategen 2>&1 | tee -a "$LOG"
 		status=${PIPESTATUS[0]}
 	fi
-	# And OMugen's lifebars, effects and sounds (tools/lifebarsgen).
-	if [[ $status -eq 0 ]] && { [[ ! -f screenpack/lifebars/fight.def ]] || [[ -n "$(find tools/lifebarsgen tools/internal src/sffwrite -newer screenpack/lifebars/fight.def -name '*.go')" ]]; }; then
+	# And OMugen's lifebars, the engine's effects and the move list icons
+	# (tools/lifebarsgen).
+	if [[ $status -eq 0 ]] && { [[ ! -f screenpack/lifebars/fight.def ]] || [[ ! -f screenpack/engine/glyphs.sff ]] || [[ -n "$(find tools/lifebarsgen tools/internal src/sffwrite -newer screenpack/engine/glyphs.sff -name '*.go')" ]]; }; then
 		echo "==> Generating the OMugen lifebars" | tee -a "$LOG"
 		go run ./tools/lifebarsgen 2>&1 | tee -a "$LOG"
 		status=${PIPESTATUS[0]}

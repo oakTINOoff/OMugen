@@ -12,7 +12,11 @@
 // the lifebars of games whose own lifebars fail to load, and -newgame copies
 // them into each new game (data/omugen/lifebars), ready to edit.
 //
-// LIFEBARSGEN_PREVIEW=file.png also renders a mock fight screen.
+// It also writes screenpack/engine: the engine's own effects (gofx: dizzy,
+// guard break, tag switch) and the move list icons (glyphs.sff).
+//
+// LIFEBARSGEN_PREVIEW=file.png also renders a mock fight screen, and
+// LIFEBARSGEN_GLYPHS=file.png a sheet of the move list icons and effects.
 package main
 
 import (
@@ -24,6 +28,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/oakTINOoff/OMugen/src/sffwrite"
@@ -40,6 +45,8 @@ var (
 	power          = barGeom{l: 430, h: 20, slant: 10, pad: 12}
 	powerX         = 124
 	powerY         = 1022
+	gauge          = barGeom{l: 300, h: 10, slant: 5, pad: 8} // guard and stun bars
+	guardY, stunY  = 996, 974
 	face           = faceGeom{s: 136, cut: 26, pad: 14}
 	faceX, faceY   = 34, 26
 	timerX         = W / 2
@@ -105,6 +112,16 @@ func drawSprites() {
 	add(21, 0, barTop(power), pax, pay)
 	add(22, 0, barFill(power, white, gray), pax, pay)
 
+	// Guard and stun bars (shown when GuardBreak / Dizzy are on).
+	gax, gay := gauge.axis()
+	for i, s := range sides {
+		add(24, i, barBack(gauge, s), gax, gay)
+	}
+	add(25, 0, barTop(gauge), gax, gay)
+	add(26, 0, barFill(gauge, white, blueHot), gax, gay)
+	add(27, 0, barFill(gauge, goldHot, art.Hex(0xFF9A2A, 1)), gax, gay)
+	add(28, 0, barFill(gauge, white, art.Hex(0xFFC0B4, 1)), gax, gay)
+
 	fp := int(face.pad)
 	for i, s := range sides {
 		add(30, i, faceBack(face, s), fp, fp)
@@ -165,6 +182,21 @@ func main() {
 	write("fightfx.sff", sff(fxSprites))
 	write("fightfx.air", crlf(fightfxAir()))
 	write("common.snd", snd(commonSounds()))
+
+	// The engine's own effects and move list icons (screenpack/engine).
+	out = filepath.Join("screenpack", "engine")
+	check(os.MkdirAll(filepath.Join(out, "gofx"), 0o755))
+	drawGofx()
+	write(filepath.Join("gofx", "gofx.def"), crlf(gofxDef))
+	write(filepath.Join("gofx", "gofx.sff"), sff(gofxSprites))
+	write(filepath.Join("gofx", "gofx.air"), crlf(gofxAir()))
+	write(filepath.Join("gofx", "gofx.snd"), snd(gofxSounds()))
+	drawGlyphs()
+	sort.Slice(glyphSprites, func(i, j int) bool { return glyphSprites[i].g < glyphSprites[j].g })
+	write("glyphs.sff", sff(glyphSprites))
+	if path := os.Getenv("LIFEBARSGEN_GLYPHS"); path != "" {
+		glyphSheet(path)
+	}
 
 	if path := os.Getenv("LIFEBARSGEN_PREVIEW"); path != "" {
 		preview(path)

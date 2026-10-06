@@ -45,10 +45,11 @@ var sources = []source{
 	{glob: "font/Open_Sans/*", required: true},
 	{glob: "font/debug.def", required: true},
 	{glob: "font/default-3x5*", required: true},
-	// Assets Ikemen GO releases ship from the Ikemen-GO-Screenpack repo.
-	{glob: "build/screenpack/data/gofx/*", dest: "data/gofx", required: true},
-	{glob: "build/screenpack/data/glyphs.sff", dest: "data", required: true},
-	{glob: "build/screenpack/font/Open_Sans.def", dest: "font", required: true},
+	// The engine's own effects (dizzy, guard break, tag switch) and move list
+	// icons, from tools/lifebarsgen.
+	{glob: "screenpack/engine/gofx/*", dest: "data/gofx", required: true},
+	{glob: "screenpack/engine/glyphs.sff", dest: "data", required: true},
+	{glob: "font/Open_Sans.def", required: true},
 	// The OMugen screenpack (system.sff comes from tools/screenpackgen).
 	{glob: "screenpack/omugen/*", dest: "data/omugen", required: true},
 	{glob: "screenpack/omugen/fonts/*", dest: "data/omugen/fonts", required: true},
@@ -67,7 +68,6 @@ var sources = []source{
 	{glob: "lib/*.dll", required: true, dlls: true},
 	// Licenses.
 	{glob: "LICENCE.txt", dest: "licenses", required: true},
-	{glob: "build/screenpack/LICENCE.txt", dest: "licenses/ikemen-go-screenpack"},
 }
 
 const ffmpegNotice = `OMugen dynamically links FFmpeg (avcodec, avformat, avutil, avfilter,
@@ -101,7 +101,7 @@ func main() {
 			n++
 		}
 		if n == 0 && s.required {
-			fail("no files match %s (build once with build/build.sh, and clone the Ikemen-GO-Screenpack repo into build/screenpack)", s.glob)
+			fail("no files match %s (run build/omugen_build.sh, which builds lib/ and generates the art)", s.glob)
 		}
 	}
 
