@@ -98,10 +98,11 @@ Files in the game folder always win over OMugen's built-in copies.
 `OMugen.exe -newgame "My Game"` creates a folder with everything a new fighting game needs,
 ready to play and to change:
 
-- **Proto**, a complete template fighter: 6 palettes, normals on the ground and in the
-  air, a projectile, a super move, a move list for the pause menu, and every standard
-  animation the common states use, with collision boxes.
-- **Proto Arena**, a parallax night-dojo stage in 1280x720.
+- **Proto**, a complete template fighter (an armored android martial artist): 6 palettes,
+  normals on the ground and in the air, a projectile, a super move, a move list for the
+  pause menu, and every standard animation the common states use, with collision boxes.
+- **Proto Arena**, a rooftop dojo at night above a neon city, in six parallax layers
+  (1280x720).
 - Editable copies of the **OMugen screenpack** and **lifebars**, `data/select.def`, and
   the game's name as its window title.
 - `GUIDE.txt`: how the files fit together and how to make characters, stages and menus.

@@ -35,19 +35,22 @@ func tint(c color.RGBA, t float64) color.RGBA { // towards white
 func protoPalette(i int) []color.RGBA {
 	c := protoColors[i]
 	p := make([]color.RGBA, 256)
+	// Five tones: shadows lean towards a cool violet, highlights towards white.
+	cool := color.RGBA{40, 30, 72, 255}
 	ramp := func(at int, base color.RGBA) {
-		p[at], p[at+1], p[at+2] = scaleRGB(base, 0.6), base, tint(base, 0.32)
+		p[at] = mixRGB(scaleRGB(base, 0.42), cool, 0.3)
+		p[at+1] = mixRGB(scaleRGB(base, 0.68), cool, 0.14)
+		p[at+2] = base
+		p[at+3] = tint(base, 0.22)
+		p[at+4] = tint(base, 0.6)
 	}
 	body := rgb(c.body)
-	p[idxOutline] = scaleRGB(body, 0.28)
-	if lum := 0.3*float64(body.R) + 0.59*float64(body.G) + 0.11*float64(body.B); lum > 150 {
-		p[idxOutline] = color.RGBA{24, 26, 34, 255} // light suits keep a dark outline
-	}
+	p[idxOutline] = mixRGB(scaleRGB(body, 0.2), color.RGBA{10, 8, 18, 255}, 0.6)
 	ramp(matBody, body)
+	ramp(matPlate, rgb(c.plate))
 	ramp(matAccent, rgb(c.accent))
 	g := rgb(c.glow)
-	p[matGlow], p[matGlow+1], p[matGlow+2] = scaleRGB(g, 0.8), g, tint(g, 0.7)
-	ramp(matPlate, rgb(c.plate))
+	p[matGlow], p[matGlow+1], p[matGlow+2] = scaleRGB(g, 0.8), g, tint(g, 0.72)
 	return p
 }
 
@@ -485,4 +488,9 @@ func writeAir(sb *strings.Builder, no int, frames []airFrame, loop int) {
 		}
 		sb.WriteString(line + "\n")
 	}
+}
+
+func mixRGB(a, b color.RGBA, t float64) color.RGBA {
+	f := func(x, y uint8) uint8 { return uint8(float64(x) + (float64(y)-float64(x))*t) }
+	return color.RGBA{f(a.R, b.R), f(a.G, b.G), f(a.B, b.B), 255}
 }
