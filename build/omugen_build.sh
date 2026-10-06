@@ -62,6 +62,12 @@ else
 		go run ./tools/templategen 2>&1 | tee -a "$LOG"
 		status=${PIPESTATUS[0]}
 	fi
+	# And OMugen's lifebars, effects and sounds (tools/lifebarsgen).
+	if [[ $status -eq 0 ]] && { [[ ! -f screenpack/lifebars/fight.def ]] || [[ -n "$(find tools/lifebarsgen tools/internal src/sffwrite -newer screenpack/lifebars/fight.def -name '*.go')" ]]; }; then
+		echo "==> Generating the OMugen lifebars" | tee -a "$LOG"
+		go run ./tools/lifebarsgen 2>&1 | tee -a "$LOG"
+		status=${PIPESTATUS[0]}
+	fi
 	if [[ $status -eq 0 ]]; then
 		echo "==> Packing engine files" | tee -a "$LOG"
 		go run ./tools/packengine -dlls="$([[ "$TARGET" == Win* ]] && echo true || echo false)" 2>&1 | tee -a "$LOG"

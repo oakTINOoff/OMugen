@@ -20,13 +20,16 @@ OMugen too, and characters or stages made for MUGEN can be added to your game.
   data/select.def             the roster: characters and stages of your game
   data/omugen/system.def      the menus: title, select screen, versus, options
   data/omugen/system.sff      the menus' sprites
+  data/omugen/lifebars/       the fight screen: life and power bars, timer,
+                              ROUND / FIGHT / K.O., hit sparks (fightfx) and
+                              the common hit sounds (common.snd)
   chars/proto/                Proto, the template fighter
   stages/proto_arena.def      Proto Arena, the template stage
   stages/proto_arena.sff      its sprites
   save/config.ini             your game's settings (window title...)
 
-Files you don't have (lifebars, hit sparks, common sounds, the engine's
-common states) come from OMugen itself. Add your own copy to override one.
+Files you don't have (like the engine's common states) come from OMugen
+itself. Add your own copy to override one.
 
 
 -------------------------------------------------------------------------------

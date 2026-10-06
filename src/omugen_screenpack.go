@@ -70,10 +70,20 @@ func omugenScreenpackFiles(m *Motif) {
 		}
 	}
 	dirs := []string{game, "", "data/"}
+	fightDirs := dirs
+	if game == "" {
+		// The game's own screenpack is this one (games made with -newgame):
+		// its system.def names the game's lifebars (data/omugen/lifebars).
+		if v := readMotifFilesKey(m.Def, "fight"); v != "" {
+			if p := SearchFile(v, []string{m.Def}); FileExist(p) != "" {
+				fight, fightDirs = p, []string{""}
+			}
+		}
+	}
 	if p := SearchFile(sel, dirs); FileExist(p) != "" {
 		m.Files.Select = p
 	}
-	if p := SearchFile(fight, dirs); FileExist(p) != "" {
+	if p := SearchFile(fight, fightDirs); FileExist(p) != "" {
 		m.Files.Fight = p
 	} else if p := FileExist(omugenFightDef); p != "" {
 		m.Files.Fight = p

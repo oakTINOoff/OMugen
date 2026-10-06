@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -61,6 +62,10 @@ func createNewGame(arg string) (string, error) {
 	if screenpack == "" {
 		return "", fmt.Errorf("the OMugen screenpack is missing")
 	}
+	lifebars := firstDir(newGameSearchDirs(path.Dir(omugenFightDef), "screenpack/lifebars")...)
+	if lifebars == "" {
+		return "", fmt.Errorf("the OMugen lifebars are missing")
+	}
 	exe, err := os.Executable()
 	if err != nil {
 		return "", err
@@ -72,12 +77,15 @@ func createNewGame(arg string) (string, error) {
 	if err := copyTree(tmpl, dst); err != nil {
 		return "", err
 	}
-	// The screenpack (system.def, its sprites and fonts) without the engine's
-	// fallback lifebars, which stay in the engine files.
+	// The screenpack (system.def, its sprites and fonts) and a copy of the
+	// lifebars, which the game makes its own.
 	if err := copyFiles(screenpack, filepath.Join(dst, "data", "omugen")); err != nil {
 		return "", err
 	}
 	if err := copyTree(filepath.Join(screenpack, "fonts"), filepath.Join(dst, "data", "omugen", "fonts")); err != nil {
+		return "", err
+	}
+	if err := copyTree(lifebars, filepath.Join(dst, "data", "omugen", "lifebars")); err != nil {
 		return "", err
 	}
 	motif := filepath.Join(dst, "data", "omugen", "system.def")
@@ -104,11 +112,14 @@ func createNewGame(arg string) (string, error) {
 var (
 	infoboxTitleRe = regexp.MustCompile(`(?m)^(title\.text[ \t]*=[ \t]*)OMUGEN[ \t]*$`)
 	infoboxTextRe  = regexp.MustCompile(`(?s)(\[Infobox Text\]\r?\n).*?(\r?\n;-)`)
+	fightKeyRe     = regexp.MustCompile(`(?m)^(fight[ \t]*=[ \t]*)fight\.def[^\r\n]*`)
 )
 
 // newGameMotif turns the info box of the screenpack copy (shown on the first
 // run) from a note about OMugen's built-in screenpack into one about the game.
 func newGameMotif(def []byte, name string) []byte {
+	// The game's lifebars are its own copy of OMugen's (data/omugen/lifebars).
+	def = fightKeyRe.ReplaceAll(def, []byte("${1}lifebars/fight.def   ;this game's lifebars (data/omugen/lifebars)"))
 	def = infoboxTitleRe.ReplaceAllFunc(def, func(m []byte) []byte {
 		return append(append([]byte{}, infoboxTitleRe.FindSubmatch(m)[1]...), name...)
 	})

@@ -32,13 +32,13 @@ func TestNewGameFromEnginePack(t *testing.T) {
 	exe, _ := os.Executable()
 	for _, f := range []string{"GUIDE.txt", "data/select.def", "chars/proto/proto.def",
 		"stages/proto_arena.def", "data/omugen/system.def", "data/omugen/system.sff",
-		"data/omugen/fonts/title.ttf", filepath.Base(exe)} {
+		"data/omugen/fonts/title.ttf", "data/omugen/lifebars/f.def", filepath.Base(exe)} {
 		if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
 			t.Errorf("missing %s: %v", f, err)
 		}
 	}
 	if _, err := os.Stat(filepath.Join(dir, "data/omugen/omugen-fallback-lifebars")); err == nil {
-		t.Errorf("the engine's fallback lifebars must not be copied")
+		t.Errorf("the lifebars must be copied as data/omugen/lifebars, the game's own")
 	}
 	cfg, err := os.ReadFile(filepath.Join(dir, "save", "config.ini"))
 	if err != nil || !strings.Contains(string(cfg), "WindowTitle = Test Game") {
@@ -75,6 +75,7 @@ func TestNewGameMotifInfobox(t *testing.T) {
 		"title.text = Dojo 100% Clash\n",
 		"[Infobox Text]\nDojo 100%% Clash\nMade with OMugen (%s - %s)\n",
 		"[Select Info]",
+		"fight = lifebars/fight.def",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q", want)

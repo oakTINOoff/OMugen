@@ -52,11 +52,10 @@ var sources = []source{
 	// The OMugen screenpack (system.sff comes from tools/screenpackgen).
 	{glob: "screenpack/omugen/*", dest: "data/omugen", required: true},
 	{glob: "screenpack/omugen/fonts/*", dest: "data/omugen/fonts", required: true},
-	// Its fallback lifebars, for games whose own lifebars fail to load.
-	{glob: "build/screenpack/data/fight.*", dest: "data/omugen/omugen-fallback-lifebars", required: true},
-	{glob: "build/screenpack/data/fightfx.*", dest: "data/omugen/omugen-fallback-lifebars", required: true},
-	{glob: "build/screenpack/data/common.snd", dest: "data/omugen/omugen-fallback-lifebars", required: true},
-	{glob: "build/screenpack/data/ikemen1/fonts/*", dest: "data/omugen/omugen-fallback-lifebars/ikemen1/fonts", required: true},
+	// OMugen's lifebars (from tools/lifebarsgen), for games whose own lifebars
+	// fail to load; -newgame copies them into new games.
+	{glob: "screenpack/lifebars/*", dest: "data/omugen/omugen-fallback-lifebars", required: true},
+	{glob: "screenpack/lifebars/fonts/*", dest: "data/omugen/omugen-fallback-lifebars/fonts", required: true},
 	// The new-game template (OMugen.exe -newgame; the sprites and animations
 	// come from tools/templategen).
 	{glob: "templates/newgame/*", required: true},
