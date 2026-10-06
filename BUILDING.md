@@ -89,8 +89,8 @@ presses and saves screenshots to `save/shots` (see `src/omugen_inputscript.go`).
 
 `.github/workflows/builds.yml` builds Windows and Linux and runs the tests on Linux.
 
-- Push a version tag to publish a Release with `OMugen-<version>-windows.zip`,
-  `OMugen-<version>-linux.tar.gz` and checksums:
+- Push a version tag to publish a Release (notes from `docs/releases/<tag>.md`) with
+  `OMugen-<version>-windows.zip`, `OMugen-<version>-linux.tar.gz` and checksums:
   `git tag v0.1.0 && git push origin v0.1.0`
 - Push the `ci` branch (`git push -f origin main:ci`), or start the workflow by hand
   (Actions > builds > Run workflow), for test builds kept a week on the run's page.

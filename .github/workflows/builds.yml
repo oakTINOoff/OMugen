@@ -1,7 +1,8 @@
 # Builds OMugen for Windows and Linux.
 #
 # Runs when a version tag is pushed (v1.2.3: the builds become a GitHub
-# Release of this repository), when the `ci` branch is pushed, or by hand
+# Release of this repository, with notes from docs/releases/<tag>.md), when
+# the `ci` branch is pushed, or by hand
 # (Actions > builds > Run workflow). Builds that are not releases are kept
 # for a week as downloads on the run's page.
 #
@@ -167,6 +168,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # The release notes: docs/releases/<tag>.md.
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: docs/releases
+
       - uses: actions/download-artifact@v8
         with:
           pattern: OMugen-*
@@ -179,11 +185,31 @@ jobs:
           cp dist/OMugen-linux/*.tar.gz release/
           (cd release && sha256sum * > SHA256SUMS.txt)
           ls -la release
+          notes="docs/releases/$GITHUB_REF_NAME.md"
+          if [ -f "$notes" ]; then cp "$notes" release-notes.md; else echo "OMugen $GITHUB_REF_NAME" > release-notes.md; fi
 
       - uses: ncipollo/release-action@v1.21.0
         with:
+          name: OMugen ${{ github.ref_name }}
+          bodyFile: release-notes.md
           artifacts: release/*
           artifactErrorsFailBuild: true
-          generateReleaseNotes: true
           allowUpdates: true
           replacesArtifacts: true
+
+      # The result, readable with git like the builds' logs.
+      - name: Keep the result
+        if: always()
+        continue-on-error: true
+        env:
+          TOKEN: ${{ github.token }}
+          STATUS: ${{ job.status }}
+        run: |
+          dir="$RUNNER_TEMP/ci-logs"
+          mkdir -p "$dir"
+          { echo "$STATUS $GITHUB_REF_NAME $GITHUB_SHA run $GITHUB_RUN_ID"; ls -la release 2>&1; } > "$dir/STATUS"
+          cd "$dir"
+          git init -q
+          git add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -qm "release: $STATUS"
+          git push -f "https://x-access-token:$TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:refs/ci-logs/release
