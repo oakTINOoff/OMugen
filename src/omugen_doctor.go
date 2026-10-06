@@ -93,7 +93,7 @@ func doctorEntries(path string) (chars, stages []doctorItem, err error) {
 	section := ""
 	seenStage := map[string]bool{}
 	addStage := func(entry string, line int) {
-		key := strings.ToLower(filepath.ToSlash(entry))
+		key := strings.ToLower(mugenSlash(entry))
 		if entry == "" || seenStage[key] {
 			return
 		}
@@ -150,7 +150,7 @@ func doctorFilter(items []doctorItem, filter string) []doctorItem {
 }
 
 func doctorResolveChar(entry string) string {
-	p := filepath.ToSlash(entry)
+	p := mugenSlash(entry)
 	if strings.HasSuffix(strings.ToLower(p), ".zip") {
 		return "" // zipped characters: reported as not checked
 	}
@@ -165,7 +165,7 @@ func doctorResolveChar(entry string) string {
 }
 
 func doctorResolveStage(entry string) string {
-	p := filepath.ToSlash(entry)
+	p := mugenSlash(entry)
 	if !strings.HasSuffix(strings.ToLower(p), ".def") {
 		p += ".def"
 	}

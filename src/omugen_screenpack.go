@@ -7,7 +7,6 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	lua "github.com/yuin/gopher-lua"
@@ -48,7 +47,7 @@ func omugenScreenpackPath() string {
 }
 
 func isOMugenMotif(def string) bool {
-	return strings.HasSuffix(strings.ToLower(filepath.ToSlash(def)), omugenMotifDef)
+	return strings.HasSuffix(strings.ToLower(mugenSlash(def)), omugenMotifDef)
 }
 
 // omugenScreenpackFiles points the OMugen screenpack at the game's own
@@ -206,9 +205,9 @@ func omugenMotifFallback(failed error) (*Motif, error) {
 		return nil, fmt.Errorf("%v (the OMugen screenpack failed too: %v)", failed, err)
 	}
 	// The engine's old default (not shipped) is replaced quietly.
-	if !strings.EqualFold(filepath.ToSlash(omugenUI.gameDef), legacyDefaultMotif) {
+	if !strings.EqualFold(mugenSlash(omugenUI.gameDef), legacyDefaultMotif) {
 		omugenUI.notice = fmt.Sprintf("The screenpack %s could not be loaded,\nso OMugen's built-in screenpack is used.\nDetails are in the log.",
-			filepath.ToSlash(omugenUI.gameDef))
+			mugenSlash(omugenUI.gameDef))
 	}
 	return m, nil
 }
@@ -220,7 +219,7 @@ const legacyDefaultMotif = "data/ikemen1/system.def"
 // omugenFightFallback loads OMugen's own lifebars after the game's failed.
 func omugenFightFallback(def string, failed error) (*FightScreen, error) {
 	p := FileExist(omugenFightDef)
-	if p == "" || strings.EqualFold(filepath.ToSlash(def), p) {
+	if p == "" || strings.EqualFold(mugenSlash(def), p) {
 		return nil, failed
 	}
 	if def == "" {

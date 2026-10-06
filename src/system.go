@@ -5368,7 +5368,7 @@ func (s *Select) AddChar(def string) *SelectChar {
 
 	parts := strings.Split(def, ",")
 	defPathFromSelect := strings.TrimSpace(parts[0])
-	defPathFromSelect = filepath.ToSlash(defPathFromSelect)
+	defPathFromSelect = mugenSlash(defPathFromSelect)
 
 	// Early exits for known keywords
 	if strings.ToLower(defPathFromSelect) == "randomselect" {
@@ -5645,7 +5645,7 @@ func (s *Select) AddStage(def string) (*SelectStage, error) {
 		sys.loadTime(tnow, tstr, false, false)
 	}()
 
-	defPathFromSelect := filepath.ToSlash(def)
+	defPathFromSelect := mugenSlash(def)
 	tstr = fmt.Sprintf("Stage added: %v", defPathFromSelect)
 
 	var finalDefPath string

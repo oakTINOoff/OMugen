@@ -62,7 +62,7 @@ func prefetchRoster(chars, stages []string) {
 // them the way Select.AddChar does (zipped characters are skipped). It
 // returns the files it read.
 func prefetchChar(entry string) (read []string) {
-	guess := filepath.ToSlash(strings.TrimSpace(entry))
+	guess := mugenSlash(strings.TrimSpace(entry))
 	low := strings.ToLower(guess)
 	if guess == "" || low == "randomselect" || strings.HasSuffix(low, ".zip") {
 		return nil
@@ -95,7 +95,7 @@ func prefetchChar(entry string) (read []string) {
 
 // prefetchStage reads a stage's .def, found the way Select.AddStage does.
 func prefetchStage(entry string) {
-	def := filepath.ToSlash(strings.TrimSpace(entry))
+	def := mugenSlash(strings.TrimSpace(entry))
 	if def == "" || strings.ContainsRune(def, '=') || strings.HasSuffix(strings.ToLower(def), ".zip") {
 		return
 	}

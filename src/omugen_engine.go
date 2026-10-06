@@ -68,6 +68,11 @@ func prepareEngineDir() {
 }
 
 // engineCacheRoot is the per-user folder for OMugen's extracted engine files.
+// mugenSlash turns the backslashes of a path from MUGEN content (select.def
+// entries, motifs) into slashes. MUGEN only ran on Windows, so its content
+// uses backslashes, which filepath.ToSlash keeps on other systems.
+func mugenSlash(p string) string { return strings.ReplaceAll(p, `\`, "/") }
+
 func engineCacheRoot() string {
 	base := os.Getenv("LOCALAPPDATA")
 	if base == "" {
