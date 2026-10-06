@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
+	"github.com/oakTINOoff/OMugen/src/mugenjoy"
 	lua "github.com/yuin/gopher-lua"
 )
 

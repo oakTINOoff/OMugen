@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
+	"github.com/oakTINOoff/OMugen/src/mugenjoy"
 )
 
 // Controllers read through SDL produce the codes MUGEN gives the same

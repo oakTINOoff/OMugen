@@ -21,9 +21,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ikemen-engine/Ikemen-GO/src/sffwrite"
-	"github.com/ikemen-engine/Ikemen-GO/tools/internal/art"
-	"github.com/ikemen-engine/Ikemen-GO/tools/internal/logo"
+	"github.com/oakTINOoff/OMugen/src/sffwrite"
+	"github.com/oakTINOoff/OMugen/tools/internal/art"
+	"github.com/oakTINOoff/OMugen/tools/internal/logo"
 )
 
 const W, H = 1920, 1080

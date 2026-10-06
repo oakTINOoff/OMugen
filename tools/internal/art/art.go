@@ -15,7 +15,7 @@ import (
 	"golang.org/x/image/math/fixed"
 	"golang.org/x/image/vector"
 
-	"github.com/ikemen-engine/Ikemen-GO/tools/internal/logo"
+	"github.com/oakTINOoff/OMugen/tools/internal/logo"
 )
 
 type RGBA struct{ R, G, B, A float64 }

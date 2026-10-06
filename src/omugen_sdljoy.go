@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
+	"github.com/oakTINOoff/OMugen/src/mugenjoy"
 	"github.com/veandco/go-sdl2/sdl"
 )
 

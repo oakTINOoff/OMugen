@@ -7,7 +7,7 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/ikemen-engine/Ikemen-GO/tools/internal/art"
+	"github.com/oakTINOoff/OMugen/tools/internal/art"
 )
 
 var (

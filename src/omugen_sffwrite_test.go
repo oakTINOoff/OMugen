@@ -6,7 +6,7 @@ import (
 	imgcolor "image/color"
 	"testing"
 
-	"github.com/ikemen-engine/Ikemen-GO/src/sffwrite"
+	"github.com/oakTINOoff/OMugen/src/sffwrite"
 )
 
 // Files written by sffwrite must parse with OMugen's own SFF v2 reader.

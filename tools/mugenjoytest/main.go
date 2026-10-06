@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
+	"github.com/oakTINOoff/OMugen/src/mugenjoy"
 )
 
 var actions = []string{"Jump", "Crouch", "Left", "Right", "A", "B", "C", "X", "Y", "Z", "Start"}

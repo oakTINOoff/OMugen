@@ -19,8 +19,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ikemen-engine/Ikemen-GO/src/sffwrite"
-	"github.com/ikemen-engine/Ikemen-GO/tools/internal/art"
+	"github.com/oakTINOoff/OMugen/src/sffwrite"
+	"github.com/oakTINOoff/OMugen/tools/internal/art"
 )
 
 func check(err error) {

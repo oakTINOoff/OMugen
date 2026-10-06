@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ikemen-engine/Ikemen-GO/src/mugenjoy"
+	"github.com/oakTINOoff/OMugen/src/mugenjoy"
 )
 
 type omugenInputCmd struct {

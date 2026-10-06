@@ -1,4 +1,4 @@
-module github.com/ikemen-engine/Ikemen-GO
+module github.com/oakTINOoff/OMugen
 
 go 1.20
 

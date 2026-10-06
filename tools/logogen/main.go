@@ -22,7 +22,7 @@ import (
 
 	"golang.org/x/image/vector"
 
-	"github.com/ikemen-engine/Ikemen-GO/tools/internal/logo"
+	"github.com/oakTINOoff/OMugen/tools/internal/logo"
 )
 
 // ---------------------------------------------------------------- raster
