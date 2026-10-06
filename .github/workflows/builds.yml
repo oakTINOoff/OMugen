@@ -52,12 +52,14 @@ jobs:
           echo "APP_BUILDTIME=$(date -u '+%Y.%m.%d')" >> "$GITHUB_ENV"
 
       # The same Go as local builds (go.mod's "go 1.20" is only the language level).
-      - uses: actions/setup-go@v7
+      - id: go
+        uses: actions/setup-go@v7
         with:
           go-version: '1.27.x'
           cache: true
 
       - name: Set up MSYS2
+        id: msys2
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
         with:
@@ -78,6 +80,7 @@ jobs:
             mingw-w64-x86_64-libxmp
 
       - name: Install Linux packages
+        id: apt
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -95,15 +98,18 @@ jobs:
           key: ffmpeg-${{ matrix.target }}-${{ hashFiles('build/build.sh') }}
 
       - name: Build (Windows)
+        id: build_windows
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: bash ./build/omugen_build.sh Win64
 
       - name: Build (Linux)
+        id: build_linux
         if: runner.os == 'Linux'
         run: bash ./build/omugen_build.sh Linux
 
       - name: Package
+        id: package
         shell: bash
         run: |
           mkdir dist
@@ -123,10 +129,37 @@ jobs:
           retention-days: 7
 
       - name: Tests
+        id: tests
         if: runner.os == 'Linux'
         run: |
+          set -o pipefail
           source build/omugen_env.sh
-          go test -vet=off -count=1 ./src ./src/mugenjoy
+          go test -vet=off -count=1 ./src ./src/mugenjoy 2>&1 | tee build/omugen_test.log
+
+      # The build's log and step results, readable with plain git (the run's
+      # page needs a browser signed in to the repository):
+      #   git fetch origin +refs/ci-logs/*:refs/ci-logs/*
+      #   git show ci-logs/linux:omugen_build.log
+      - name: Keep the log
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          TOKEN: ${{ github.token }}
+          STATUS: ${{ job.status }}
+          STEPS: ${{ toJSON(steps) }}
+        run: |
+          dir="$RUNNER_TEMP/ci-logs"
+          mkdir -p "$dir"
+          for f in build/omugen_build.log build/omugen_test.log; do
+            if [ -f "$f" ]; then tail -n 5000 "$f" > "$dir/$(basename "$f")"; fi
+          done
+          printf '%s %s run %s\n%s\n' "$STATUS" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$STEPS" > "$dir/STATUS"
+          cd "$dir"
+          git init -q
+          git add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -qm "${{ matrix.name }}: $STATUS"
+          git push -f "https://x-access-token:$TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:refs/ci-logs/${{ matrix.name }}
 
   release:
     name: release
