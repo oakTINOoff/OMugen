@@ -454,6 +454,6 @@ var fontDefs = []struct {
 }
 
 func fontDef(name, ttf string, size int) string {
-	return fmt.Sprintf("; OMugen lifebar font: %s (SIL Open Font License)\n[FNT v2]\nfntversion = 2,00\nname = %q\nauthor = \"Steve Matteson\"\n\n[Def]\nType = truetype\nSize = 0,%d\nSpacing = 0,0\nOffset = 0,0\nFile = Open_Sans/%s\nBlend = 1\n",
+	return fmt.Sprintf("; OMugen lifebar font: %s (Apache License 2.0)\n[FNT v2]\nfntversion = 2,00\nname = %q\nauthor = \"Steve Matteson\"\n\n[Def]\nType = truetype\nSize = 0,%d\nSpacing = 0,0\nOffset = 0,0\nFile = Open_Sans/%s\nBlend = 1\n",
 		name, name, size, ttf)
 }

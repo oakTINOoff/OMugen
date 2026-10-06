@@ -1,0 +1,50 @@
+name: Bug report
+description: Something doesn't work, or works differently than in MUGEN 1.1.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Step by step from starting the game, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: game
+    attributes:
+      label: Game
+      description: Which MUGEN game (name or link), and does it work in MUGEN 1.1?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: OMugen version
+      description: Shown at the bottom of the main menu, e.g. "nightly - 2026.10.06" or "v0.1.0".
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Starting / loading
+        - Menus / screenpack
+        - Controls / controllers
+        - Characters / stages
+        - Matches / gameplay
+        - Online / LAN
+        - Video / frame rate
+        - Making a game (-newgame)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: >
+        Attach the newest file from the game's save/logs folder. For controllers, also
+        save/logs/controllers.txt and how your pads are connected (USB, Bluetooth, DS4Windows,
+        Steam Input). For characters or stages, the report from running OMugen.exe -doctor
+        (save/doctor/report.html). Please don't attach copyrighted game content.

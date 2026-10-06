@@ -157,8 +157,6 @@ options.t_itemname = {
 			modifyGameOption('Config.TurnsLoading', false)
 			--modifyGameOption('Config.BootLoadingMode', 0)
 			--modifyGameOption('Config.FirstRun', false)
-			--modifyGameOption('Config.WindowTitle', "Ikemen GO")
-			--modifyGameOption('Config.WindowIcon', {"external/icons/IkemenCylia_256.png", "external/icons/IkemenCylia_96.png", "external/icons/IkemenCylia_48.png"})
 			--modifyGameOption('Config.System', "external/script/main.lua")
 			--modifyGameOption('Config.ScreenshotFolder', "")
 			--modifyGameOption('Config.TrainingChar', "")

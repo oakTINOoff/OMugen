@@ -54,7 +54,7 @@ while [[ $# -gt 0 ]]; do
 Usage: ./build/build_android.sh [--no-build] [--build-only]
 
 Builds the Docker image and runs the android-build container to produce:
-  - bin/ikemen-go.apk
+  - bin/omugen.apk
   - bin/libmain.so, bin/libmain.h
   - lib/*.so
 

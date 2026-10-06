@@ -86,22 +86,22 @@ OMugen_MacOSARM: ${srcFiles}
 
 # MacOS app bundle
 appbundle:
-	mkdir -p I.K.E.M.E.N-Go.app
-	mkdir -p I.K.E.M.E.N-Go.app/Contents
-	mkdir -p I.K.E.M.E.N-Go.app/Contents/MacOS
-	mkdir -p I.K.E.M.E.N-Go.app/Contents/Frameworks
-	mkdir -p I.K.E.M.E.N-Go.app/Contents/Resources
+	mkdir -p OMugen.app
+	mkdir -p OMugen.app/Contents
+	mkdir -p OMugen.app/Contents/MacOS
+	mkdir -p OMugen.app/Contents/Frameworks
+	mkdir -p OMugen.app/Contents/Resources
 	# BINNAME can be a full path (e.g. bin/OMugen_MacOS) or just the filename.
-	cp $(BINNAME) I.K.E.M.E.N-Go.app/Contents/MacOS/$(notdir $(BINNAME))
-	cp ./build/Info.plist I.K.E.M.E.N-Go.app/Contents/Info.plist
-	cp ./build/bundle_run.sh I.K.E.M.E.N-Go.app/Contents/MacOS/bundle_run.sh
-	chmod +x I.K.E.M.E.N-Go.app/Contents/MacOS/bundle_run.sh
-	chmod +x I.K.E.M.E.N-Go.app/Contents/MacOS/$(notdir $(BINNAME))
-	cp lib/*.dylib I.K.E.M.E.N-Go.app/Contents/Frameworks/ 2>/dev/null || true
+	cp $(BINNAME) OMugen.app/Contents/MacOS/$(notdir $(BINNAME))
+	cp ./build/Info.plist OMugen.app/Contents/Info.plist
+	cp ./build/bundle_run.sh OMugen.app/Contents/MacOS/bundle_run.sh
+	chmod +x OMugen.app/Contents/MacOS/bundle_run.sh
+	chmod +x OMugen.app/Contents/MacOS/$(notdir $(BINNAME))
+	cp lib/*.dylib OMugen.app/Contents/Frameworks/ 2>/dev/null || true
 	mkdir -p build/icontmp/icon.iconset
 	cp external/icons/omugen_256.png build/icontmp/icon.iconset/icon_256x256.png
 	iconutil -c icns build/icontmp/icon.iconset -o build/icontmp/icon.icns
-	cp build/icontmp/icon.icns I.K.E.M.E.N-Go.app/Contents/Resources/icon.icns
+	cp build/icontmp/icon.icns OMugen.app/Contents/Resources/icon.icns
 	rm -rf build/icontmp
 
 .PHONY: android-apk
@@ -109,4 +109,4 @@ android-apk:
 	bash ./build/build_android.sh
 
 clean_appbundle:
-	rm -rf I.K.E.M.E.N-Go.app
+	rm -rf OMugen.app

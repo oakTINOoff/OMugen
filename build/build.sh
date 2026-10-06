@@ -53,7 +53,7 @@ require_safe_path() {
 		echo "ERROR: Repository path contains characters unsafe for MSYS2/autotools:" >&2
 		echo "  $REPO_ROOT" >&2
 		echo "Use only letters, digits, '_', '-', '.'" >&2
-		echo "Tip: move to something like: C:\dev\Ikemen-GO" >&2
+		echo "Tip: move to something like: C:\dev\OMugen" >&2
 		exit 1
 	  fi
 	  if ((${#REPO_ROOT} > 220)); then
@@ -991,7 +991,7 @@ function stage_android_apk_assets() {
 			cp -a "$src" "$dst"
 		else
 			# If your tree doesn't include some optional paths from manifest, just warn.
-			echo "WARNING: Asset path missing in Ikemen-GO tree: $p" >&2
+			echo "WARNING: Asset path missing in the OMugen tree: $p" >&2
 		fi
 	done < <(tr -s '[:space:]' '\n' < "$manifest")
 }

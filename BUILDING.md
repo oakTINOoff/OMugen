@@ -1,259 +1,107 @@
-# Building Ikemen GO
+# Building OMugen
 
-Ikemen GO links against **FFmpeg** (background video: VP8/VP9/Opus/Vorbis in WebM/Matroska), **libxmp** (module music: MOD/XM/S3M/IT, etc.), and **SDL2** (windowing, input, and game controller support via go-sdl2).
-All three must be available as development packages via **pkg-config** (`libav*`, `libxmp`, and `sdl2`).
-`build/build.sh` **auto-detects your OS** and, by default, **auto-builds a decoder-only libvpx and minimal FFmpeg**
-(same config as CI). You don't need system FFmpeg dev packages unless you prefer them.
+OMugen is written in Go with cgo. It links **SDL2** (window, input, controllers),
+**FFmpeg** (video backgrounds) and **libxmp** (module music). `build/build.sh` compiles a
+small, decoder-only FFmpeg (with libvpx, for WebM alpha) into `build/ffmpeg` the first time,
+so you don't need FFmpeg development packages.
 
----
+`build/omugen_build.sh` is the one command to run. It:
 
-## Windows (MSYS2 / MINGW64)
+1. builds the runtime libraries into `lib/` (Windows, first build only),
+2. generates the art and sounds from code (`tools/screenpackgen`, `tools/templategen`,
+   `tools/lifebarsgen`) when their sources changed,
+3. packs the engine files into `src/omugen_engine.zip` (`tools/packengine`),
+4. builds the drop-in executable with the pack embedded (`-tags=omugen_engine`).
 
-### Dependencies
-Install MSYS2 from https://www.msys2.org and open **MSYS2 MINGW64**, then:
+The generated art (`screenpack/omugen/system.sff`, `screenpack/lifebars`,
+`screenpack/engine`, Proto's `.sff`/`.air`) and the pack are not in git; the build makes
+them.
+
+## Windows (MSYS2)
+
+Install [MSYS2](https://www.msys2.org), open **MSYS2 MINGW64** and install the tools:
+
 ```bash
 pacman -Syu --noconfirm
-pacman -S --noconfirm \
-  git make diffutils mingw-w64-x86_64-pkg-config \
-  mingw-w64-x86_64-go mingw-w64-x86_64-toolchain \
-  mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm \
-  mingw-w64-x86_64-tools-git mingw-w64-x86_64-libxmp \
-  mingw-w64-x86_64-SDL2
+pacman -S --noconfirm git make diffutils \
+  mingw-w64-x86_64-go mingw-w64-x86_64-toolchain mingw-w64-x86_64-pkg-config \
+  mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-tools-git \
+  mingw-w64-x86_64-SDL2 mingw-w64-x86_64-libxmp
 ```
 
-> On MSYS2 we auto-fix "trimmed" Go by setting `GOROOT=/mingw64/lib/go` if needed.
-
-### Build 64-bit (Ikemen_GO.exe)
+Then, from the repository:
 
 ```bash
-git clone https://github.com/ikemen-engine/Ikemen-GO.git
-cd Ikemen-GO
-# build.sh (matches CI default)
-./build/build.sh Win64
-# or make
-make Ikemen_GO.exe
+bash build/omugen_build.sh
 ```
 
-### Build 32-bit (Ikemen_GO_x86.exe)
+This writes `OMugen.exe` (about 37 MB, everything inside) and `build/omugen_build.log`.
+Copy the exe into a MUGEN folder to try it, or use `tools/make_testgame.ps1` to make a
+test folder that links to a game without ever writing to it.
 
-> Requires 32-bit MinGW cross tools in addition to the above:
-> `pacman -S --noconfirm mingw-w64-i686-toolchain mingw-w64-i686-pkg-config mingw-w64-i686-nasm mingw-w64-i686-yasm mingw-w64-i686-libxmp mingw-w64-i686-SDL2`
+From PowerShell:
 
-```bash
-# build.sh
-./build/build.sh Win32
-# or make
-make Ikemen_GO_x86.exe
+```powershell
+$env:MSYSTEM="MINGW64"; C:\msys64\usr\bin\bash.exe -lc "bash /c/path/to/OMugen/build/omugen_build.sh"
 ```
 
-### Run (Windows)
-
-```bash
-./Ikemen_GO.exe          # 64-bit
-./Ikemen_GO_x86.exe      # 32-bit
-```
-
-### Use system FFmpeg instead (optional)
-
-Install `mingw-w64-x86_64-ffmpeg` (and/or i686 variant for 32-bit), then:
-
-```bash
-BUILD_FFMPEG=no ./build/build.sh Win64   # or Win32
-```
-
----
+- `OMUGEN_EMBED=0 bash build/omugen_build.sh` makes a quicker development build without
+  the pack; it then needs the repository's `external/`, `data/`, `font/` and `lib/` next
+  to it.
+- `DEBUG_BUILD=1` keeps a console window for logs and panics.
+- The repository path must not contain spaces or other characters autotools dislike.
 
 ## Linux
 
-### Dependencies (Debian/Ubuntu)
+Debian/Ubuntu packages (other distributions: the same libraries):
 
 ```bash
-sudo apt update && sudo apt install -y \
-  golang-go git pkg-config make nasm yasm build-essential \
-  libxmp-dev libsdl2-dev
+sudo apt-get install -y build-essential pkg-config yasm nasm \
+  libasound2-dev libgl1-mesa-dev xorg-dev libgtk-3-dev libxmp-dev libsdl2-dev
 ```
 
-### Build x86-64 (Ikemen_GO_Linux)
+and Go 1.27 from <https://go.dev/dl> (the version CI uses; distribution packages are often
+older). Then:
 
 ```bash
-git clone https://github.com/ikemen-engine/Ikemen-GO.git
-cd Ikemen-GO
-# build.sh (matches CI default)
-./build/build.sh Linux
-# or make
-make Ikemen_GO_Linux
+./build/omugen_build.sh Linux
 ```
 
-### Build ARM64 on an ARM host (Ikemen_GO_LinuxARM)
+This writes `OMugen_Linux` with the engine files embedded. Its libraries stay in `lib/`
+next to it (Linux loads them before OMugen starts), so ship both together.
 
-> On an **ARM64 (aarch64) machine**, the same dependencies apply.
+## Tests
 
 ```bash
-# build.sh
-./build/build.sh LinuxARM
-# or make
-make Ikemen_GO_LinuxARM
+source build/omugen_env.sh     # cgo flags and library paths
+go test -vet=off -count=1 ./src ./src/mugenjoy
+go vet ./tools/...
+gofmt -l src tools             # must print nothing
 ```
 
-> Cross-compiling x86→ARM with CGO/FFmpeg requires an ARM cross toolchain and is not covered here.
+`-vet=off` because some upstream engine code doesn't pass vet. Tests that need a real
+game (like `TestLoadRealJumpForceConfig`) skip themselves when it isn't there.
 
-### Run (Linux)
+For screens and menus, run the game with `-inputscript file`: it plays scripted key
+presses and saves screenshots to `save/shots` (see `src/omugen_inputscript.go`).
 
-```bash
-./Ikemen_GO_Linux        # x86-64
-./Ikemen_GO_LinuxARM     # ARM64
-# If you need a GL fallback on some drivers:
-MESA_GL_VERSION_OVERRIDE=2.1 ./Ikemen_GO_Linux
-```
+## GitHub Actions
 
-You can also double-click **`build/Ikemen_GO.command`** on Linux.
+`.github/workflows/builds.yml` builds Windows and Linux and runs the tests on Linux.
 
-### Use system FFmpeg instead (optional)
+- Push a version tag to publish a Release with `OMugen-<version>-windows.zip`,
+  `OMugen-<version>-linux.tar.gz` and checksums:
+  `git tag v0.1.0 && git push origin v0.1.0`
+- Push the `ci` branch (`git push -f origin main:ci`), or start the workflow by hand
+  (Actions > builds > Run workflow), for test builds kept a week on the run's page.
+- Each build also pushes its log and step results to `refs/ci-logs/<windows|linux>`,
+  readable without a browser:
+  `git fetch origin "+refs/ci-logs/*:refs/ci-logs/*"` then
+  `git show ci-logs/linux:STATUS` (also `omugen_build.log`, `omugen_test.log`).
 
-```bash
-sudo apt install -y ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libswresample-dev libavfilter-dev
-BUILD_FFMPEG=no ./build/build.sh Linux      # or LinuxARM
-```
+It doesn't run on every push to `main`, to save Actions minutes.
 
----
+## Other platforms
 
-## macOS (Apple Silicon by default; Intel supported)
-
-### Dependencies (Homebrew)
-
-```bash
-brew update && brew install git go pkg-config nasm libxmp sdl2 molten-vk
-# Optional: brew install yasm
-```
-
-### Build (Apple Silicon default)
-
-```bash
-git clone https://github.com/ikemen-engine/Ikemen-GO.git
-cd Ikemen-GO
-# build.sh (matches CI default)
-./build/build.sh MacOSARM
-# or make
-make Ikemen_GO_MacOSARM
-```
-
-### Build (Intel)
-
-```bash
-./build/build.sh MacOS
-# or
-make Ikemen_GO_MacOS
-```
-
-### App bundle (optional)
-
-```bash
-make appbundle BINNAME=bin/Ikemen_GO_MacOSARM   # or BINNAME=bin/Ikemen_GO_MacOS
-open I.K.E.M.E.N-Go.app
-```
-
-You can also double-click **`build/Ikemen_GO.command`**; it starts the bundle or the binary.
-
-### Run (raw binary)
-
-```bash
-./bin/Ikemen_GO_MacOSARM   # Apple Silicon
-./bin/Ikemen_GO_MacOS      # Intel
-```
-
-### Use system FFmpeg instead (optional)
-
-```bash
-brew install ffmpeg
-BUILD_FFMPEG=no ./build/build.sh MacOSARM   # or MacOS
-```
-
----
-
-## Android (APK via Docker)
-
-This builds the engine **and** produces a ready-to-install **APK** inside Docker. No Android Studio required.
-
-### Requirements
-
-* Docker (Docker Desktop on Windows/macOS, or Docker Engine on Linux)
-
-### Build (from repo root)
-
-#### Option A: one-liner helper script
-
-```bash
-./build/build_android.sh
-```
-
-This script wraps the docker compose commands and runs the Android build inside the container.
-
-### Option B: run Docker Compose directly
-
-```bash
-docker compose -f build/docker/android/docker-compose.yml build
-docker compose -f build/docker/android/docker-compose.yml run --rm android-build
-```
-
-### Outputs
-
-After a successful run, these will exist in your repo:
-
-* `bin/ikemen-go.apk` (the APK)
-* `bin/libmain.so` and `bin/libmain.h` (engine shared library + header)
-* `lib/*.so` (Android runtime dependencies: SDL2, FFmpeg libs, libxmp, etc.)
-* `build/android-apk/ikemen-droid` (cloned Android wrapper project)
-
-### Configuration knobs (optional)
-
-You can override build metadata and wrapper source:
-
-```bash
-APP_VERSION=my-build APP_BUILDTIME=2026.01.13 \
-ANDROID_APK_REPO=https://github.com/Jesuszilla/ikemen-droid.git \
-ANDROID_APK_REF=main \
-docker compose -f build/docker/android/docker-compose.yml run --rm android-build
-```
-
-To skip APK packaging (only build `.so` + deps):
-
-```bash
-BUILD_ANDROID_APK=0 docker compose -f build/docker/android/docker-compose.yml run --rm android-build
-```
-
-### Customizing the Android wrapper (package name, manifest, icons, etc.)
-
-The APK is built from the `ikemen-droid` wrapper project, which is cloned into:
-`build/android-apk/ikemen-droid`
-
-If you need changes in that wrapper, fork it and point the build to your fork via:
-`ANDROID_APK_REPO` and `ANDROID_APK_REF` (shown above).
-
----
-
-## Assets required to run (desktop builds)
-
-Place these folders **next to the executable or app bundle**:
-`data`, `external`, `font`, and a screenpack (see our Elecbyte screenpack repo).
-The release CI bundles these automatically.
-
----
-
-## Notes & licensing
-
-* The minimal FFmpeg we build matches CI: shared libs only; `file` protocol; Matroska/WebM demuxers;
-  libvpx VP8/VP9 decoders (including WebM alpha), Opus/Vorbis decoders, and parsers; no FFmpeg CLI tools.
-* FFmpeg is used under **LGPL v2.1**; releases attach the corresponding source snapshot.
-* libvpx is statically linked into FFmpeg and used under its BSD-style license.
-* Ikemen GO sources are MIT; bundled screenpack assets have their own licenses.
-
----
-
-## Troubleshooting
-
-* **Missing tools**: re-run the dependency commands for your OS/arch.
-* **FFmpeg link errors**: use the default `build.sh` (auto-builds FFmpeg), or install system FFmpeg dev packages and run with `BUILD_FFMPEG=no`.
-* **libxmp not found**: install libxmp-dev (Linux), libxmp (macOS/Homebrew), or the MSYS2 package mingw-w64-*-libxmp on Windows.
-* **SDL2 not found / pkg-config errors**: if you see an error mentioning that the sdl2 package is missing from the pkg-config search path, install SDL2 development files.
-* **Windows DLLs**: verify `.\lib\*.dll` exists (local build places FFmpeg DLLs there).
-* **Linux GL compatibility**: try `MESA_GL_VERSION_OVERRIDE=2.1` for a fallback.
+`build/build.sh` still has the macOS and Android targets it inherited (`make
+OMugen_MacOSARM`, `make android-apk`), but OMugen doesn't build or test them yet.

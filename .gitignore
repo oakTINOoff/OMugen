@@ -12,11 +12,6 @@ vendor/*
 *.png
 !external/icons/*.png
 save/*
-Ikemen_GO.exe
-Ikemen_GO_Linux
-Ikemen_GO_MacOS
-Ikemen_GO_x86.exe
-Ikemen_GO.command
 OMugen.exe
 OMugen_x86.exe
 screenpack/omugen/system.sff
@@ -35,7 +30,7 @@ external/script/.idea/*
 *.manifest
 resources/*
 
-# Ikemen_GO-Elecbyte-Screenpack
+# Game content (characters, stages, screenpacks) copied in for testing
 ScreenpackLicense.txt
 chars/*
 data/big/*
@@ -109,8 +104,6 @@ external/script/version
 
 # OMugen local test game folders (junctions/hard links to real games)
 /test/
-# Ikemen-GO-Screenpack clone (engine assets for test folders)
-/build/screenpack/
 
 # Generated engine pack embedded by OMugen.exe (tools/packengine)
 /src/omugen_engine.zip

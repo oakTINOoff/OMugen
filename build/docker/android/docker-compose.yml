@@ -9,7 +9,7 @@ services:
         ANDROID_NDK_VERSION: "r27d"
         #BASE_IMAGE: "${BASE_IMAGE:-public.ecr.aws/docker/library/ubuntu:22.04}"
         BASE_IMAGE: "${BASE_IMAGE:-ubuntu:22.04}"
-    image: ikemen-go-android-builder:ubuntu-22.04
+    image: omugen-android-builder:ubuntu-22.04
     working_dir: /work
     volumes:
       # Mount the repo root (this compose file lives in build/docker/android)
