@@ -22,6 +22,26 @@ func TestReadMotifKey(t *testing.T) {
 	}
 }
 
+// Lifebars without a localcoord use the screenpack's, also in quick VS,
+// where they load before the screenpack.
+func TestMotifDefLocalcoord(t *testing.T) {
+	dir := t.TempDir()
+	hd := filepath.Join(dir, "hd.def")
+	os.WriteFile(hd, []byte("[Info]\nname = \"HD\"\nlocalcoord = 1280,720     ;Local coordinate space\n"), 0o644)
+	old := filepath.Join(dir, "old.def")
+	os.WriteFile(old, []byte("[Info]\nname = \"Old\"\n[Files]\nfight = fight.def\n"), 0o644)
+	for def, want := range map[string][2]int32{
+		hd:                         {1280, 720},
+		old:                        {320, 240},
+		filepath.Join(dir, "none"): {320, 240},
+		"":                         {320, 240},
+	} {
+		if got := motifDefLocalcoord(def); got != want {
+			t.Errorf("motifDefLocalcoord(%q) = %v, want %v", def, got, want)
+		}
+	}
+}
+
 func TestIsOMugenMotif(t *testing.T) {
 	for def, want := range map[string]bool{
 		"data/omugen/system.def": true,

@@ -197,8 +197,8 @@ options.t_itemname = {
 			--modifyGameOption('Video.WindowCentered', true)
 			modifyGameOption('Video.ExternalShaders', {})
 			modifyGameOption('Video.WindowScaleMode', true)
-			modifyGameOption('Video.FightAspectWidth', -1)
-			modifyGameOption('Video.FightAspectHeight', -1)
+			modifyGameOption('Video.FightAspectWidth', 0)
+			modifyGameOption('Video.FightAspectHeight', 0)
 			modifyGameOption('Video.KeepAspect', true)
 			modifyGameOption('Video.EnableModel', true)
 			modifyGameOption('Video.EnableModelShadow', true)
@@ -2111,7 +2111,8 @@ function options.f_keyDefault()
 	resetRemapInput()
 end
 
-if gameOption('Config.FirstRun') then
+-- OMugen: a game's mugen.cfg controls stay as they are on the first run.
+if gameOption('Config.FirstRun') and not omugenControlsActive() then
 	options.f_keyDefault()
 end
 

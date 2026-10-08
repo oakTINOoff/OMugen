@@ -173,20 +173,35 @@ func readMotifKey(def, section, key string) string {
 // game's own screenpack (320x240 when it has none, as in MUGEN).
 func omugenFightLocalcoord() [2]int32 {
 	if !isOMugenMotif(sys.motif.Def) {
+		// Quick VS (-p1/-p2) loads the lifebars before the screenpack (its
+		// fight path is still unset): read the localcoord from its file, as
+		// MUGEN does in every mode.
+		if sys.motif.Files.Fight == "" {
+			return motifDefLocalcoord(sys.motif.Def)
+		}
 		return [2]int32{sys.motif.Info.Localcoord[0], sys.motif.Info.Localcoord[1]}
 	}
 	lc := [2]int32{320, 240}
 	if omugenUI.gameDef != "" {
-		if v := readMotifKey(omugenUI.gameDef, "Info", "localcoord"); v != "" {
+		lc = motifDefLocalcoord(omugenUI.gameDef)
+	}
+	LogMessage("OMugen screenpack: lifebars without a localcoord use %dx%d", lc[0], lc[1])
+	return lc
+}
+
+// motifDefLocalcoord reads [Info] localcoord from a screenpack's file
+// (320x240 when it sets none).
+func motifDefLocalcoord(def string) [2]int32 {
+	if def != "" {
+		if v := readMotifKey(def, "Info", "localcoord"); v != "" {
 			if p := strings.Split(v, ","); len(p) == 2 {
 				if w, h := Atoi(strings.TrimSpace(p[0])), Atoi(strings.TrimSpace(p[1])); w > 0 && h > 0 {
-					lc = [2]int32{w, h}
+					return [2]int32{w, h}
 				}
 			}
 		}
 	}
-	LogMessage("OMugen screenpack: lifebars without a localcoord use %dx%d", lc[0], lc[1])
-	return lc
+	return [2]int32{320, 240}
 }
 
 // loadMotifSafe is loadMotif with panics turned into errors, so a broken
