@@ -118,6 +118,12 @@ func ShowErrorDialog(message string) {
 	Logcat(fmt.Sprintf("CRITICAL ERROR: %s", message))
 }
 
+// ShowYesNoDialog can't ask here: the answer is No.
+func ShowYesNoDialog(message, title string) bool {
+	Logcat(fmt.Sprintf("QUESTION [%s]: %s", title, message))
+	return false
+}
+
 //export SDL_main
 func SDL_main(argc C.int, argv **C.char) C.int {
 	runtime.LockOSThread()

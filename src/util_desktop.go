@@ -18,7 +18,12 @@ func NewLogWriter() io.Writer {
 
 // Message box implementation
 func ShowInfoDialog(message, title string) {
-	dialog.Message(message).Title(title).Info()
+	dialog.Message("%s", message).Title(title).Info()
+}
+
+// ShowYesNoDialog asks a question and reports whether Yes was chosen.
+func ShowYesNoDialog(message, title string) bool {
+	return dialog.Message("%s", message).Title(title).YesNo()
 }
 
 func ShowErrorDialog(message string) {
@@ -27,7 +32,7 @@ func ShowErrorDialog(message string) {
 		LogMessage("ERROR: %s", message)
 		return
 	}
-	dialog.Message(message).Title("OMugen Error").Error()
+	dialog.Message("%s", message).Title("OMugen Error").Error()
 }
 
 // TTF font loading

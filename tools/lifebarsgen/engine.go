@@ -360,6 +360,11 @@ func gofxSounds() []sound {
 var glyphSprites []sprite
 
 func addGlyph(no int, c *art.Canvas) {
+	for _, s := range glyphSprites {
+		if s.g == no {
+			panic(fmt.Sprintf("glyph %d,0 drawn twice", no))
+		}
+	}
 	glyphSprites = append(glyphSprites, sprite{no, 0, 0, c.H, img(c)})
 }
 
@@ -458,7 +463,8 @@ func drawGlyphs() {
 	addGlyph(66, button("2P", art.Hex(0xFF8A2A, 1)))
 
 	// Directions (forward is right, as the move list faces right) and their
-	// held versions (gold).
+	// held versions (gold, 92-99: there is no 45, so not a fixed offset).
+	holdGlyph := map[int]int{41: 92, 42: 93, 43: 94, 44: 95, 46: 96, 47: 97, 48: 98, 49: 99}
 	dirs := map[int]float64{41: 3 * math.Pi / 4, 42: math.Pi / 2, 43: math.Pi / 4, 44: math.Pi, 46: 0,
 		47: -3 * math.Pi / 4, 48: -math.Pi / 2, 49: -math.Pi / 4}
 	for no, a := range dirs {
@@ -468,7 +474,7 @@ func drawGlyphs() {
 		h := disc()
 		h.PaintMask(mask(h, circle(32, 32, 28), art.Reversed(circle(32, 32, 24))), art.Solid(gold))
 		dirArrow(h, a, goldHot)
-		addGlyph(no+51, h) // 92-99 = hold 41-49 (+51)
+		addGlyph(holdGlyph[no], h)
 	}
 
 	// Motions: arcs from the first direction to the last (angles grow

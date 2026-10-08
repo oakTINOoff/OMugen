@@ -29,6 +29,12 @@ func ShowErrorDialog(message string) {
 	print("OMugen Error\n\n" + message)
 }
 
+// ShowYesNoDialog can't ask here: the answer is No.
+func ShowYesNoDialog(message, title string) bool {
+	print(title + "\n\n" + message)
+	return false
+}
+
 // TTF font loading stub
 func LoadFntTtf(f *Fnt, fontfile string, filename string, height int32) {
 	panic(Error("TrueType fonts are not supported on this platform"))

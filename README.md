@@ -57,6 +57,9 @@
 2. Copy it into your MUGEN 1.1 game folder, next to `mugen.exe`.
 3. Run it.
 
+Started outside a game folder, OMugen says where it belongs and offers to create a new game
+of your own there instead.
+
 The first start unpacks the engine files once to `%LOCALAPPDATA%\OMugen\engine\`, never
 into the game folder. Settings, logs, replays and reports go to the game's `save` folder.
 Files in the game folder always win over OMugen's built-in copies.

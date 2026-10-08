@@ -122,16 +122,6 @@ func realMain() {
 		sys.baseDir = "./"
 	}
 
-	// Handle Permissions and Directory Creation
-	permission := os.FileMode(0755)
-	if runtime.GOOS != "android" {
-		permission |= os.ModeSticky
-	}
-
-	// Create directories for ALL platforms
-	os.MkdirAll(filepath.Join(sys.baseDir, "save/replays"), permission)
-	os.MkdirAll(filepath.Join(sys.baseDir, "save/logs"), permission)
-
 	processCommandLine()
 
 	// Ensure cmdFlags exists even when there are no CLI args,
@@ -145,6 +135,20 @@ func realMain() {
 		runNewGame(name)
 		return
 	}
+	// No game in this folder: say where OMugen belongs, offer a new game.
+	if omugenNoGame() {
+		return
+	}
+
+	// Handle Permissions and Directory Creation
+	permission := os.FileMode(0755)
+	if runtime.GOOS != "android" {
+		permission |= os.ModeSticky
+	}
+
+	// Create directories for ALL platforms
+	os.MkdirAll(filepath.Join(sys.baseDir, "save/replays"), permission)
+	os.MkdirAll(filepath.Join(sys.baseDir, "save/logs"), permission)
 
 	// Stats file path
 	if _, ok := sys.cmdFlags["-stats"]; !ok {
@@ -188,6 +192,9 @@ func realMain() {
 	}
 	sys.cfg = *cfg
 	// Logcat("LOG: Config Loaded. System Script: " + sys.cfg.Config.System)
+	if omugenMissingSelect() {
+		return
+	}
 
 	if sys.cfg.Debug.DumpLuaTables {
 		os.MkdirAll(filepath.Join(sys.baseDir, "debug"), permission)

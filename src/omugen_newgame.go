@@ -50,7 +50,13 @@ func runNewGame(arg string) {
 // createNewGame creates the game folder and returns its absolute path. It
 // never writes into a folder that already has files in it.
 func createNewGame(arg string) (string, error) {
-	dst, err := newGameDir(arg)
+	return createNewGameIn(startDir, arg)
+}
+
+// createNewGameIn is createNewGame with a relative arg (or the default name)
+// taken from the folder base.
+func createNewGameIn(base, arg string) (string, error) {
+	dst, err := newGameDir(base, arg)
 	if err != nil {
 		return "", err
 	}
@@ -134,11 +140,10 @@ func newGameMotif(def []byte, name string) []byte {
 	})
 }
 
-// newGameDir picks the new game's folder: arg (relative to startDir), or the
+// newGameDir picks the new game's folder: arg (relative to base), or the
 // first free "My OMugen Game", "My OMugen Game 2"... when arg is empty.
-func newGameDir(arg string) (string, error) {
+func newGameDir(base, arg string) (string, error) {
 	arg = strings.TrimSpace(arg)
-	base := startDir
 	if base == "" {
 		base = "."
 	}
