@@ -122,13 +122,19 @@ func omugenSetBinding(player int, kind, action, value string) bool {
 			return false
 		}
 		if code > 0 {
-			// Changing one button of a player on player 1's layout keeps the
-			// rest of that layout as their own bindings.
-			if mugenAutoPlayer(player - 1) {
+			// Changing one button of a player on player 1's layout, or on the
+			// standard layout (mugen.cfg's was made on another controller),
+			// keeps the rest of that layout as their own bindings.
+			standard := mugenUsesStandardLayout(player - 1)
+			if mugenAutoPlayer(player-1) || standard {
 				if auto := mugenPlayerCodes(player - 1); auto != nil {
 					for i := range pc.joy {
 						pc.joy[i] = auto[i]
 						omugenAddEdit(mugenCfgEdit{section, mugenCfgKeyNames[i], strconv.Itoa(auto[i])})
+					}
+					if standard && auto[ikemenMenuSlot] > 0 {
+						pc.menu = auto[ikemenMenuSlot]
+						omugenAddEdit(mugenCfgEdit{section, "Menu", strconv.Itoa(pc.menu)})
 					}
 				}
 			}

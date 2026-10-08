@@ -157,6 +157,9 @@ func mugenWriteControllerReport() {
 		switch {
 		case !mugenWantsPad(p):
 			fmt.Fprintf(&b, "P%d  no joystick layout\n", p+1)
+		case mugenPads.idx[p] >= 0 && mugenUsesStandardLayout(p):
+			fmt.Fprintf(&b, "P%d  controller %c, standard layout (the one in %s was made on another kind of controller)\n",
+				p+1, 'A'+mugenPads.idx[p], mugenCfgPath)
 		case mugenPads.idx[p] >= 0:
 			fmt.Fprintf(&b, "P%d  controller %c\n", p+1, 'A'+mugenPads.idx[p])
 		default:

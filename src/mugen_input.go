@@ -312,6 +312,12 @@ func mugenPlayerCodes(p int) []int {
 			}
 		}
 	}
+	// A layout made on another kind of controller: the standard one for this one.
+	if d, ok := mugenDeviceAt(pad); ok {
+		if std := mugenStandardCodes(p, codes, d); std != nil {
+			return std
+		}
+	}
 	// No pause menu button yet (no controller was connected when the bindings
 	// were read): the controller's own Start/Options button, if it is free.
 	src := p
@@ -446,6 +452,9 @@ func mugenJoystickState(codes []int) [14]bool {
 	for i, code := range codes {
 		if i < len(out) {
 			out[i] = mugenJoy.Pressed(code)
+		} else if j := i - len(out); j < 4 {
+			// a standard layout's second codes for the directions (left stick)
+			out[j] = out[j] || mugenJoy.Pressed(code)
 		}
 	}
 	return out
