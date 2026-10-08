@@ -327,17 +327,35 @@ func mugenPlayerCodes(p int) []int {
 		src = 0
 	}
 	if codes[ikemenMenuSlot] == 0 && mugenInputActive != nil && src < len(mugenInputActive.players) && mugenInputActive.players[src].menu < 0 {
-		if b, ok := mugenjoy.MenuButton(d); ok {
-			c, free := mugenjoy.ButtonCode(d, b), true
-			for _, x := range codes[:len(mugenActions)] {
-				free = free && x != c
-			}
-			if c > 0 && free {
-				codes = append([]int(nil), codes...)
-				codes[ikemenMenuSlot] = c
-			}
+		codes = mugenWithMenuButton(codes, d)
+	}
+	// Codes that suit the controller become your layout for its kind if you
+	// have none yet (with the pause menu button just added).
+	if !mugenAutoPlayer(p) {
+		mugenRememberLayout(codes, d, false)
+	}
+	return codes
+}
+
+// mugenWithMenuButton returns codes with controller d's own Start/Options
+// button as the pause menu button, when it isn't bound to an action (a copy;
+// codes as they are otherwise).
+func mugenWithMenuButton(codes []int, d mugenjoy.DeviceInfo) []int {
+	b, ok := mugenjoy.MenuButton(d)
+	if !ok {
+		return codes
+	}
+	c := mugenjoy.ButtonCode(d, b)
+	if c <= 0 {
+		return codes
+	}
+	for _, x := range codes[:len(mugenActions)] {
+		if x == c {
+			return codes
 		}
 	}
+	codes = append([]int(nil), codes...)
+	codes[ikemenMenuSlot] = c
 	return codes
 }
 

@@ -197,3 +197,38 @@ func TestMugenYourLayoutKeptLater(t *testing.T) {
 		t.Errorf("P1 codes = %v, want the layout kept meanwhile", codes)
 	}
 }
+
+// With SDL no controller is listed yet when the bindings are read, so the
+// pause menu button (the pad's Options) is only added when the pad joins.
+// The kept layout has it; one kept without it (older OMugen) gets it too.
+func TestMugenKeptLayoutPauseButton(t *testing.T) {
+	dir := t.TempDir()
+	wd, _ := os.Getwd()
+	defer os.Chdir(wd)
+	os.Chdir(dir)
+	os.MkdirAll("save", 0o755)
+	pt := newPadLayoutTest(t)
+	devs := []mugenjoy.DeviceInfo{{Index: 0, ID: 0, Name: "PS4 Controller", VendorID: 0x054C, ProductID: 0x05C4, Layout: mugenDS4Layout}}
+
+	mugenJoy = mugenjoy.NewFakeManager(nil)
+	applyMugenInputConfig(mugenCfg{"input": {"p1.joystick.type": "1", "p2.joystick.type": "0"}, "p1 joystick": padLayoutOwn})
+	mugenJoy = mugenjoy.NewFakeManager(devs)
+	mugenJoy.SetFakeInput(0, pt.rest)
+	mugenJoy.AdvanceFakeClock(20 * time.Millisecond)
+	mugenJoy.Poll()
+	pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 1 }))
+	if codes := mugenPlayerCodes(0); len(codes) < 14 || codes[ikemenMenuSlot] != 26 {
+		t.Fatalf("P1 codes = %v, want Options (26) as the pause button", codes)
+	}
+	if b, _ := os.ReadFile(mugenYourLayouts.path); !strings.Contains(string(b), "menu = 26\n") {
+		t.Errorf("kept layout without the pause button:\n%s", b)
+	}
+
+	os.WriteFile(mugenYourLayouts.path, []byte("[PlayStation]\njump = 1\ncrouch = 2\nleft = 3\nright = 4\n"+
+		"a = 17\nb = 20\nc = 19\nx = 18\ny = 22\nz = 24\nstart = 21\nmenu = 0\n"), 0o644)
+	mugenYourLayouts.loaded = false
+	pt.start(padLayoutForeign)
+	if codes := mugenPlayerCodes(0); len(codes) < 14 || codes[0] != 1 || codes[ikemenMenuSlot] != 26 {
+		t.Errorf("P1 codes = %v, want your layout with Options (26) as the pause button", codes)
+	}
+}

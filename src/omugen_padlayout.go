@@ -310,16 +310,12 @@ type mugenReplacement struct {
 var mugenReplaced = map[int]mugenReplacement{}
 
 // mugenReplacementCodes returns the layout player p plays with on controller
-// d when their codes don't suit it (yours, or the standard one), else nil;
-// codes that suit d become your layout for its kind if you have none yet.
+// d when their codes don't suit it (yours, or the standard one), else nil.
 func mugenReplacementCodes(p int, codes []int, d mugenjoy.DeviceInfo) []int {
 	if mugenLayoutFits(codes, d) {
 		if _, was := mugenReplaced[p]; was {
 			delete(mugenReplaced, p)
 			mugenWriteControllerReport()
-		}
-		if !mugenAutoPlayer(p) {
-			mugenRememberLayout(codes, d, false)
 		}
 		return nil
 	}
@@ -332,6 +328,9 @@ func mugenReplacementCodes(p int, codes []int, d mugenjoy.DeviceInfo) []int {
 	r := mugenReplacement{device: d.ID, index: d.Index}
 	if r.codes = mugenYourLayout(d); r.codes != nil {
 		r.yours = true
+		if r.codes[ikemenMenuSlot] == 0 { // kept without one: the pad's own Start/Options
+			r.codes = mugenWithMenuButton(r.codes, d)
+		}
 	} else if r.codes = mugenStandardLayout(d); r.codes == nil {
 		return nil
 	}
