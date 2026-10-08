@@ -15,6 +15,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -102,6 +103,13 @@ func createNewGameIn(base, arg string) (string, error) {
 	}
 	if err := copyFile(exe, filepath.Join(dst, filepath.Base(exe))); err != nil {
 		return "", err
+	}
+	// Outside Windows the runtime libraries ship next to the executable
+	// (lib/), which loads them before it starts.
+	if lib := filepath.Join(filepath.Dir(exe), "lib"); runtime.GOOS != "windows" && firstDir(lib) != "" {
+		if err := copyTree(lib, filepath.Join(dst, "lib")); err != nil {
+			return "", err
+		}
 	}
 	// The game's name is its window title.
 	cfg := fmt.Sprintf("; Settings of this game: any value missing here uses OMugen's default.\n"+

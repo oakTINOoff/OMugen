@@ -312,11 +312,13 @@ func mugenPlayerCodes(p int) []int {
 			}
 		}
 	}
+	d, ok := mugenDeviceAt(pad)
+	if !ok {
+		return codes
+	}
 	// A layout made on another kind of controller: yours or the standard one.
-	if d, ok := mugenDeviceAt(pad); ok {
-		if repl := mugenReplacementCodes(p, codes, d); repl != nil {
-			return repl
-		}
+	if repl := mugenReplacementCodes(p, codes, d); repl != nil {
+		return repl
 	}
 	// No pause menu button yet (no controller was connected when the bindings
 	// were read): the controller's own Start/Options button, if it is free.
@@ -325,16 +327,14 @@ func mugenPlayerCodes(p int) []int {
 		src = 0
 	}
 	if codes[ikemenMenuSlot] == 0 && mugenInputActive != nil && src < len(mugenInputActive.players) && mugenInputActive.players[src].menu < 0 {
-		for _, d := range mugenJoy.Devices() {
-			if b, ok := mugenjoy.MenuButton(d); ok && d.Index == pad {
-				c, free := mugenjoy.ButtonCode(d, b), true
-				for _, x := range codes[:len(mugenActions)] {
-					free = free && x != c
-				}
-				if c > 0 && free {
-					codes = append([]int(nil), codes...)
-					codes[ikemenMenuSlot] = c
-				}
+		if b, ok := mugenjoy.MenuButton(d); ok {
+			c, free := mugenjoy.ButtonCode(d, b), true
+			for _, x := range codes[:len(mugenActions)] {
+				free = free && x != c
+			}
+			if c > 0 && free {
+				codes = append([]int(nil), codes...)
+				codes[ikemenMenuSlot] = c
 			}
 		}
 	}

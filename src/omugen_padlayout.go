@@ -60,6 +60,9 @@ func mugenDirectional(l mugenjoy.Layout, off int) (dir, known bool) {
 // mugenLayoutFits reports whether the directions of a player's codes (on
 // controller d) land on its sticks or D-pad.
 func mugenLayoutFits(codes []int, d mugenjoy.DeviceInfo) bool {
+	if !mugenLaidOut(d) {
+		return true // can't judge
+	}
 	for _, c := range codes[:4] {
 		if c <= 0 || c/mugenjoy.CodesPerJoystick != d.Index {
 			continue
@@ -69,6 +72,17 @@ func mugenLayoutFits(codes []int, d mugenjoy.DeviceInfo) bool {
 		}
 	}
 	return true
+}
+
+// mugenLaidOut reports whether OMugen knows controller d's layout: the
+// controllers it lays out itself (SDL, simulated), or with OMUGEN_JOY=winmm
+// the DualShock 4 and Xbox pads whose WinMM layouts these copy (other
+// devices can report the same counts with other meanings).
+func mugenLaidOut(d mugenjoy.DeviceInfo) bool {
+	if mugenJoyBackendName != "WinMM" {
+		return true
+	}
+	return d.Layout == mugenDS4Layout && d.VendorID == 0x054C || d.Layout == mugenXboxLayout && d.VendorID == 0x045E
 }
 
 // mugenStandardSlots is the length of a standard layout: Ikemen's 14 input
@@ -105,12 +119,7 @@ func mugenDeviceAt(i int) (mugenjoy.DeviceInfo, bool) {
 	if mugenJoy == nil {
 		return mugenjoy.DeviceInfo{}, false
 	}
-	for _, d := range mugenJoy.Devices() {
-		if d.Index == i {
-			return d, true
-		}
-	}
-	return mugenjoy.DeviceInfo{}, false
+	return mugenJoy.Device(i)
 }
 
 // ---------------------------------------------------------------- your layout
@@ -210,7 +219,7 @@ func mugenSaveYourLayouts() error {
 // (changed in the Controls menu).
 func mugenRememberLayout(codes []int, d mugenjoy.DeviceInfo, saved bool) {
 	kind := mugenPadKind(d.Layout)
-	if kind == "" || len(codes) <= ikemenMenuSlot {
+	if kind == "" || !mugenLaidOut(d) || len(codes) <= ikemenMenuSlot {
 		return
 	}
 	mugenLoadYourLayouts()
@@ -297,7 +306,10 @@ var mugenReplaced = map[int]mugenReplacement{}
 // codes that suit d become your layout for its kind if you have none yet.
 func mugenReplacementCodes(p int, codes []int, d mugenjoy.DeviceInfo) []int {
 	if mugenLayoutFits(codes, d) {
-		delete(mugenReplaced, p)
+		if _, was := mugenReplaced[p]; was {
+			delete(mugenReplaced, p)
+			mugenWriteControllerReport()
+		}
 		if !mugenAutoPlayer(p) {
 			mugenRememberLayout(codes, d, false)
 		}

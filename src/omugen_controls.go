@@ -121,11 +121,12 @@ func omugenSetBinding(player int, kind, action, value string) bool {
 		if code < 0 || code >= mugenjoy.NumCodes {
 			return false
 		}
-		if code > 0 {
-			// Changing one button of a player on player 1's layout, or on one
-			// replacing mugen.cfg's (made on another controller), keeps the
-			// rest of that layout as their own bindings.
-			replaced, _ := mugenReplacedLayout(player - 1)
+		// Changing (or clearing) one button of a player on a layout replacing
+		// mugen.cfg's (made on another controller), or changing one of a
+		// player on player 1's layout, keeps the rest of that layout as
+		// their own bindings.
+		replaced, _ := mugenReplacedLayout(player - 1)
+		if code > 0 || replaced {
 			if mugenAutoPlayer(player-1) || replaced {
 				if auto := mugenPlayerCodes(player - 1); auto != nil {
 					for i := range pc.joy {

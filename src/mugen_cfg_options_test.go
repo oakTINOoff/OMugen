@@ -13,7 +13,7 @@ const testMugenCfgOptions = "[Options]\r\nDifficulty = 4\r\nLife = 30\r\nTime = 
 	"[Config]\r\nGameWidth = 852\r\nGameHeight = 480\r\n\r\n" +
 	"[Video]\r\nKeepAspect = 0\r\n ;Stage fit mode.\r\nStageFit = 1\r\n\r\n" +
 	"[Sound]\r\nMasterVolume = 150\r\nWavVolume = 70\r\nBGMVolume = 50 ;music\r\n\r\n" +
-	"[Arcade]\r\nAI.RandomColor = 1\r\narcade.AIramp.start = 2, 0\r\narcade.AIramp.end   = 4, 2\r\n\r\n" +
+	"[Arcade]\r\nAI.RandomColor = 1\r\narcade.AIramp.start = 3, 1\r\narcade.AIramp.end   = 4, 2\r\n\r\n" +
 	"[Debug]\r\nAllowDebugKeys = 0\r\n"
 
 func TestImportMugenCfgOptions(t *testing.T) {
@@ -43,7 +43,7 @@ func TestImportMugenCfgOptions(t *testing.T) {
 	if c.Sound.MasterVolume != 100 || c.Sound.WavVolume != 70 || c.Sound.BGMVolume != 50 {
 		t.Errorf("volumes = %d %d %d", c.Sound.MasterVolume, c.Sound.WavVolume, c.Sound.BGMVolume)
 	}
-	if !c.Arcade.AI.RandomColor || c.Arcade.Arcade.AIramp.Start != [2]int32{2, 0} || c.Arcade.Arcade.AIramp.End != [2]int32{4, 2} {
+	if !c.Arcade.AI.RandomColor || c.Arcade.Arcade.AIramp.Start != [2]int32{3, 1} || c.Arcade.Arcade.AIramp.End != [2]int32{4, 2} {
 		t.Errorf("arcade = %v %v %v", c.Arcade.AI.RandomColor, c.Arcade.Arcade.AIramp.Start, c.Arcade.Arcade.AIramp.End)
 	}
 	if c.Debug.AllowDebugKeys {
@@ -92,6 +92,18 @@ func TestSyncMugenCfgOptions(t *testing.T) {
 			t.Errorf("mugen.cfg lacks %q:\n%s", want, got)
 		}
 	}
+	// Values set for this session by a command-line flag stay out of it.
+	savedFlags := sys.cmdFlags
+	defer func() { sys.cmdFlags = savedFlags }()
+	sys.cmdFlags = map[string]string{"-nosound": ""}
+	c.Sound.MasterVolume = 0
+	syncMugenCfgOptions(&c, path)
+	if b2, _ := os.ReadFile(path); string(b2) != got {
+		t.Errorf("-nosound's volume reached mugen.cfg:\n%s", b2)
+	}
+	sys.cmdFlags = savedFlags
+	c.Sound.MasterVolume = 100
+
 	// A custom aspect ratio has no StageFit form: StageFit stays.
 	c.Video.FightAspectWidth, c.Video.FightAspectHeight = 4, 3
 	syncMugenCfgOptions(&c, path)
@@ -147,5 +159,10 @@ func TestLoadConfigFirstStartTakesMugenCfg(t *testing.T) {
 	}
 	if c2.Sound.BGMVolume != 90 || c2.Options.Life != 30 {
 		t.Errorf("second start: bgm %d life %v, want 90 30", c2.Sound.BGMVolume, c2.Options.Life)
+	}
+	// The values that map to other keys or pairs were kept too.
+	if c2.Arcade.Arcade.AIramp.Start != [2]int32{3, 1} || c2.Video.FightAspectWidth != -1 || c2.Video.FightAspectHeight != -1 {
+		t.Errorf("second start: arcade ramp %v, fight aspect %d:%d, want [3 1] and -1:-1 (StageFit = 1)",
+			c2.Arcade.Arcade.AIramp.Start, c2.Video.FightAspectWidth, c2.Video.FightAspectHeight)
 	}
 }

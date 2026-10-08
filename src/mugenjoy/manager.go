@@ -139,6 +139,19 @@ func (m *Manager) Snapshot() State {
 	return m.state
 }
 
+// Device returns the joystick with index i, without copying the list (for
+// lookups made every frame).
+func (m *Manager) Device(i int) (DeviceInfo, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, d := range m.infos {
+		if d.Index == i {
+			return d, true
+		}
+	}
+	return DeviceInfo{}, false
+}
+
 // Devices lists the currently enumerated joysticks.
 func (m *Manager) Devices() []DeviceInfo {
 	m.mu.Lock()

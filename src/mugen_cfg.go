@@ -149,7 +149,7 @@ func syncMugenCfgVideo(c *Config, path string) {
 			mugenCfgEdit{"Video", "Width", strconv.Itoa(c.Video.WindowWidth)},
 			mugenCfgEdit{"Video", "Height", strconv.Itoa(c.Video.WindowHeight)})
 	}
-	if c.Video.Fullscreen != v.fullscreen {
+	if c.Video.Fullscreen != v.fullscreen && !mugenSessionOverride("Video", "FullScreen") {
 		fs := "0"
 		if c.Video.Fullscreen {
 			fs = "1"

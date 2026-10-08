@@ -100,8 +100,8 @@ var mugenCfgSettings = []mugenCfgSetting{
 		func(c *Config) (string, bool) { return strconv.Itoa(int(c.Options.Time)), true },
 		func(v string) (map[string]string, bool) {
 			n, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, false
+			if err != nil || n == 0 {
+				return nil, false // 0 would end every round at once
 			}
 			if n < 0 {
 				n = -1 // no time limit
@@ -216,7 +216,7 @@ func syncMugenCfgOptions(c *Config, path string) {
 	var edits []mugenCfgEdit
 	for _, s := range mugenCfgSettings {
 		v, ok := s.get(c)
-		if !ok || v == mugenCfgOptionsSnap[mugenCfgSettingID(s.section, s.key)] {
+		if !ok || v == mugenCfgOptionsSnap[mugenCfgSettingID(s.section, s.key)] || mugenSessionOverride(s.section, s.key) {
 			continue
 		}
 		edits = append(edits, mugenCfgEdit{s.section, s.key, v})
@@ -234,6 +234,22 @@ func syncMugenCfgOptions(c *Config, path string) {
 		mugenCfgOptionsSnap[mugenCfgSettingID(e.section, e.key)] = e.value
 	}
 	LogMessage("OMugen: saved settings to %s: %s", path, strings.Join(names, ", "))
+}
+
+// mugenSessionOverride reports whether a mugen.cfg setting was set for this
+// session only by a command-line flag (-nosound, -setvolume, -ailevel,
+// -windowed): such values are never written back to mugen.cfg.
+func mugenSessionOverride(section, key string) bool {
+	flag := func(f string) bool { _, ok := sys.cmdFlags[f]; return ok }
+	switch strings.ToLower(section + "." + key) {
+	case "sound.mastervolume":
+		return flag("-nosound") || flag("-setvolume")
+	case "options.difficulty":
+		return flag("-ailevel")
+	case "video.fullscreen":
+		return flag("-windowed")
+	}
+	return false
 }
 
 // mugenRules are mugen.cfg's [Rules] multipliers, applied to every
