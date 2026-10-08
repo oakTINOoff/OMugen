@@ -3982,6 +3982,10 @@ func (c *Char) load(def string) error {
 			}
 		}
 	}
+	// OMugen: the game's mugen.cfg [Rules] (the character's own [Constants] still win)
+	for k, v := range mugenRules {
+		gi.constants[k] = v
+	}
 
 	gi.remapPreset = make(map[string]RemapPreset)
 

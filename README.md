@@ -81,6 +81,9 @@ Files in the game folder always win over OMugen's built-in copies.
   appears when one joins, and the highlighted menu item shows who is selecting.
 - **Screenpack, resolution, window and fullscreen** come from `mugen.cfg`; changes made in
   Options are saved back to it (a backup goes to `save/backups` first).
+- **The game's own rules:** the first start takes life, round time, difficulty, game
+  speed, team, volume, arcade AI and stage-fit settings from `mugen.cfg`, so the game plays
+  as it does in MUGEN. Changes made later in Options are saved to both.
 - **OMugen screenpack:** Options > Video Settings > OMugen Screenpack (or `-omugenui`). A
   1920x1080 interface that uses the game's characters, stages, lifebars, sounds and music,
   sizes the select grid to the roster and fits portraits of any size.

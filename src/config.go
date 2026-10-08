@@ -316,10 +316,18 @@ func loadConfig(def string) (*Config, error) {
 	c.IniFile = iniFile
 	c.DefaultOnlyIni = defaultOnlyIni
 	c.normalize()
-	// Save before applying mugen.cfg so its values stay out of save/config.ini.
-	c.Save(def)
 	mc := loadGameMugenCfg()
+	// The first start in a game folder takes the game's settings (life,
+	// time, volumes...) from mugen.cfg and keeps them in save/config.ini.
+	if userIniFile == nil {
+		c.importMugenCfgOptions(mc)
+	}
+	// Save before applying mugen.cfg's video and motif so they stay out of
+	// save/config.ini (mugen.cfg sets them at every start).
+	c.Save(def)
 	c.applyMugenCfg(mc)
+	loadMugenRules(mc)
+	snapshotMugenCfgOptions(&c)
 	c.sysSet()
 	applyMugenInputConfig(mc)
 	return &c, nil
