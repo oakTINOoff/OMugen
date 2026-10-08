@@ -172,3 +172,28 @@ func TestMugenYourLayoutFollows(t *testing.T) {
 		t.Errorf("the saved layout wasn't kept:\n%s", b3)
 	}
 }
+
+// A game started before your layout was kept (by another game running at
+// the same time) picks it up when controllers are handed out again.
+func TestMugenYourLayoutKeptLater(t *testing.T) {
+	dir := t.TempDir()
+	wd, _ := os.Getwd()
+	defer os.Chdir(wd)
+	os.Chdir(dir)
+	os.MkdirAll("save", 0o755)
+	pt := newPadLayoutTest(t)
+
+	pt.start(padLayoutForeign)
+	if codes := mugenPlayerCodes(0); len(codes) != mugenStandardSlots {
+		t.Fatalf("P1 codes = %v, want the standard layout (nothing kept yet)", codes)
+	}
+	os.WriteFile(mugenYourLayouts.path, []byte("[PlayStation]\njump = 1\ncrouch = 2\nleft = 3\nright = 4\n"+
+		"a = 17\nb = 20\nc = 19\nx = 18\ny = 22\nz = 24\nstart = 21\nmenu = 26\n"), 0o644)
+
+	mugenResetPads() // Options > Input > Reassign Controllers
+	pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 1 }))
+	pt.feed(pt.rest)
+	if codes := mugenPlayerCodes(0); len(codes) < 14 || codes[0] != 1 || codes[4] != 17 {
+		t.Errorf("P1 codes = %v, want the layout kept meanwhile", codes)
+	}
+}

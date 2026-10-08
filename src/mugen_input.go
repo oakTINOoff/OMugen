@@ -349,6 +349,7 @@ func mugenResetPads() {
 	}
 	mugenJoy.ResetLive()
 	mugenPads.gen = -1
+	mugenReplaced = map[int]mugenReplacement{} // work out their layouts again too
 	for p := range mugenPads.id {
 		mugenPads.id[p], mugenPads.idx[p] = -1, -1
 	}

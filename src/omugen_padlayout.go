@@ -133,6 +133,7 @@ var mugenLayoutKeys = append(append([]string(nil), mugenActions[:]...), "menu")
 var mugenYourLayouts struct {
 	loaded bool
 	off    bool   // not in a game folder (tests): none kept or read
+	failed bool   // the file couldn't be written
 	path   string // "" = the default, %LOCALAPPDATA%\OMugen\pad-layouts.ini
 	kinds  map[string][]int
 }
@@ -148,7 +149,7 @@ func mugenLoadYourLayouts() {
 	if mugenYourLayouts.loaded {
 		return
 	}
-	mugenYourLayouts.loaded = true
+	mugenYourLayouts.loaded, mugenYourLayouts.off = true, false
 	mugenYourLayouts.kinds = map[string][]int{}
 	// Only in a game folder (the game has save/; tests run elsewhere).
 	if _, err := os.Stat("save"); err != nil {
@@ -213,8 +214,17 @@ func mugenRememberLayout(codes []int, d mugenjoy.DeviceInfo, saved bool) {
 		return
 	}
 	mugenLoadYourLayouts()
-	if _, kept := mugenYourLayouts.kinds[kind]; mugenYourLayouts.off || kept && !saved || !mugenLayoutFits(codes, d) {
+	if _, kept := mugenYourLayouts.kinds[kind]; mugenYourLayouts.off || kept && !saved ||
+		mugenYourLayouts.failed && !saved || !mugenLayoutFits(codes, d) {
 		return
+	}
+	if !saved {
+		// None kept as far as this session knows: another game may have
+		// kept one since it started.
+		mugenYourLayouts.loaded = false
+		if mugenLoadYourLayouts(); mugenYourLayouts.kinds[kind] != nil {
+			return
+		}
 	}
 	offs := make([]int, len(mugenLayoutKeys))
 	for i := range mugenActions {
@@ -226,6 +236,7 @@ func mugenRememberLayout(codes []int, d mugenjoy.DeviceInfo, saved bool) {
 	}
 	mugenYourLayouts.kinds[kind] = offs
 	if err := mugenSaveYourLayouts(); err != nil {
+		mugenYourLayouts.failed = true // don't retry every frame
 		LogMessage("OMugen: could not keep your %s controller layout: %v", kind, err)
 		return
 	}
@@ -272,8 +283,9 @@ func mugenYourLayout(d mugenjoy.DeviceInfo) []int {
 
 // mugenReplacement is the layout a player got instead of mugen.cfg's.
 type mugenReplacement struct {
-	device int  // device ID
-	yours  bool // your layout, else the standard one
+	device, index int  // the controller's device ID and index
+	yours         bool // your layout, else the standard one
+	codes         []int
 }
 
 // mugenReplaced records, per player, the replacement layout in use, so it is
@@ -291,25 +303,28 @@ func mugenReplacementCodes(p int, codes []int, d mugenjoy.DeviceInfo) []int {
 		}
 		return nil
 	}
-	r := mugenReplacement{device: d.ID}
-	repl := mugenYourLayout(d)
-	if repl != nil {
+	if old, ok := mugenReplaced[p]; ok && old.device == d.ID && old.index == d.Index {
+		return old.codes
+	}
+	// A new controller for this player: read your layouts again (another
+	// game may have kept or saved one since this one started).
+	mugenYourLayouts.loaded = false
+	r := mugenReplacement{device: d.ID, index: d.Index}
+	if r.codes = mugenYourLayout(d); r.codes != nil {
 		r.yours = true
-	} else if repl = mugenStandardLayout(d); repl == nil {
+	} else if r.codes = mugenStandardLayout(d); r.codes == nil {
 		return nil
 	}
-	if old, ok := mugenReplaced[p]; !ok || old != r {
-		mugenReplaced[p] = r
-		which := "the standard layout"
-		if r.yours {
-			which = "your " + mugenPadKind(d.Layout) + " controller layout"
-		}
-		LogMessage("OMugen: P%d's joystick layout in %s was made on another kind of controller "+
-			"(its directions are on %s's triggers or buttons): P%d plays with %s",
-			p+1, mugenCfgPath, d.Name, p+1, which)
-		mugenWriteControllerReport()
+	mugenReplaced[p] = r
+	which := "the standard layout"
+	if r.yours {
+		which = "your " + mugenPadKind(d.Layout) + " controller layout"
 	}
-	return repl
+	LogMessage("OMugen: P%d's joystick layout in %s was made on another kind of controller "+
+		"(its directions are on %s's triggers or buttons): P%d plays with %s",
+		p+1, mugenCfgPath, d.Name, p+1, which)
+	mugenWriteControllerReport()
+	return r.codes
 }
 
 // mugenReplacedLayout reports whether player p plays with a replacement for

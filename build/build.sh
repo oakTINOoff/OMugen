@@ -1264,7 +1264,7 @@ BEGIN
 		BLOCK "040904B0"
 		BEGIN
 			VALUE "CompanyName", "OMugen\\0"
-			VALUE "FileDescription", "OMugen 2D fighting game engine\\0"
+			VALUE "FileDescription", "OMugen\\0"
 			VALUE "FileVersion", "${SXS_VERSION}\\0"
 			VALUE "ProductName", "OMugen\\0"
 			VALUE "ProductVersion", "${SXS_VERSION}\\0"
