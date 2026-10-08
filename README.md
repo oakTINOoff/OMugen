@@ -77,6 +77,11 @@ Files in the game folder always win over OMugen's built-in copies.
   that mirror another pad (DS4Windows), are skipped. Players without joystick codes of
   their own play with player 1's layout. Options > Input Settings > Reassign Controllers
   hands them out again. `save/logs/controllers.txt` lists what OMugen sees.
+- **Your pad layout follows you.** A game's joystick codes are numbered for the controller
+  they were set up on; on another kind they can land on its triggers (a menu that scrolls
+  by itself). Then OMugen uses your own layout for that kind of controller: the first one
+  you played with, or the last one saved in Options (kept in
+  `%LOCALAPPDATA%\OMugen\pad-layouts.ini`), or else a standard layout.
 - **Controller indicator:** P1-P4 tags in the corner show who has a controller, a notice
   appears when one joins, and the highlighted menu item shows who is selecting.
 - **Screenpack, resolution, window and fullscreen** come from `mugen.cfg`; changes made in

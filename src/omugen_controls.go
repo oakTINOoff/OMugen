@@ -122,17 +122,17 @@ func omugenSetBinding(player int, kind, action, value string) bool {
 			return false
 		}
 		if code > 0 {
-			// Changing one button of a player on player 1's layout, or on the
-			// standard layout (mugen.cfg's was made on another controller),
-			// keeps the rest of that layout as their own bindings.
-			standard := mugenUsesStandardLayout(player - 1)
-			if mugenAutoPlayer(player-1) || standard {
+			// Changing one button of a player on player 1's layout, or on one
+			// replacing mugen.cfg's (made on another controller), keeps the
+			// rest of that layout as their own bindings.
+			replaced, _ := mugenReplacedLayout(player - 1)
+			if mugenAutoPlayer(player-1) || replaced {
 				if auto := mugenPlayerCodes(player - 1); auto != nil {
 					for i := range pc.joy {
 						pc.joy[i] = auto[i]
 						omugenAddEdit(mugenCfgEdit{section, mugenCfgKeyNames[i], strconv.Itoa(auto[i])})
 					}
-					if standard && auto[ikemenMenuSlot] > 0 {
+					if replaced && auto[ikemenMenuSlot] > 0 {
 						pc.menu = auto[ikemenMenuSlot]
 						omugenAddEdit(mugenCfgEdit{section, "Menu", strconv.Itoa(pc.menu)})
 					}
@@ -388,6 +388,22 @@ func omugenScriptInit(l *lua.LState) {
 			l.Push(lua.LFalse)
 			l.Push(lua.LString(err.Error()))
 			return 2
+		}
+		// A pad layout saved here becomes your layout for that kind of
+		// controller (used in games whose own doesn't fit it).
+		for p := 0; p < 2; p++ {
+			changed := false
+			for _, e := range omugenPendingEdits {
+				changed = changed || strings.EqualFold(e.section, omugenSection(p+1, "Joystick"))
+			}
+			if !changed {
+				continue
+			}
+			if d, ok := mugenDeviceAt(mugenPlayerPad(p)); ok {
+				if codes := mugenPlayerCodes(p); codes != nil {
+					mugenRememberLayout(codes, d, true)
+				}
+			}
 		}
 		omugenPendingEdits = nil
 		l.Push(lua.LTrue)

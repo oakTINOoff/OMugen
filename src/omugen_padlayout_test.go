@@ -1,6 +1,9 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,71 +30,145 @@ func TestMugenDirectional(t *testing.T) {
 	}
 }
 
-// A game set up on a 4-axis pad (D-pad at codes 9-12), played on a
-// DualShock 4: there 9-12 are the trigger axes, and released triggers would
-// hold Jump and Left for good. The player gets the standard layout instead.
-func TestMugenStandardLayoutForForeignCodes(t *testing.T) {
-	devs := []mugenjoy.DeviceInfo{{Index: 0, ID: 0, Name: "PS4 Controller", VendorID: 0x054C, ProductID: 0x05C4, Layout: mugenDS4Layout}}
-	foreign := mugenCfg{
-		"input":       {"p1.joystick.type": "1", "p2.joystick.type": "0"},
-		"p1 joystick": {"jump": "9", "crouch": "10", "left": "11", "right": "12", "a": "13", "b": "14", "c": "20", "x": "15", "y": "16", "z": "18", "start": "24"},
-	}
+// padLayoutTest drives player 1 with one fake DualShock 4.
+type padLayoutTest struct {
+	t    *testing.T
+	rest mugenjoy.Snapshot
+}
+
+func newPadLayoutTest(t *testing.T) *padLayoutTest {
 	savedKeys, savedJoy, savedFlags := sys.keyConfig, sys.joystickConfig, sys.cmdFlags
-	savedMJ, savedActive, savedPads, savedStd := mugenJoy, mugenInputActive, mugenPads, mugenStandardFor
-	defer func() {
+	savedMJ, savedActive, savedPads, savedRepl, savedYours := mugenJoy, mugenInputActive, mugenPads, mugenReplaced, mugenYourLayouts
+	t.Cleanup(func() {
 		sys.keyConfig, sys.joystickConfig, sys.cmdFlags = savedKeys, savedJoy, savedFlags
-		mugenJoy, mugenInputActive, mugenPads, mugenStandardFor = savedMJ, savedActive, savedPads, savedStd
-	}()
+		mugenJoy, mugenInputActive, mugenPads, mugenReplaced, mugenYourLayouts = savedMJ, savedActive, savedPads, savedRepl, savedYours
+	})
 	sys.keyConfig = make([]KeyConfig, 4)
 	sys.joystickConfig = make([]KeyConfig, 4)
 	sys.cmdFlags = map[string]string{}
-	mugenStandardFor = map[int]int{}
-
+	mugenReplaced = map[int]mugenReplacement{}
+	mugenYourLayouts.loaded, mugenYourLayouts.off, mugenYourLayouts.kinds = false, false, nil
+	mugenYourLayouts.path = filepath.Join(t.TempDir(), "pad-layouts.ini")
 	// A DualShock 4 at rest, as WinMM reports it: both triggers at one end.
-	rest := mugenjoy.Snapshot{Axes: [6]int32{0, 0, 0, 0, -32767, -32767}}
-	with := func(f func(s *mugenjoy.Snapshot)) mugenjoy.Snapshot { s := rest; f(&s); return s }
-	feed := func(s mugenjoy.Snapshot) [14]bool {
-		mugenJoy.SetFakeInput(0, s)
-		mugenJoy.AdvanceFakeClock(20 * time.Millisecond)
-		return mugenJoystickState(mugenPlayerCodes(0))
-	}
-	start := func(mc mugenCfg) {
-		mugenJoy = mugenjoy.NewFakeManager(devs)
-		mugenJoy.SetFakeInput(0, rest)
-		applyMugenInputConfig(mc)
-		mugenJoy.AdvanceFakeClock(20 * time.Millisecond)
-		mugenJoy.Poll()
-		feed(with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 1 })) // Cross: the pad joins as P1
-		feed(rest)
-	}
+	return &padLayoutTest{t: t, rest: mugenjoy.Snapshot{Axes: [6]int32{0, 0, 0, 0, -32767, -32767}}}
+}
 
-	start(foreign)
+func (pt *padLayoutTest) with(f func(s *mugenjoy.Snapshot)) mugenjoy.Snapshot {
+	s := pt.rest
+	f(&s)
+	return s
+}
+
+func (pt *padLayoutTest) feed(s mugenjoy.Snapshot) [14]bool {
+	mugenJoy.SetFakeInput(0, s)
+	mugenJoy.AdvanceFakeClock(20 * time.Millisecond)
+	return mugenJoystickState(mugenPlayerCodes(0))
+}
+
+// start opens a game with these mugen.cfg joystick codes for player 1; the
+// pad joins with a press of Cross.
+func (pt *padLayoutTest) start(p1 map[string]string) {
+	devs := []mugenjoy.DeviceInfo{{Index: 0, ID: 0, Name: "PS4 Controller", VendorID: 0x054C, ProductID: 0x05C4, Layout: mugenDS4Layout}}
+	mugenJoy = mugenjoy.NewFakeManager(devs)
+	mugenJoy.SetFakeInput(0, pt.rest)
+	applyMugenInputConfig(mugenCfg{"input": {"p1.joystick.type": "1", "p2.joystick.type": "0"}, "p1 joystick": p1})
+	mugenJoy.AdvanceFakeClock(20 * time.Millisecond)
+	mugenJoy.Poll()
+	pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 1 }))
+	pt.feed(pt.rest)
+}
+
+// Set up on a 4-axis pad (D-pad at codes 9-12): on a DualShock 4 those are
+// the trigger axes, and released triggers would hold Jump and Left for good.
+var padLayoutForeign = map[string]string{"jump": "9", "crouch": "10", "left": "11", "right": "12",
+	"a": "13", "b": "14", "c": "20", "x": "15", "y": "16", "z": "18", "start": "24"}
+
+// Set up on a DualShock 4: left stick, buttons (the user's Jump Force layout).
+var padLayoutOwn = map[string]string{"jump": "1", "crouch": "2", "left": "3", "right": "4",
+	"a": "17", "b": "20", "c": "19", "x": "18", "y": "22", "z": "24", "start": "21"}
+
+func TestMugenStandardLayoutForForeignCodes(t *testing.T) {
+	pt := newPadLayoutTest(t) // tests run outside a game folder: no layout of yours
+	pt.start(padLayoutForeign)
 	codes := mugenPlayerCodes(0)
 	if len(codes) != mugenStandardSlots || codes[0] != 13 || codes[4] != 18 || codes[10] != 26 || codes[ikemenMenuSlot] != 25 {
 		t.Fatalf("P1 codes = %v, want the standard layout (D-pad 13-16, a = Cross 18, start = Options 26, menu = Share 25)", codes)
 	}
-	if !mugenUsesStandardLayout(0) {
-		t.Errorf("the standard layout isn't recorded")
+	if replaced, yours := mugenReplacedLayout(0); !replaced || yours {
+		t.Errorf("replaced %v yours %v, want the standard layout recorded", replaced, yours)
 	}
-	if st := feed(rest); st != ([14]bool{}) {
+	if st := pt.feed(pt.rest); st != ([14]bool{}) {
 		t.Errorf("at rest the player holds %v, want nothing", st)
 	}
-	if st := feed(with(func(s *mugenjoy.Snapshot) { s.Hat = mugenjoy.HatUp })); !st[0] {
+	if st := pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Hat = mugenjoy.HatUp })); !st[0] {
 		t.Errorf("D-pad up isn't up: %v", st)
 	}
-	if st := feed(with(func(s *mugenjoy.Snapshot) { s.Axes[0] = -30000 })); !st[2] {
+	if st := pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Axes[0] = -30000 })); !st[2] {
 		t.Errorf("left stick left isn't left: %v", st)
 	}
-	if st := feed(with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 1 })); !st[4] {
+	if st := pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 1 })); !st[4] {
 		t.Errorf("Cross isn't a: %v", st)
 	}
 
-	// A layout that suits the pad (left stick, buttons) is used as it is.
-	start(mugenCfg{
-		"input":       {"p1.joystick.type": "1", "p2.joystick.type": "0"},
-		"p1 joystick": {"jump": "1", "crouch": "2", "left": "3", "right": "4", "a": "17", "b": "20", "c": "19", "x": "18", "y": "22", "z": "24", "start": "21"},
-	})
-	if codes := mugenPlayerCodes(0); len(codes) < 14 || codes[0] != 1 || codes[4] != 17 || mugenUsesStandardLayout(0) {
-		t.Errorf("P1 codes = %v (standard %v), want mugen.cfg's own", codes, mugenUsesStandardLayout(0))
+	// A layout that suits the pad is used as it is.
+	pt.start(padLayoutOwn)
+	if codes := mugenPlayerCodes(0); len(codes) < 14 || codes[0] != 1 || codes[4] != 17 {
+		t.Errorf("P1 codes = %v, want mugen.cfg's own", codes)
+	}
+	if replaced, _ := mugenReplacedLayout(0); replaced {
+		t.Errorf("a suiting layout was replaced")
+	}
+}
+
+// The layout a player set their pad up with in one game follows them to a
+// game whose own layout doesn't fit that pad.
+func TestMugenYourLayoutFollows(t *testing.T) {
+	dir := t.TempDir()
+	wd, _ := os.Getwd()
+	defer os.Chdir(wd)
+	os.Chdir(dir)
+	os.MkdirAll("save", 0o755) // a game folder
+	pt := newPadLayoutTest(t)
+
+	pt.start(padLayoutOwn) // the first game: its layout suits the pad and is kept
+	mugenPlayerCodes(0)
+	b, err := os.ReadFile(mugenYourLayouts.path)
+	if err != nil {
+		t.Fatalf("layout not kept: %v", err)
+	}
+	if s := string(b); !strings.Contains(s, "[PlayStation]") || !strings.Contains(s, "jump = 1\n") || !strings.Contains(s, "start = 21\n") {
+		t.Errorf("pad-layouts.ini =\n%s", s)
+	}
+
+	// Next start (read back from the file), another game set up on another pad.
+	mugenYourLayouts.loaded, mugenYourLayouts.kinds = false, nil
+	pt.start(padLayoutForeign)
+	codes := mugenPlayerCodes(0)
+	if len(codes) < 14 || codes[0] != 1 || codes[4] != 17 || codes[10] != 21 {
+		t.Fatalf("P1 codes = %v, want the kept layout (jump 1, a 17, start 21)", codes)
+	}
+	if replaced, yours := mugenReplacedLayout(0); !replaced || !yours {
+		t.Errorf("replaced %v yours %v, want your layout", replaced, yours)
+	}
+	if st := pt.feed(pt.rest); st != ([14]bool{}) {
+		t.Errorf("at rest the player holds %v, want nothing", st)
+	}
+	if st := pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 0 })); !st[4] {
+		t.Errorf("Square isn't a: %v", st)
+	}
+
+	// A suiting layout from another game doesn't replace the kept one...
+	other := map[string]string{"jump": "13", "crouch": "14", "left": "15", "right": "16",
+		"a": "18", "b": "19", "c": "24", "x": "17", "y": "20", "z": "22", "start": "26"}
+	pt.start(other)
+	mugenPlayerCodes(0)
+	if b2, _ := os.ReadFile(mugenYourLayouts.path); string(b2) != string(b) {
+		t.Errorf("another game's layout replaced yours:\n%s", b2)
+	}
+	// ...but one saved in the Controls menu does.
+	d, _ := mugenDeviceAt(0)
+	mugenRememberLayout(mugenPlayerCodes(0), d, true)
+	if b3, _ := os.ReadFile(mugenYourLayouts.path); !strings.Contains(string(b3), "jump = 13\n") {
+		t.Errorf("the saved layout wasn't kept:\n%s", b3)
 	}
 }

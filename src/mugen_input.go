@@ -312,10 +312,10 @@ func mugenPlayerCodes(p int) []int {
 			}
 		}
 	}
-	// A layout made on another kind of controller: the standard one for this one.
+	// A layout made on another kind of controller: yours or the standard one.
 	if d, ok := mugenDeviceAt(pad); ok {
-		if std := mugenStandardCodes(p, codes, d); std != nil {
-			return std
+		if repl := mugenReplacementCodes(p, codes, d); repl != nil {
+			return repl
 		}
 	}
 	// No pause menu button yet (no controller was connected when the bindings

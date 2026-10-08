@@ -153,13 +153,21 @@ func mugenWriteControllerReport() {
 			d.VendorID, d.ProductID, d.Layout.NumAxes, d.Layout.NumHats, d.Layout.NumButtons, state)
 	}
 	b.WriteString("\n")
+	var replaced, yours [mugenMaxPlayers]bool
+	for p := range replaced {
+		replaced[p], yours[p] = mugenReplacedLayout(p)
+	}
 	for p := 0; p < mugenMaxPlayers && p < len(sys.joystickConfig); p++ {
 		switch {
 		case !mugenWantsPad(p):
 			fmt.Fprintf(&b, "P%d  no joystick layout\n", p+1)
-		case mugenPads.idx[p] >= 0 && mugenUsesStandardLayout(p):
-			fmt.Fprintf(&b, "P%d  controller %c, standard layout (the one in %s was made on another kind of controller)\n",
-				p+1, 'A'+mugenPads.idx[p], mugenCfgPath)
+		case mugenPads.idx[p] >= 0 && replaced[p]:
+			which := "the standard layout"
+			if yours[p] {
+				which = "your layout (" + mugenYourLayoutsPath() + ")"
+			}
+			fmt.Fprintf(&b, "P%d  controller %c with %s: the one in %s was made on another kind of controller\n",
+				p+1, 'A'+mugenPads.idx[p], which, mugenCfgPath)
 		case mugenPads.idx[p] >= 0:
 			fmt.Fprintf(&b, "P%d  controller %c\n", p+1, 'A'+mugenPads.idx[p])
 		default:
