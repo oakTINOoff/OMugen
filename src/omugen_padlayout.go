@@ -143,6 +143,7 @@ var mugenYourLayouts struct {
 	loaded bool
 	off    bool   // not in a game folder (tests): none kept or read
 	failed bool   // the file couldn't be written
+	status string // what the last read found, for controllers.txt
 	path   string // "" = the default, %LOCALAPPDATA%\OMugen\pad-layouts.ini
 	kinds  map[string][]int
 }
@@ -163,13 +164,19 @@ func mugenLoadYourLayouts() {
 	// Only in a game folder (the game has save/; tests run elsewhere).
 	if _, err := os.Stat("save"); err != nil {
 		mugenYourLayouts.off = true
+		wd, _ := os.Getwd()
+		mugenYourLayouts.status = "not read: no save folder in " + wd
 		return
 	}
 	f, err := os.Open(mugenYourLayoutsPath())
 	if err != nil {
+		mugenYourLayouts.status = "not read: " + err.Error()
 		return
 	}
 	defer f.Close()
+	defer func() {
+		mugenYourLayouts.status = fmt.Sprintf("read, kept: %v", SortedKeys(mugenYourLayouts.kinds))
+	}()
 	kind := ""
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {

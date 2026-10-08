@@ -152,6 +152,9 @@ func mugenWriteControllerReport() {
 		fmt.Fprintf(&b, "%c  %-32s VID %04X PID %04X  %d axes %d hat %d buttons  %s\n", 'A'+d.Index, d.Name,
 			d.VendorID, d.ProductID, d.Layout.NumAxes, d.Layout.NumHats, d.Layout.NumButtons, state)
 	}
+	if mugenYourLayouts.loaded {
+		fmt.Fprintf(&b, "\nYour layouts (%s): %s\n", mugenYourLayoutsPath(), mugenYourLayouts.status)
+	}
 	b.WriteString("\n")
 	var replaced, yours [mugenMaxPlayers]bool
 	for p := range replaced {
