@@ -89,19 +89,20 @@ func mugenLaidOut(d mugenjoy.DeviceInfo) bool {
 // slots, then second codes for the four directions (the left stick).
 const mugenStandardSlots = ikemenMenuSlot + 1 + 4
 
-// mugenStandardLayout is OMugen's layout for controller d, the engine's own
-// default ([Joystick_P1]): the D-pad and the left stick move; X Y Z are
-// Square Triangle R1 and A B C are Cross Circle R2 (Xbox: X Y RB, A B RT);
-// Start is Options (Start) and the pause menu Share (Back). nil for layouts
+// mugenStandardLayout is OMugen's layout for controller d (until the player
+// has one of their own): the D-pad and the left stick move; X Y Z are Square
+// Triangle R1 and A B C are Cross Circle R2 (Xbox: X Y RB, A B RT); MUGEN's
+// Start, which games often use in fights (energy charge, taunts), is L1 (LB);
+// Options (Start) opens the pause menu, as on a console. nil for layouts
 // OMugen doesn't know.
 func mugenStandardLayout(d mugenjoy.DeviceInfo) []int {
 	// Slots: up down left right a b c x y z start d w menu, stick up down left right.
 	var offs [mugenStandardSlots]int
 	switch d.Layout {
 	case mugenDS4Layout: // hat 13-16, buttons 17-30: Square Cross Circle Triangle L1 R1 L2 R2 Share Options
-		offs = [...]int{13, 14, 15, 16, 18, 19, 24, 17, 20, 22, 26, 0, 0, 25, 1, 2, 3, 4}
+		offs = [...]int{13, 14, 15, 16, 18, 19, 24, 17, 20, 22, 21, 0, 0, 26, 1, 2, 3, 4}
 	case mugenXboxLayout: // triggers axis 5/6 (RT = 5), hat 11-14, buttons 15-24: A B X Y LB RB Back Start
-		offs = [...]int{11, 12, 13, 14, 15, 16, 5, 17, 18, 20, 22, 0, 0, 21, 1, 2, 3, 4}
+		offs = [...]int{11, 12, 13, 14, 15, 16, 5, 17, 18, 20, 19, 0, 0, 22, 1, 2, 3, 4}
 	default:
 		return nil
 	}

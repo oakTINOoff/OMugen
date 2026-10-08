@@ -91,8 +91,8 @@ func TestMugenStandardLayoutForForeignCodes(t *testing.T) {
 	pt := newPadLayoutTest(t) // tests run outside a game folder: no layout of yours
 	pt.start(padLayoutForeign)
 	codes := mugenPlayerCodes(0)
-	if len(codes) != mugenStandardSlots || codes[0] != 13 || codes[4] != 18 || codes[10] != 26 || codes[ikemenMenuSlot] != 25 {
-		t.Fatalf("P1 codes = %v, want the standard layout (D-pad 13-16, a = Cross 18, start = Options 26, menu = Share 25)", codes)
+	if len(codes) != mugenStandardSlots || codes[0] != 13 || codes[4] != 18 || codes[10] != 21 || codes[ikemenMenuSlot] != 26 {
+		t.Fatalf("P1 codes = %v, want the standard layout (D-pad 13-16, a = Cross 18, start = L1 21, menu = Options 26)", codes)
 	}
 	if replaced, yours := mugenReplacedLayout(0); !replaced || yours {
 		t.Errorf("replaced %v yours %v, want the standard layout recorded", replaced, yours)
