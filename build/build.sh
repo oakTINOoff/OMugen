@@ -75,18 +75,10 @@ DELAYLIB_DIR="$BUILDDIR/delaylib"
 FFMPEG_SRCDIR="$BUILDDIR/ffmpeg-src"
 LIBVPX_SRCDIR="$BUILDDIR/libvpx-src"
 
-# Screenpack assets
-SCREENPACK_REPO="${SCREENPACK_REPO:-https://github.com/ikemen-engine/Ikemen-GO-Screenpack.git}"
-SCREENPACK_REF="${SCREENPACK_REF:-master}"
-SCREENPACK_DIR="$REPO_ROOT/$BUILDDIR/screenpack"
-
-# Android APK packaging (ikemen-droid)
+# Android APK packaging: OMugen's app project (android/), built with Gradle
 BUILD_ANDROID_APK="${BUILD_ANDROID_APK:-1}"  # 1=yes, 0=no
-# ANDROID_APK_REPO can be a git URL (default) OR a local directory path to an existing ikemen-droid checkout.
-ANDROID_APK_REPO="${ANDROID_APK_REPO:-https://github.com/Jesuszilla/ikemen-droid.git}"
-ANDROID_APK_REF="${ANDROID_APK_REF:-main}"
-ANDROID_APK_DIR="$REPO_ROOT/$BUILDDIR/android-apk/ikemen-droid"
-ANDROID_APK_OUT="${ANDROID_APK_OUT:-$REPO_ROOT/bin/omugen.apk}"
+ANDROID_APP_DIR="$REPO_ROOT/android"
+ANDROID_APK_OUT="${ANDROID_APK_OUT:-$REPO_ROOT/bin/OMugen.apk}"
 
 # FFmpeg config
 FFMPEG_REV="${FFMPEG_REV:-release/7.1}"
@@ -454,7 +446,7 @@ function varAndroid() {
 	export CGO_ENABLED=1
 	# ANDROID_NDK_HOME is an environment variable as its path can be different per platform.
 	export TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/${host_os}-x86_64"
-	export TARGET="aarch64-linux-android34" # for Android 14
+	export TARGET="aarch64-linux-android${ANDROID_API:-26}" # Android 8 and later (the app's minSdk)
 	export CC="$TOOLCHAIN/bin/${TARGET}-clang"
 	export CXX="$TOOLCHAIN/bin/${TARGET}-clang++"
 	export ANDROID_DEPS_PATH="$REPO_ROOT/build/android-deps"
@@ -587,7 +579,7 @@ function build_ffmpeg() {
 	echo "==> Starting configure..."
 	if [[ "$GOOS" == "android" ]]; then
 		local arch="aarch64"
-		local api_level="34"
+		local api_level="${ANDROID_API:-26}"
 		local prefix="$ANDROID_DEPS_PATH"
 		
 		# Path to the specific Android Clang
@@ -740,7 +732,6 @@ function build_sdl2_android() {
 		-DANDROID_ABI="arm64-v8a" \
 		-DANDROID_PLATFORM=android-21 \
 		-DCMAKE_INSTALL_PREFIX="$ANDROID_DEPS_PATH" \
-		-DSDL_ANDROID_PACKAGE_NAME=org.ikemen_engine.ikemen_go \
 		-DSDL_STATIC=OFF \
 		-DSDL_SHARED=ON \
 		-DCMAKE_SHARED_LINKER_FLAGS="-Wl,-z,max-page-size=16384"
@@ -782,47 +773,6 @@ download_file() {
 	else
 		echo "ERROR: Need curl or wget to download: $url" >&2
 		return 1
-	fi
-}
-
-ensure_screenpack() {
-	mkdir -p "$(dirname "$SCREENPACK_DIR")"
-	if [[ ! -d "$SCREENPACK_DIR/.git" ]]; then
-		rm -rf "$SCREENPACK_DIR"
-		echo "==> Cloning Elecbyte screenpack: $SCREENPACK_REPO ($SCREENPACK_REF) -> $SCREENPACK_DIR"
-		git clone --depth=1 -b "$SCREENPACK_REF" "$SCREENPACK_REPO" "$SCREENPACK_DIR"
-	else
-		echo "==> Updating Elecbyte screenpack in $SCREENPACK_DIR ($SCREENPACK_REF)"
-		( cd "$SCREENPACK_DIR" \
-			&& git fetch --depth=1 origin "$SCREENPACK_REF" \
-			&& git checkout -f FETCH_HEAD )
-	fi
-	# Avoid "dubious ownership" on volume mounts
-	git config --system --add safe.directory "$SCREENPACK_DIR" >/dev/null 2>&1 || true
-}
-
-ensure_android_runtime_assets() {
-	[[ "$GOOS" != "android" ]] && return 0
-
-	# The Android APK must ship with the same runtime assets as desktop releases.
-	# If the engine repo doesn't contain them (CI), pull from the Elecbyte screenpack.
-	ensure_screenpack
-
-	# external/gamecontrollerdb.txt (referenced by Android manifest)
-	local db="$REPO_ROOT/external/gamecontrollerdb.txt"
-	if [[ ! -f "$db" ]]; then
-		echo "==> Downloading SDL GameController DB..."
-		download_file \
-			"https://raw.githubusercontent.com/mdqinc/SDL_GameControllerDB/refs/heads/master/gamecontrollerdb.txt" \
-			"$db"
-	fi
-
-	# data/system.base.def (referenced by Android manifest)
-	local sys="$REPO_ROOT/data/system.base.def"
-	if [[ ! -f "$sys" ]]; then
-		echo "==> Generating data/system.base.def from src/resources/defaultMotif.ini..."
-		mkdir -p "$REPO_ROOT/data"
-		cp -a "$REPO_ROOT/src/resources/defaultMotif.ini" "$sys"
 	fi
 }
 
@@ -904,130 +854,49 @@ function ensure_android_sdk_for_gradle() {
 	fi
 }
 
-function sync_android_apk_repo() {
-	mkdir -p "$(dirname "$ANDROID_APK_DIR")"
-
-	# Local repo support
-	if [[ -d "$ANDROID_APK_REPO" ]]; then
-		local src
-		src="$(cd "$ANDROID_APK_REPO" && pwd -P)"
-		if [[ "$src" != "$ANDROID_APK_DIR" ]]; then
-			rm -rf "$ANDROID_APK_DIR"
-			echo "==> Using local ikemen-droid checkout: $src -> $ANDROID_APK_DIR"
-			cp -a "$src" "$ANDROID_APK_DIR"
-		else
-			echo "==> Using local ikemen-droid checkout in-place: $ANDROID_APK_DIR"
-		fi
-		# Avoid "dubious ownership" on volume mounts
-		git config --system --add safe.directory "$ANDROID_APK_DIR" >/dev/null 2>&1 || true
-		return 0
-	fi
-
-	if [[ ! -d "$ANDROID_APK_DIR/.git" ]]; then
-		rm -rf "$ANDROID_APK_DIR"
-		echo "==> Cloning ikemen-droid: $ANDROID_APK_REPO ($ANDROID_APK_REF) -> $ANDROID_APK_DIR"
-		git clone --depth=1 -b "$ANDROID_APK_REF" "$ANDROID_APK_REPO" "$ANDROID_APK_DIR"
-	else
-		echo "==> Updating ikemen-droid in $ANDROID_APK_DIR ($ANDROID_APK_REF)"
-		( cd "$ANDROID_APK_DIR" \
-			&& git fetch --depth=1 origin "$ANDROID_APK_REF" \
-			&& git checkout -f FETCH_HEAD )
-	fi
-	# Avoid "dubious ownership" on volume mounts
-	git config --system --add safe.directory "$ANDROID_APK_DIR" >/dev/null 2>&1 || true
-}
-
-function stage_android_apk_libs() {
-	local app_dir="$ANDROID_APK_DIR/app"
-	# Clean any pre-existing native libs that Gradle might pick up
-	find "$app_dir" -type f \( -name "*.so" -o -name "*.so.*" \) \
-		\( -path "*/src/main/jniLibs/*" -o -path "*/jniLibs/*" -o -path "*/libs/*" \) \
-		-print -delete 2>/dev/null || true
-	local abi_dir="$app_dir/src/main/jniLibs/arm64-v8a"
-
-	mkdir -p "$abi_dir"
-	# Clean previous staged libs (but keep the dir)
-	rm -f "$abi_dir"/*.so* 2>/dev/null || true
-
-	echo "==> Staging native libs into: $abi_dir"
-	# Engine
-	cp -av "$REPO_ROOT/bin/libmain.so" "$abi_dir/"
-	# Deps (only .so, ignore Windows DLLs)
-	cp -av "$REPO_ROOT/lib/"*.so* "$abi_dir/" 2>/dev/null || true
-}
-
-function stage_android_apk_assets() {
-	local app_dir="$ANDROID_APK_DIR/app"
-	local assets_dir="$app_dir/src/main/assets"
-	local manifest="$assets_dir/manifest.txt"
-
-	if [[ ! -f "$manifest" ]]; then
-		echo "ERROR: ikemen-droid manifest not found at: $manifest" >&2
-		exit 1
-	fi
-
-	echo "==> Staging assets into: $assets_dir (from $manifest)"
-	local screenpack="$SCREENPACK_DIR"
-	# Remove everything except manifest.txt so the APK content matches your engine tree
-	find "$assets_dir" -mindepth 1 -maxdepth 1 ! -name "manifest.txt" -exec rm -rf {} + 2>/dev/null || true
-
-	# manifest.txt is whitespace-separated (often a single long line)
-	local p src dst
-	while read -r p; do
-		[[ -z "$p" ]] && continue
-		src="$REPO_ROOT/$p"
-		dst="$assets_dir/$p"
-
-		# If not present in the engine repo, fall back to the Elecbyte screenpack clone.
-		if [[ ! -e "$src" && -n "$screenpack" && -e "$screenpack/$p" ]]; then
-			src="$screenpack/$p"
-		fi
-
-		if [[ -d "$src" ]]; then
-			mkdir -p "$dst"
-			cp -a "$src/." "$dst/" 2>/dev/null || true
-		elif [[ -f "$src" ]]; then
-			mkdir -p "$(dirname "$dst")"
-			cp -a "$src" "$dst"
-		else
-			# If your tree doesn't include some optional paths from manifest, just warn.
-			echo "WARNING: Asset path missing in the OMugen tree: $p" >&2
-		fi
-	done < <(tr -s '[:space:]' '\n' < "$manifest")
-}
-
 function build_android_apk() {
 	[[ "$GOOS" != "android" ]] && return 0
 	[[ "$BUILD_ANDROID_APK" == "0" ]] && { echo "==> BUILD_ANDROID_APK=0: skipping APK build"; return 0; }
-
 	ensure_android_sdk_for_gradle
-	sync_android_apk_repo
-	ensure_android_runtime_assets
-	stage_android_apk_libs
-	stage_android_apk_assets
 
-	echo "==> Checking for stray native libs in apk repo..."
-	find "$ANDROID_APK_DIR/app" -type f -name "libmain.so" -print || true
-
-	echo "==> Building APK with Gradle (debug)..."
-	pushd "$ANDROID_APK_DIR" >/dev/null
-
-	# Ensure Gradle sees the SDK location
-	printf "sdk.dir=%s\n" "${ANDROID_SDK_ROOT}" > local.properties
-	chmod +x ./gradlew || true
-
-	./gradlew --no-daemon clean assembleDebug
-
-	local apk_src="$ANDROID_APK_DIR/app/build/outputs/apk/debug/app-debug.apk"
-	if [[ ! -f "$apk_src" ]]; then
-		echo "ERROR: Gradle finished but APK not found at: $apk_src" >&2
+	local main="$ANDROID_APP_DIR/app/src/main"
+	# SDL's Java side, from the SDL source the native library was built from
+	# (org.libsdl.app; OMugenActivity extends its SDLActivity).
+	local sdljava="$REPO_ROOT/$BUILDDIR/sdl2-src/android-project/app/src/main/java/org/libsdl/app"
+	if [[ ! -d "$sdljava" ]]; then
+		echo "ERROR: SDL's Java sources not found: $sdljava" >&2
 		exit 1
 	fi
-	mkdir -p "$(dirname "$ANDROID_APK_OUT")"
-	cp -av "$apk_src" "$ANDROID_APK_OUT"
+	rm -rf "$main/java/org/libsdl"
+	mkdir -p "$main/java/org/libsdl"
+	cp -a "$sdljava" "$main/java/org/libsdl/"
 
+	# Native libraries: the engine and the libraries it links.
+	local abi="$main/jniLibs/arm64-v8a"
+	rm -rf "$main/jniLibs"
+	mkdir -p "$abi"
+	cp -a "$REPO_ROOT/bin/libmain.so" "$abi/"
+	local f
+	for f in "$ANDROID_DEPS_PATH"/lib/*.so; do
+		[[ -f "$f" ]] && cp -aL "$f" "$abi/"
+	done
+	echo "==> Native libraries in the APK:"
+	ls -la "$abi"
+	echo "==> libmain.so needs:"
+	(readelf -d "$abi/libmain.so" 2>/dev/null || "$TOOLCHAIN/bin/llvm-readelf" -d "$abi/libmain.so") | grep NEEDED || true
+
+	# The launcher icon, from OMugen's own icons.
+	local d
+	for d in "mdpi:omugen_48.png" "xhdpi:omugen_96.png" "xxxhdpi:omugen_256.png"; do
+		mkdir -p "$main/res/mipmap-${d%%:*}"
+		cp -a "$REPO_ROOT/external/icons/${d#*:}" "$main/res/mipmap-${d%%:*}/ic_launcher.png"
+	done
+
+	echo "==> Building the APK with Gradle..."
+	( cd "$ANDROID_APP_DIR" && "${GRADLE:-gradle}" --no-daemon --stacktrace assembleRelease ) || exit 1
+	mkdir -p "$(dirname "$ANDROID_APK_OUT")"
+	cp -av "$ANDROID_APP_DIR/app/build/outputs/apk/release/app-release.apk" "$ANDROID_APK_OUT"
 	echo "==> APK ready: $ANDROID_APK_OUT"
-	popd >/dev/null
 }
 
 function maybe_build_ffmpeg() {
@@ -1125,7 +994,10 @@ function build() {
 
 	# Android has slightly different steps.
 	if [[ "$GOOS" == "android" ]]; then
-		go build -buildmode=c-shared -trimpath -v -tags=android,gles2 \
+		# -tags here replaces GOFLAGS' tags: keep omugen_engine (the embedded engine files).
+		local tags="android,gles2"
+		[[ " ${GOFLAGS:-} " == *omugen_engine* ]] && tags+=",omugen_engine"
+		go build -buildmode=c-shared -trimpath -v -tags="$tags" \
 		-ldflags="-s -w -X 'main.Version=${APP_VERSION}' -X 'main.BuildTime=${APP_BUILDTIME}' -X 'runtime.godebugDefault=asyncpreemptoff=1,sigaltstack=0'" \
 		-o "$OUTDIR/$binName" ./src
 	else
@@ -1138,7 +1010,7 @@ function build() {
 	bundle_shared_libs
 	fix_macos_dylib_paths
 
-	# For Android, optionally build the APK via ikemen-droid
+	# For Android, the APK (OMugen's app project in android/)
 	build_android_apk
 
 	echo "==> Build successful"

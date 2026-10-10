@@ -162,6 +162,103 @@ jobs:
           git -c user.name=ci -c user.email=ci@localhost commit -qm "${{ matrix.name }}: $STATUS"
           git push -f "https://x-access-token:$TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:refs/ci-logs/${{ matrix.name }}
 
+  # The Android app (android/): the engine as libmain.so plus OMugen's own
+  # app project, built with the Android SDK and NDK the runner already has.
+  android:
+    name: android
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Version
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            version="$GITHUB_REF_NAME"
+          else
+            version="dev-${GITHUB_SHA::7}"
+          fi
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+          echo "APP_BUILDTIME=$(date -u '+%Y.%m.%d')" >> "$GITHUB_ENV"
+          # A newer APK must have a higher number to install over an older one.
+          echo "OMUGEN_VERSION_CODE=$GITHUB_RUN_NUMBER" >> "$GITHUB_ENV"
+
+      - id: go
+        uses: actions/setup-go@v7
+        with:
+          go-version: '1.27.x'
+          cache: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Install packages
+        id: apt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm yasm pkg-config cmake ninja-build
+
+      # SDL2, libxmp, libvpx and FFmpeg built for Android; build.sh skips
+      # what it finds.
+      - name: Cache Android libraries
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/android-deps
+            build/sdl2-src
+            build/libxmp-src
+            build/ffmpeg-src/config_components.h
+          key: android-deps-v1-${{ hashFiles('build/build.sh') }}
+          restore-keys: android-deps-v1-
+
+      - name: Build
+        id: build_android
+        shell: bash
+        run: |
+          export ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME"
+          echo "NDK: $ANDROID_NDK_HOME"
+          bash ./build/omugen_build.sh Android
+
+      - name: Package
+        id: package
+        shell: bash
+        run: |
+          mkdir dist
+          cp bin/OMugen.apk "dist/OMugen-$APP_VERSION-android.apk"
+          ls -la dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: OMugen-android
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Keep the log
+        if: always()
+        continue-on-error: true
+        shell: bash
+        env:
+          TOKEN: ${{ github.token }}
+          STATUS: ${{ job.status }}
+          STEPS: ${{ toJSON(steps) }}
+        run: |
+          dir="$RUNNER_TEMP/ci-logs"
+          mkdir -p "$dir"
+          if [ -f build/omugen_build.log ]; then tail -n 5000 build/omugen_build.log > "$dir/omugen_build.log"; fi
+          printf '%s %s run %s\n%s\n' "$STATUS" "$GITHUB_SHA" "$GITHUB_RUN_ID" "$STEPS" > "$dir/STATUS"
+          cd "$dir"
+          git init -q
+          git add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -qm "android: $STATUS"
+          git push -f "https://x-access-token:$TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:refs/ci-logs/android
+
   release:
     name: release
     if: github.ref_type == 'tag'

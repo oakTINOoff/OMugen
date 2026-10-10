@@ -101,6 +101,8 @@ func realMain() {
 		if os.Args == nil || len(os.Args) == 0 {
 			os.Args = []string{"omugen"}
 		}
+		// OMugen: the app's options (frame rate...) as command-line flags.
+		os.Args = append(os.Args[:1], androidArgs()...)
 
 		if err := os.Chdir(sys.baseDir); err != nil {
 			Logcat(fmt.Sprintf("LOG: CHDIR FAILED: %v\n", err))
@@ -109,12 +111,19 @@ func realMain() {
 			Logcat("LOG: CHDIR SUCCESSFUL")
 		}
 
+		// OMugen: the phone's accelerometer is no controller; the Back button
+		// is an Escape key (pause menu, back in menus) instead of closing the app.
+		sdl.SetHint("SDL_ACCELEROMETER_AS_JOYSTICK", "0")
+		sdl.SetHint("SDL_ANDROID_TRAP_BACK_BUTTON", "1")
+
 		// Init SDL NOW
 		if err := sdl.Init(sdl.INIT_AUDIO | sdl.INIT_VIDEO | sdl.INIT_EVENTS | sdl.INIT_TIMER); err != nil {
 			Logcat("LOG: SDL Init Failed: " + err.Error())
 			return
 		}
 		Logcat("LOG: SDL Init SUCCESS")
+		// The engine's own files, in the app's storage (LOCALAPPDATA, set by the app).
+		prepareEngineDir()
 	} else {
 		// OMugen: the game folder is the exe's folder (like MUGEN), even from a shortcut.
 		useExeDirAsGameDir()
@@ -168,6 +177,8 @@ func realMain() {
 		sdl.InitSubSystem(sdl.INIT_JOYSTICK)
 		sdl.InitSubSystem(sdl.INIT_GAMECONTROLLER)
 		Logcat("LOG: Subsystems initialized!")
+		// The app can add its on-screen controller now.
+		androidEngineReady()
 	}
 
 	// Init the SDL LUT's

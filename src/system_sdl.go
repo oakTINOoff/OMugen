@@ -377,10 +377,14 @@ func (w *Window) pollEvents() {
 		case sdl.QuitEvent:
 			w.closeflag = true
 		case sdl.KeyboardEvent:
+			sym := t.Keysym.Sym
+			if sym == sdl.K_AC_BACK {
+				sym = sdl.K_ESCAPE // Android's Back button
+			}
 			if t.State == sdl.PRESSED {
-				OnKeyPressed(t.Keysym.Sym, t.Keysym.Mod)
+				OnKeyPressed(sym, t.Keysym.Mod)
 			} else if t.State == sdl.RELEASED {
-				OnKeyReleased(t.Keysym.Sym, t.Keysym.Mod)
+				OnKeyReleased(sym, t.Keysym.Mod)
 			}
 		case sdl.WindowEvent:
 			if t.Event == sdl.WINDOWEVENT_EXPOSED {

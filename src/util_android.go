@@ -23,6 +23,19 @@ static void ReleaseStringUTFChars_Wrapper(JNIEnv* env, jstring str, const char* 
     }
 }
 
+// OMugen: calls a no-argument method of the app's activity (OMugenActivity).
+static void omugen_notify_activity(const char* method) {
+    JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+    jobject activity = (jobject)SDL_AndroidGetActivity();
+    if (!env || !activity) return;
+    jclass cls = (*env)->GetObjectClass(env, activity);
+    jmethodID mid = (*env)->GetMethodID(env, cls, method, "()V");
+    if (mid) (*env)->CallVoidMethod(env, activity, mid);
+    if ((*env)->ExceptionCheck(env)) (*env)->ExceptionClear(env);
+    (*env)->DeleteLocalRef(env, cls);
+    (*env)->DeleteLocalRef(env, activity);
+}
+
 // THIS IS THE KEY: A C constructor.
 // This runs when the .so is loaded, BEFORE Go starts itself up.
 __attribute__((constructor))
@@ -39,6 +52,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"unsafe"
 
 	findfont "github.com/flopp/go-findfont"
@@ -47,7 +61,20 @@ import (
 var (
 	extractionDone = make(chan bool, 1)
 	baseDir        string
+	appArgs        []string // the app's options as command-line flags (-framerate 60)
+	logcatTag      = C.CString("omugen")
 )
+
+// androidArgs are the command-line flags the app passed with the game folder.
+func androidArgs() []string { return appArgs }
+
+// androidEngineReady tells the app the engine reads controllers now, so it
+// can add its on-screen controller.
+func androidEngineReady() {
+	cs := C.CString("onEngineReady")
+	C.omugen_notify_activity(cs)
+	C.free(unsafe.Pointer(cs))
+}
 
 func init() {
 }
@@ -157,12 +184,19 @@ func getAndroidFilesDir() string {
 	return C.GoString(path)
 }
 
-//export Java_org_libsdl_app_SDLActivity_nativeOnSDLReady
-func Java_org_libsdl_app_SDLActivity_nativeOnSDLReady(env *C.JNIEnv, clazz C.jclass, jPath C.jstring) {
+// OMugen's app (android/, OMugenActivity) calls this with the game folder the
+// player chose and its options as command-line flags.
+//
+//export Java_io_github_oaktinooff_omugen_OMugenActivity_nativeOnSDLReady
+func Java_io_github_oaktinooff_omugen_OMugenActivity_nativeOnSDLReady(env *C.JNIEnv, clazz C.jclass, jPath, jArgs C.jstring) {
 	cPath := C.GetStringUTFChars_Wrapper(env, jPath)
 	if cPath != nil {
 		baseDir = C.GoString(cPath)
 		C.ReleaseStringUTFChars_Wrapper(env, jPath, cPath)
+	}
+	if cArgs := C.GetStringUTFChars_Wrapper(env, jArgs); cArgs != nil {
+		appArgs = strings.Fields(C.GoString(cArgs))
+		C.ReleaseStringUTFChars_Wrapper(env, jArgs, cArgs)
 	}
 
 	// Signal the Go thread to wake up
@@ -176,6 +210,6 @@ func Java_org_libsdl_app_SDLActivity_nativeOnSDLReady(env *C.JNIEnv, clazz C.jcl
 
 func Logcat(s string) {
 	cs := C.CString(s)
-	C.__android_log_write(C.ANDROID_LOG_INFO, C.CString("omugen"), cs)
+	C.__android_log_write(C.ANDROID_LOG_INFO, logcatTag, cs)
 	C.free(unsafe.Pointer(cs))
 }

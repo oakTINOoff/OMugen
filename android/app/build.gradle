@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.application'
+}
+
+// APP_VERSION (v0.2.0, dev-abc1234) and a growing number (CI's run number),
+// so a newer APK installs over an older one.
+def omugenVersion = System.getenv('APP_VERSION') ?: 'dev'
+def omugenVersionCode = (System.getenv('OMUGEN_VERSION_CODE') ?: '1') as int
+
+android {
+    namespace 'io.github.oaktinooff.omugen'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'io.github.oaktinooff.omugen'
+        minSdk 26
+        targetSdk 34
+        versionCode omugenVersionCode
+        versionName omugenVersion
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    signingConfigs {
+        // A test key that stays the same from build to build, so a new APK
+        // installs over the old one and keeps the app's settings.
+        omugen {
+            storeFile rootProject.file('omugen-test.p12')
+            storePassword 'android'
+            keyAlias 'omugen'
+            keyPassword 'android'
+            storeType 'pkcs12'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.omugen
+        }
+        debug {
+            signingConfig signingConfigs.omugen
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
