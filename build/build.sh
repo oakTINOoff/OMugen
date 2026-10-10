@@ -789,7 +789,9 @@ function patch_go_sdl2_android() {
 	if [[ -f "$vendorf" ]]; then
 		f="$vendorf"
 	else
-		# 2) Fallback to module cache (may be read-only unless -modcacherw is used)
+		# 2) Fallback to module cache (may be read-only unless -modcacherw is used).
+		# Download it first: on a fresh machine go build would only fetch it later.
+		go mod download github.com/veandco/go-sdl2 >/dev/null 2>&1 || true
 		local modver modcache moddir
 		modver="$(go list -m -f '{{.Version}}' github.com/veandco/go-sdl2 2>/dev/null || true)"
 		[[ -z "$modver" ]] && return 0

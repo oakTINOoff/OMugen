@@ -101,7 +101,22 @@ presses and saves screenshots to `save/shots` (see `src/omugen_inputscript.go`).
 
 It doesn't run on every push to `main`, to save Actions minutes.
 
+## Android
+
+`./build/omugen_build.sh Android` builds the engine as `libmain.so` (arm64, Android 8+) with
+its files embedded, the libraries it needs (SDL2, FFmpeg, libvpx, libxmp) and the app in
+`android/`, and writes `bin/OMugen.apk`. It needs the Android NDK (`ANDROID_NDK_HOME`), the
+Android SDK (`ANDROID_SDK_ROOT`), JDK 17 and Gradle 8 on the PATH. GitHub Actions has all of
+these, so the simplest way is the `android` job of `builds.yml` (the APK is in its downloads).
+
+- `android/` is OMugen's app: a game picker (MUGEN folders in Internal storage/OMugen), the
+  settings (on-screen controller or Bluetooth controllers, frame rate) and the on-screen
+  DualShock 4 (`TouchPadView`). SDL's own Java files are copied in from SDL's source at
+  build time.
+- `android/omugen-test.p12` signs test builds, always with the same key, so a new APK
+  installs over the old one.
+
 ## Other platforms
 
-`build/build.sh` still has the macOS and Android targets it inherited (`make
-OMugen_MacOSARM`, `make android-apk`), but OMugen doesn't build or test them yet.
+`build/build.sh` still has the macOS target it inherited (`make OMugen_MacOSARM`), but
+OMugen doesn't build or test it yet.

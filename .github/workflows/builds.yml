@@ -205,9 +205,10 @@ jobs:
           sudo apt-get install -y nasm yasm pkg-config cmake ninja-build
 
       # SDL2, libxmp, libvpx and FFmpeg built for Android; build.sh skips
-      # what it finds.
-      - name: Cache Android libraries
-        uses: actions/cache@v4
+      # what it finds. Saved even when a later step fails.
+      - name: Restore Android libraries
+        id: deps
+        uses: actions/cache/restore@v4
         with:
           path: |
             build/android-deps
@@ -224,6 +225,17 @@ jobs:
           export ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME"
           echo "NDK: $ANDROID_NDK_HOME"
           bash ./build/omugen_build.sh Android
+
+      - name: Save Android libraries
+        if: always() && steps.deps.outputs.cache-hit != 'true' && hashFiles('build/android-deps/lib/pkgconfig/libavcodec.pc') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            build/android-deps
+            build/sdl2-src
+            build/libxmp-src
+            build/ffmpeg-src/config_components.h
+          key: android-deps-v1-${{ hashFiles('build/build.sh') }}
 
       - name: Package
         id: package
