@@ -385,8 +385,12 @@ func (t *Texture_GLES32) SetSubData(data []byte, x, y, width, height, stride int
 		gl.TexSubImage2D(gl.TEXTURE_2D, 0, x, y, width, height, uint32(uploadFormat), uploadType, nil)
 	}
 
-	if err := gl.GetError(); err != 0 {
-		Logcat(fmt.Sprintf("GL ERROR in SetSubData: %v | w:%d h:%d s:%d", err, width, height, stride))
+	// No glGetError here: it makes the CPU wait for the GPU on every upload
+	// (phones run hotter for it).
+	if sys.cfg.Video.RendererDebugMode {
+		if err := gl.GetError(); err != 0 {
+			Logcat(fmt.Sprintf("GL ERROR in SetSubData: %v | w:%d h:%d s:%d", err, width, height, stride))
+		}
 	}
 
 	if rowLength != 0 {

@@ -93,7 +93,8 @@ Files in the game folder always win over OMugen's built-in copies.
   as it does in MUGEN. Changes made later in Options are saved to both.
 - **OMugen screenpack:** Options > Video Settings > OMugen Screenpack (or `-omugenui`). A
   1920x1080 interface that uses the game's characters, stages, lifebars, sounds and music,
-  sizes the select grid to the roster and fits portraits of any size.
+  sizes the select grid to the roster and fits portraits of any size (cut like the game's own
+  screenpack cuts them, for games that draw both sides' portraits in one picture).
 - **OMugen lifebars:** used by new games and by any game whose lifebars fail to load. They
   bring the standard hit sparks and hit sounds MUGEN characters call by number.
 - **OMugen Doctor:** `OMugen.exe -doctor` loads every character and stage in `select.def`

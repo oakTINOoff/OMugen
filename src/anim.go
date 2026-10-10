@@ -2037,6 +2037,7 @@ type Anim struct {
 	scaleInit    [2]float32
 	windowInit   [4]float32
 	velocityInit [2]float32
+	crop         [4]float32 // OMugen: the part of the sprite drawn (x0, y0, x1, y1 in sprite pixels), zero: all
 }
 
 func NewAnim(sff *Sff, action string) *Anim {
@@ -2095,6 +2096,7 @@ func (a *Anim) Copy() *Anim {
 	newAnim.offsetInit = a.offsetInit
 	newAnim.scaleInit = a.scaleInit
 	newAnim.windowInit = a.windowInit
+	newAnim.crop = a.crop
 	newAnim.velocityInit = a.velocityInit
 	newAnim.xvel = a.xvel
 	newAnim.yvel = a.yvel
@@ -2359,6 +2361,9 @@ func (a *Anim) Draw(ln int16) {
 	// the result of sys.gameWidth subtraction to int.
 	// we do the same thing to sys.gameHeight just in case
 	window := a.drawWindow()
+	if a.crop != [4]float32{} {
+		window = a.cropWindow(window, xscl)
+	}
 	a.anim.Draw(&window, a.x+a.vel[0]-xsoffset+float32(int(sys.gameWidth-320)/2),
 		a.y+a.vel[1]+float32(int(sys.gameHeight-240)), 1, 1, xscl, xscl, a.yscl,
 		xshear, a.rot, 0, a.palfx, a.facing, [2]float32{1, 1}, a.projection, a.fLength, 0, false, CustomShaderRenderData{})

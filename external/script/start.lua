@@ -748,10 +748,15 @@ function start.f_animGet(ref, side, member, params, velParams, loop, srcAnim)
 				-- (done faces use their face's box)
 				local fitP = params.fit ~= nil and params or velParams
 				if fitP.fit ~= nil and fitP.fit[1] > 0 and fitP.fit[2] > 0 then
-					local s, dx, dy = start.f_fitSprite(a, fitP.fit[1], fitP.fit[2], params.facing, fitP.fitalign[1], fitP.fitalign[2], v[1], v[2])
+					-- the part the game's own screenpack shows for this side, if it cuts one
+					local crop = start.f_gameFaceCrop(a, side, charData, v[1], v[2])
+					local s, dx, dy = start.f_fitSprite(a, fitP.fit[1], fitP.fit[2], params.facing, fitP.fitalign[1], fitP.fitalign[2], v[1], v[2], crop)
 					if s ~= nil then
 						animSetScale(a, s, s)
 						animSetPos(a, dx, dy)
+						if crop ~= nil then
+							animSetCrop(a, crop[1], crop[2], crop[3], crop[4])
+						end
 					end
 				end
 				if srcAnim ~= nil then
@@ -1228,12 +1233,12 @@ function start.f_gridFollow(row)
 	end
 end
 
---OMugen: scale that fits an anim's sprite into a w x h box, snapped to a whole
---number when upscaling by nearly whole factors so pixel art stays sharp.
---Also returns the offset from the box's top-left corner to the draw position
---(halign/valign: -1 left/top, 0 center, 1 right/bottom). Returns nil while
---the sprite isn't loaded.
-function start.f_fitSprite(anim, w, h, facing, halign, valign, group, number)
+--OMugen: scale that fits an anim's sprite (or its crop: {x0, y0, x1, y1} in
+--sprite pixels) into a w x h box, snapped to a whole number when upscaling by
+--nearly whole factors so pixel art stays sharp. Also returns the offset from
+--the box's top-left corner to the draw position (halign/valign: -1 left/top,
+--0 center, 1 right/bottom). Returns nil while the sprite isn't loaded.
+function start.f_fitSprite(anim, w, h, facing, halign, valign, group, number, crop)
 	if anim == nil or w <= 0 or h <= 0 then
 		return nil
 	end
@@ -1244,7 +1249,11 @@ function start.f_fitSprite(anim, w, h, facing, halign, valign, group, number)
 	if info == nil or info.Size[1] <= 0 or info.Size[2] <= 0 then
 		return nil
 	end
-	local sw, sh = info.Size[1], info.Size[2]
+	local x0, y0, x1, y1 = 0, 0, info.Size[1], info.Size[2]
+	if crop ~= nil then
+		x0, y0, x1, y1 = crop[1], crop[2], crop[3], crop[4]
+	end
+	local sw, sh = x1 - x0, y1 - y0
 	local s = math.min(w / sw, h / sh)
 	if s > 1 then
 		local whole = math.floor(s)
@@ -1252,13 +1261,58 @@ function start.f_fitSprite(anim, w, h, facing, halign, valign, group, number)
 			s = whole
 		end
 	end
-	local ax = info.Offset[1]
+	-- from the (cut) sprite's left edge on screen to its axis
+	local ax = info.Offset[1] - x0
 	if (facing or 1) < 0 then
-		ax = sw - ax
+		ax = x1 - info.Offset[1]
 	end
 	local dx = (w - sw * s) * ((halign or 0) + 1) / 2 + ax * s
-	local dy = (h - sh * s) * ((valign or 0) + 1) / 2 + info.Offset[2] * s
+	local dy = (h - sh * s) * ((valign or 0) + 1) / 2 + (info.Offset[2] - y0) * s
 	return s, dx, dy
+end
+
+--OMugen: the part of a big portrait the game's own screenpack shows for this
+--side, trimmed to its drawn pixels: {x0, y0, x1, y1} in sprite pixels, or nil
+--to show all of it. Some games draw both players' portraits in one
+--full-screen sprite and let each side's face.window cut out its part (DBS
+--KODAIKA has the fighter at both edges of a 1280x720 sprite).
+function start.f_gameFaceCrop(anim, side, charData, group, number)
+	local gf = omugenGameFace(side)
+	if gf == nil or charData == nil or group ~= gf.spr[1] or number ~= gf.spr[2] then
+		return nil
+	end
+	local info = animGetSpriteInfo(anim)
+	if info == nil and group >= 0 and number >= 0 then
+		info = animGetSpriteInfo(anim, group, number)
+	end
+	if info == nil or info.Size[1] <= 0 or info.Size[2] <= 0 then
+		return nil
+	end
+	-- the game draws it at its face.scale, adjusted like any portrait for the
+	-- character's localcoord and portraitscale
+	local k = (charData.portraitscale or 1) * gf.localcoord / (charData.localcoord or 320)
+	local sx, sy = math.abs(gf.scale[1] * k), math.abs(gf.scale[2] * k)
+	if sx <= 0 or sy <= 0 then
+		return nil
+	end
+	local ax, ay = info.Offset[1], info.Offset[2]
+	local x0, x1
+	if gf.facing < 0 then
+		x0, x1 = ax - (gf.window[3] - gf.offset[1]) / sx, ax - (gf.window[1] - gf.offset[1]) / sx
+	else
+		x0, x1 = ax + (gf.window[1] - gf.offset[1]) / sx, ax + (gf.window[3] - gf.offset[1]) / sx
+	end
+	local y0, y1 = ay + (gf.window[2] - gf.offset[2]) / sy, ay + (gf.window[4] - gf.offset[2]) / sy
+	local sw, sh = info.Size[1], info.Size[2]
+	x0, y0, x1, y1 = math.max(0, x0), math.max(0, y0), math.min(sw, x1), math.min(sh, y1)
+	if x1 - x0 < 4 or y1 - y0 < 4 or (x0 <= 0 and y0 <= 0 and x1 >= sw and y1 >= sh) then
+		return nil -- the window cuts nothing (or everything)
+	end
+	local bx0, by0, bx1, by1 = animGetOpaqueBounds(anim, x0, y0, x1, y1)
+	if bx0 ~= nil then
+		x0, y0, x1, y1 = bx0, by0, bx1, by1
+	end
+	return {x0, y0, x1, y1}
 end
 
 --OMugen: places a small portrait in a cell of any size. Every portrait gets

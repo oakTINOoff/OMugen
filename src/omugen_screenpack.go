@@ -153,11 +153,12 @@ func readMotifKey(def, section, key string) string {
 	}
 	lines := SplitAndTrim(NormalizeNewlines(text), "\n")
 	for i := 0; i < len(lines); {
-		is, name, _ := ReadIniSection(lines, &i)
+		is, name, sub := ReadIniSection(lines, &i)
 		if len(name) == 0 {
 			break
 		}
-		if strings.EqualFold(name, section) {
+		// ReadIniSection splits "Select Info" into "select " and "Info".
+		if strings.EqualFold(name+sub, section) {
 			v := strings.TrimSpace(is[key])
 			if sc := strings.Index(v, ";"); sc >= 0 {
 				v = strings.TrimSpace(v[:sc])
@@ -274,6 +275,7 @@ func loadFightScreenSafe(def string) (fs *FightScreen, err error) {
 }
 
 func omugenScreenpackScriptInit(l *lua.LState) {
+	omugenPortraitCropScriptInit(l)
 	luaRegister(l, "omugenScreenpackNotice", func(l *lua.LState) int {
 		l.Push(lua.LString(omugenUI.notice))
 		omugenUI.notice = ""

@@ -671,7 +671,8 @@ type Sprite struct {
 	coldepth     byte
 	paltemp      []uint32
 	PalTex       Texture
-	sffv1BasePal bool // SFFv1 sprite palette duplicates the base palette
+	sffv1BasePal bool        // SFFv1 sprite palette duplicates the base palette
+	opaque       *opaqueMask // OMugen: where a big portrait's drawn pixels are (omugen_portraitcrop.go)
 }
 
 func (s *Sprite) isBlank() bool {
@@ -818,6 +819,7 @@ func (s *Sprite) shareCopy(src *Sprite) {
 		s.palidx = src.palidx
 	}
 	s.coldepth = src.coldepth
+	s.opaque = src.opaque
 
 	// We must defer copying the texture during the main thread
 	// Otherwise we can end up copying a nil texture over the good one or other race condition bugs
@@ -872,6 +874,9 @@ func (s *Sprite) SetPxl(px []byte) {
 	if int64(len(px)) != int64(s.Size[0])*int64(s.Size[1]) {
 		return
 	}
+	if wantsOpaqueMask(s) {
+		s.opaque = opaqueMaskIndexed(px, int(s.Size[0]), int(s.Size[1]))
+	}
 	sys.mainThreadTask <- func() {
 		s.Tex = gfx.newTexture(int32(s.Size[0]), int32(s.Size[1]), 8, false)
 		s.Tex.SetData(px)
@@ -887,6 +892,9 @@ func (s *Sprite) SetRaw(data []byte, sprWidth int32, sprHeight int32, sprDepth i
 				data[i+1] = 0
 				data[i+2] = 0
 			}
+		}
+		if wantsOpaqueMask(s) {
+			s.opaque = opaqueMaskRGBA(data, int(sprWidth), int(sprHeight))
 		}
 	}
 	sys.mainThreadTask <- func() {
