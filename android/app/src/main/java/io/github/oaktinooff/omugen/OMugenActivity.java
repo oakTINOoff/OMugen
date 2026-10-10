@@ -1,6 +1,7 @@
 package io.github.oaktinooff.omugen;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -11,12 +12,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.system.Os;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -25,10 +26,19 @@ import android.widget.TextView;
 
 import org.libsdl.app.SDLActivity;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * OMugen on Android: a game picker over SDL's activity. The engine
@@ -42,8 +52,11 @@ public class OMugenActivity extends SDLActivity {
     private static final String PREFS = "OMugen";
     private static final int[] FRAME_RATES = { 60, 90, 120, 144 };
 
-    /** Starts the engine on a game folder, with command-line flags (util_android.go). */
-    private static native void nativeOnSDLReady(String gameDir, String args);
+    /**
+     * Starts the engine on a game folder, with the app's folders (its files:
+     * the engine's, your pad layouts) and command-line flags (util_android.go).
+     */
+    private static native void nativeOnSDLReady(String gameDir, String filesDir, String cacheDir, String args);
 
     private SharedPreferences prefs;
     private View picker;
@@ -57,15 +70,10 @@ public class OMugenActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // OMugen's own files (the engine's, your pad layouts) go to the app's
-        // storage. Set before the engine loads, which reads it at start.
-        try {
-            Os.setenv("LOCALAPPDATA", getFilesDir().getAbsolutePath(), true);
-        } catch (Exception ignored) {
-        }
         super.onCreate(savedInstanceState);
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         showPicker();
+        checkLastRun();
     }
 
     @Override
@@ -92,6 +100,11 @@ public class OMugenActivity extends SDLActivity {
         super.onDestroy();
         // The engine runs once per process: start fresh next time.
         android.os.Process.killProcess(android.os.Process.myPid());
+    }
+
+    /** Called by the engine when the game is quit from its menu. */
+    public void onEngineExit() {
+        prefs.edit().remove("running").commit();
     }
 
     /** Called by the engine once it reads controllers. */
@@ -195,7 +208,14 @@ public class OMugenActivity extends SDLActivity {
 
     private void startGame(File game) {
         started = true;
-        prefs.edit().putString("last", game.getAbsolutePath()).apply();
+        // "running" stays until the game is quit from its menu: if it is still
+        // there next time, OMugen looks for what went wrong (checkLastRun).
+        prefs.edit().putString("last", game.getAbsolutePath())
+                .putString("running", game.getAbsolutePath())
+                .putInt("runningPid", android.os.Process.myPid())
+                .putLong("runningSince", System.currentTimeMillis())
+                .commit();
+        requestRefreshRate(frameRate());
         if (picker != null && picker.getParent() != null) {
             ((ViewGroup) picker.getParent()).removeView(picker);
         }
@@ -205,7 +225,33 @@ public class OMugenActivity extends SDLActivity {
             addContentView(touchPad, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT));
         }
-        nativeOnSDLReady(game.getAbsolutePath(), "-framerate " + frameRate());
+        nativeOnSDLReady(game.getAbsolutePath(), getFilesDir().getAbsolutePath(),
+                getCacheDir().getAbsolutePath(), "-framerate " + frameRate());
+    }
+
+    /** Asks for the screen mode closest to the frame rate (less battery at 60). */
+    private void requestRefreshRate(int fps) {
+        try {
+            Display display = getWindowManager().getDefaultDisplay();
+            Display.Mode current = display.getMode();
+            Display.Mode best = null;
+            for (Display.Mode m : display.getSupportedModes()) {
+                if (m.getPhysicalWidth() != current.getPhysicalWidth()
+                        || m.getPhysicalHeight() != current.getPhysicalHeight()) {
+                    continue;
+                }
+                if (best == null || Math.abs(m.getRefreshRate() - fps) < Math.abs(best.getRefreshRate() - fps)) {
+                    best = m;
+                }
+            }
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            if (best != null) {
+                lp.preferredDisplayModeId = best.getModeId();
+            }
+            lp.preferredRefreshRate = fps;
+            getWindow().setAttributes(lp);
+        } catch (Exception ignored) {
+        }
     }
 
     /** Folders of the OMugen folder that hold a MUGEN game (a data folder). */
@@ -263,6 +309,180 @@ public class OMugenActivity extends SDLActivity {
         } else {
             requestPermissions(new String[] { Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE }, 1);
+        }
+    }
+
+    // ------------------------------------------------------------- error report
+
+    /**
+     * When the last game didn't end from its menu, looks in the engine's log
+     * (last-run.log, util_android.go) and Android's log for an error, and
+     * shows it, saved as OMugen-error-report.txt in the OMugen folder.
+     */
+    private void checkLastRun() {
+        final String game = prefs.getString("running", null);
+        if (game == null) {
+            return;
+        }
+        final int pid = prefs.getInt("runningPid", -1);
+        final long since = prefs.getLong("runningSince", 0);
+        prefs.edit().remove("running").remove("runningPid").remove("runningSince").commit();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<String> engineLog = readLines(new File(new File(getFilesDir(), "OMugen"), "last-run.log"), 400);
+                List<String> systemLog = systemLog(pid);
+                List<String> found = new ArrayList<>();
+                for (String l : engineLog) {
+                    if (isErrorLine(l)) {
+                        found.add(l);
+                    }
+                }
+                for (String l : systemLog) {
+                    if (isErrorLine(l)) {
+                        found.add(l);
+                    }
+                }
+                if (found.isEmpty()) {
+                    return; // closed some other way (swiped away, say)
+                }
+                StringBuilder r = new StringBuilder();
+                r.append("OMugen error report\n");
+                r.append("App: ").append(appVersion()).append('\n');
+                r.append("Device: ").append(Build.MANUFACTURER).append(' ').append(Build.MODEL)
+                        .append(" (").append(Build.DEVICE).append("), Android ").append(Build.VERSION.RELEASE)
+                        .append(" (API ").append(Build.VERSION.SDK_INT).append(")\n");
+                r.append("Game: ").append(game).append('\n');
+                r.append("Started: ").append(new Date(since)).append("\n\n");
+                r.append("== What went wrong ==\n");
+                for (int i = 0; i < Math.min(found.size(), 40); i++) {
+                    r.append(found.get(i)).append('\n');
+                }
+                r.append("\n== OMugen log (end) ==\n");
+                for (String l : engineLog) {
+                    r.append(l).append('\n');
+                }
+                r.append("\n== Android log ==\n");
+                for (String l : systemLog) {
+                    r.append(l).append('\n');
+                }
+                final String report = r.toString();
+                final File saved = saveReport(report);
+                final StringBuilder summary = new StringBuilder();
+                for (int i = 0; i < Math.min(found.size(), 12); i++) {
+                    summary.append(found.get(i)).append("\n\n");
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showReport(summary.toString().trim(), report, saved);
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private static boolean isErrorLine(String l) {
+        String s = l.toLowerCase(Locale.ROOT);
+        return s.contains("critical error") || s.contains("panic") || s.contains("fatal")
+                || s.contains("sigsegv") || s.contains("sigabrt") || s.contains("application error")
+                || s.contains("engine error") || s.contains("unsatisfiedlinkerror");
+    }
+
+    /** The last lines of a text file (none if it is missing). */
+    private static List<String> readLines(File f, int max) {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8))) {
+            String l;
+            while ((l = r.readLine()) != null) {
+                lines.add(l);
+                if (lines.size() > max) {
+                    lines.remove(0);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return lines;
+    }
+
+    /** This app's lines of Android's log from the last run (apps only see their own). */
+    private static List<String> systemLog(int pid) {
+        List<String> lines = new ArrayList<>();
+        String p = " " + pid + " ";
+        try {
+            Process proc = new ProcessBuilder("logcat", "-d", "-v", "threadtime", "-t", "5000")
+                    .redirectErrorStream(true).start();
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+                String l;
+                while ((l = r.readLine()) != null) {
+                    // threadtime: date time pid tid level tag: message. Native
+                    // crash reports come from Android's crash_dump (tag DEBUG).
+                    if ((pid > 0 && l.contains(p)) || l.contains(" DEBUG ") || l.contains("crash_dump")) {
+                        lines.add(l);
+                        if (lines.size() > 1500) {
+                            lines.remove(0);
+                        }
+                    }
+                }
+            }
+            proc.waitFor();
+        } catch (Exception e) {
+            lines.add("(no Android log: " + e + ")");
+        }
+        return lines;
+    }
+
+    private File saveReport(String report) {
+        File f = new File(gamesFolder(), "OMugen-error-report.txt");
+        try (Writer w = new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)) {
+            w.write(report);
+            return f;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void showReport(String summary, final String report, File saved) {
+        if (isFinishing()) {
+            return;
+        }
+        TextView t = new TextView(this);
+        t.setText(summary + (saved != null
+                ? "\n\nThe full report is in your phone's storage: OMugen/" + saved.getName() : ""));
+        t.setTextIsSelectable(true);
+        t.setTypeface(Typeface.MONOSPACE);
+        t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        t.setPadding(dp(20), dp(12), dp(20), dp(12));
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(t);
+        new AlertDialog.Builder(this)
+                .setTitle("OMugen closed because of an error")
+                .setView(scroll)
+                .setPositiveButton("Share report", (d, w) -> {
+                    Intent send = new Intent(Intent.ACTION_SEND);
+                    send.setType("text/plain");
+                    send.putExtra(Intent.EXTRA_SUBJECT, "OMugen error report");
+                    // Binder transactions are limited: the start and end are what matter.
+                    String text = report.length() > 90000
+                            ? report.substring(0, 45000) + "\n...\n" + report.substring(report.length() - 45000)
+                            : report;
+                    send.putExtra(Intent.EXTRA_TEXT, text);
+                    try {
+                        startActivity(Intent.createChooser(send, "Share the OMugen error report"));
+                    } catch (Exception ignored) {
+                    }
+                })
+                .setNegativeButton("Close", null)
+                .show();
+    }
+
+    @SuppressWarnings("deprecation")
+    private String appVersion() {
+        try {
+            android.content.pm.PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
+            return info.versionName + " (" + info.versionCode + ")";
+        } catch (Exception e) {
+            return "?";
         }
     }
 

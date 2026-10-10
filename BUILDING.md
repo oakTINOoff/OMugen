@@ -115,6 +115,13 @@ these, so the simplest way is the `android` job of `builds.yml` (the APK is in i
   build time.
 - `android/omugen-test.p12` signs test builds, always with the same key, so a new APK
   installs over the old one.
+- Errors: the engine shows its error messages as Android dialogs and writes this run's log
+  (with Go's own crash reports) to `last-run.log` in the app's storage. When a game closed
+  without being quit from its menu, the app shows what went wrong on its next start
+  (from that log and the app's lines of Android's log), saves it as
+  `OMugen/OMugen-error-report.txt` and can share it. Go only sees the environment the
+  process started with, so the app passes its folders to `nativeOnSDLReady` instead of
+  setting environment variables.
 
 ## Other platforms
 

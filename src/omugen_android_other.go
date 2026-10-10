@@ -7,3 +7,5 @@ package main
 func androidArgs() []string { return nil }
 
 func androidEngineReady() {}
+
+func androidEngineExit() {}

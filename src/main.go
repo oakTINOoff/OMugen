@@ -70,12 +70,6 @@ func realMain() {
 	if runtime.GOOS == "android" {
 		Logcat("Inside realMain...")
 		runtime.LockOSThread()
-		sdl.GLSetAttribute(sdl.GL_CONTEXT_PROFILE_MASK, sdl.GL_CONTEXT_PROFILE_ES)
-		sdl.GLSetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION, 3)
-		sdl.GLSetAttribute(sdl.GL_CONTEXT_MINOR_VERSION, 2)
-		sdl.GLSetAttribute(sdl.GL_DOUBLEBUFFER, 1)
-		sdl.GLSetAttribute(sdl.GL_ALPHA_SIZE, 0)
-		sdl.GLSetAttribute(sdl.GL_DEPTH_SIZE, 24)
 		// sdl.SetHint("SDL_VIDEO_EXTERNAL_CONTEXT", "0")
 		// sdl.SetHint("SDL_HIDAPI_IGNORE_DEVICES", "1")
 		// sdl.SetHint("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1")
@@ -122,6 +116,14 @@ func realMain() {
 			return
 		}
 		Logcat("LOG: SDL Init SUCCESS")
+		// OpenGL ES 3.2, as the shaders need (SDL keeps these only once its
+		// video is up; it would make an ES 2.0 context otherwise).
+		sdl.GLSetAttribute(sdl.GL_CONTEXT_PROFILE_MASK, sdl.GL_CONTEXT_PROFILE_ES)
+		sdl.GLSetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION, 3)
+		sdl.GLSetAttribute(sdl.GL_CONTEXT_MINOR_VERSION, 2)
+		sdl.GLSetAttribute(sdl.GL_DOUBLEBUFFER, 1)
+		sdl.GLSetAttribute(sdl.GL_ALPHA_SIZE, 0)
+		sdl.GLSetAttribute(sdl.GL_DEPTH_SIZE, 24)
 		// The engine's own files, in the app's storage (LOCALAPPDATA, set by the app).
 		prepareEngineDir()
 	} else {
@@ -200,6 +202,10 @@ func realMain() {
 	// Force to OpenGL ES 3.2 for Android
 	if runtime.GOOS == "android" {
 		cfg.Video.RenderMode = "OpenGL ES 3.2"
+		// The frame rate chosen in the app (for this session only).
+		if n := Atoi(sys.cmdFlags["-framerate"]); n > 0 {
+			cfg.Video.Framerate = int(n)
+		}
 	}
 	sys.cfg = *cfg
 	// Logcat("LOG: Config Loaded. System Script: " + sys.cfg.Config.System)
@@ -377,6 +383,7 @@ Creating a game:
 
 // Exit program without any errors
 func handleExit() {
+	androidEngineExit()
 	sys.shutdown()
 	os.Exit(0)
 }

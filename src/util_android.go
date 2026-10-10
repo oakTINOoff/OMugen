@@ -53,9 +53,12 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
+	"time"
 	"unsafe"
 
 	findfont "github.com/flopp/go-findfont"
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 var (
@@ -64,6 +67,37 @@ var (
 	appArgs        []string // the app's options as command-line flags (-framerate 60)
 	logcatTag      = C.CString("omugen")
 )
+
+// runLogName is this run's log in OMugen's folder of the app's storage
+// (LOCALAPPDATA/OMugen): the engine's messages and Go's own crash reports.
+// After a crash the app shows it (OMugenActivity).
+const runLogName = "last-run.log"
+
+// openRunLog sends standard output and errors to the run log; Android drops
+// them otherwise.
+func openRunLog() {
+	dir := engineCacheRoot()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		Logcat("run log: " + err.Error())
+		return
+	}
+	f, err := os.Create(filepath.Join(dir, runLogName))
+	if err != nil {
+		Logcat("run log: " + err.Error())
+		return
+	}
+	syscall.Dup3(int(f.Fd()), 1, 0)
+	syscall.Dup3(int(f.Fd()), 2, 0)
+	fmt.Fprintf(os.Stderr, "OMugen %s (%s) on Android\nGame: %s\nArgs: %v\nStarted: %s\n\n",
+		Version, BuildTime, baseDir, appArgs, time.Now().Format("2006-01-02 15:04:05"))
+}
+
+// androidEngineExit tells the app the game was quit from its menu (no crash).
+func androidEngineExit() {
+	cs := C.CString("onEngineExit")
+	C.omugen_notify_activity(cs)
+	C.free(unsafe.Pointer(cs))
+}
 
 // androidArgs are the command-line flags the app passed with the game folder.
 func androidArgs() []string { return appArgs }
@@ -135,20 +169,30 @@ func LoadFntTtf(f *Fnt, fontfile string, filename string, height int32) {
 	}
 }
 
-// Message box implementation
-// Android doesn't have a simple "dialog" package like desktop.
+// Message boxes: SDL shows them as Android dialogs (and waits for them), even
+// before its video starts.
 func ShowInfoDialog(message, title string) {
 	Logcat(fmt.Sprintf("INFO [%s]: %s", title, message))
+	sdl.ShowSimpleMessageBox(sdl.MESSAGEBOX_INFORMATION, title, message, nil)
 }
 
 func ShowErrorDialog(message string) {
 	Logcat(fmt.Sprintf("CRITICAL ERROR: %s", message))
+	sdl.ShowSimpleMessageBox(sdl.MESSAGEBOX_ERROR, "OMugen", message, nil)
 }
 
-// ShowYesNoDialog can't ask here: the answer is No.
 func ShowYesNoDialog(message, title string) bool {
 	Logcat(fmt.Sprintf("QUESTION [%s]: %s", title, message))
-	return false
+	id, err := sdl.ShowMessageBox(&sdl.MessageBoxData{
+		Flags:   sdl.MESSAGEBOX_INFORMATION,
+		Title:   title,
+		Message: message,
+		Buttons: []sdl.MessageBoxButtonData{
+			{Flags: sdl.MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, ButtonID: 0, Text: "No"},
+			{Flags: sdl.MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, ButtonID: 1, Text: "Yes"},
+		},
+	})
+	return err == nil && id == 1
 }
 
 //export SDL_main
@@ -157,6 +201,7 @@ func SDL_main(argc C.int, argv **C.char) C.int {
 
 	// Wait for JNI to tell us the path is ready
 	<-extractionDone
+	openRunLog()
 
 	Logcat("SDL_main: Path ready, jumping to realMain")
 
@@ -185,18 +230,21 @@ func getAndroidFilesDir() string {
 }
 
 // OMugen's app (android/, OMugenActivity) calls this with the game folder the
-// player chose and its options as command-line flags.
+// player chose, the app's own folders and its options as command-line flags.
 //
 //export Java_io_github_oaktinooff_omugen_OMugenActivity_nativeOnSDLReady
-func Java_io_github_oaktinooff_omugen_OMugenActivity_nativeOnSDLReady(env *C.JNIEnv, clazz C.jclass, jPath, jArgs C.jstring) {
-	cPath := C.GetStringUTFChars_Wrapper(env, jPath)
-	if cPath != nil {
-		baseDir = C.GoString(cPath)
-		C.ReleaseStringUTFChars_Wrapper(env, jPath, cPath)
+func Java_io_github_oaktinooff_omugen_OMugenActivity_nativeOnSDLReady(env *C.JNIEnv, clazz C.jclass, jPath, jFilesDir, jCacheDir, jArgs C.jstring) {
+	baseDir = jniString(env, jPath)
+	appArgs = strings.Fields(jniString(env, jArgs))
+	// Go reads the environment once, as the process started (Android's
+	// zygote), so the app's Os.setenv never reaches it: set it here.
+	// LOCALAPPDATA holds the engine files and your pad layouts.
+	if dir := jniString(env, jFilesDir); dir != "" {
+		os.Setenv("LOCALAPPDATA", dir)
+		os.Setenv("HOME", dir)
 	}
-	if cArgs := C.GetStringUTFChars_Wrapper(env, jArgs); cArgs != nil {
-		appArgs = strings.Fields(C.GoString(cArgs))
-		C.ReleaseStringUTFChars_Wrapper(env, jArgs, cArgs)
+	if dir := jniString(env, jCacheDir); dir != "" {
+		os.Setenv("TMPDIR", dir)
 	}
 
 	// Signal the Go thread to wake up
@@ -208,8 +256,19 @@ func Java_io_github_oaktinooff_omugen_OMugenActivity_nativeOnSDLReady(env *C.JNI
 	}
 }
 
+func jniString(env *C.JNIEnv, s C.jstring) string {
+	c := C.GetStringUTFChars_Wrapper(env, s)
+	if c == nil {
+		return ""
+	}
+	defer C.ReleaseStringUTFChars_Wrapper(env, s, c)
+	return C.GoString(c)
+}
+
+// Logcat writes to Android's log and to the run log.
 func Logcat(s string) {
 	cs := C.CString(s)
 	C.__android_log_write(C.ANDROID_LOG_INFO, logcatTag, cs)
 	C.free(unsafe.Pointer(cs))
+	os.Stderr.WriteString(s + "\n")
 }
