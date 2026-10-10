@@ -113,8 +113,11 @@ these, so the simplest way is the `android` job of `builds.yml` (the APK is in i
   settings (on-screen controller or Bluetooth controllers, frame rate) and the on-screen
   DualShock 4 (`TouchPadView`). SDL's own Java files are copied in from SDL's source at
   build time.
-- `android/omugen-test.p12` signs test builds, always with the same key, so a new APK
-  installs over the old one.
+- `android/omugen-test.p12` signs the APK, always with the same key, so a new APK installs
+  over the old one. With the repository secrets `OMUGEN_KEYSTORE_BASE64` (a PKCS12 key
+  store in base64) and `OMUGEN_KEYSTORE_PASSWORD` (optional: `OMUGEN_KEY_ALIAS`,
+  `OMUGEN_KEY_PASSWORD`), CI signs with that release key instead; switching keys means
+  uninstalling the old app once.
 - Errors: the engine shows its error messages as Android dialogs and writes this run's log
   (with Go's own crash reports) to `last-run.log` in the app's storage. When a game closed
   without being quit from its menu, the app shows what went wrong on its next start

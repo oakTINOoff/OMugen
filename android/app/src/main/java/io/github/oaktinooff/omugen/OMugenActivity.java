@@ -204,6 +204,7 @@ public class OMugenActivity extends SDLActivity {
                 shareLastLog();
             }
         }));
+        col.addView(text("OMugen " + appVersion(), 12, false));
 
         ScrollView scroll = new ScrollView(this);
         scroll.setBackgroundColor(0xF2101016);

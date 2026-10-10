@@ -31,12 +31,14 @@
   over and say so. `OMugen.exe -doctor` checks every character and stage and writes a report.
 - **Make your own game.** `OMugen.exe -newgame "My Game"` creates a playable game: a full
   template fighter, a stage, menus and lifebars, all in standard MUGEN formats.
+- **On your phone too.** OMugen for Android plays the same game folders, with an
+  on-screen DualShock 4 or Bluetooth controllers.
 
 ## OMugen and MUGEN 1.1
 
 | | M.U.G.E.N 1.1 | OMugen |
 |---|---|---|
-| Runs on | 32-bit, Windows | 64-bit, Windows (Linux builds: early) |
+| Runs on | 32-bit, Windows | 64-bit, Windows and Android (Linux builds: early) |
 | Your game folder | as is | as is (OMugen adds only `save`) |
 | Controls | `mugen.cfg` | the same `mugen.cfg` and codes, plus pads assigned automatically for up to 4 players |
 | Above 60 fps | the game itself speeds up | up to 240 fps or the monitor's rate, same gameplay (checked tick by tick) |
@@ -63,6 +65,21 @@ of your own there instead.
 The first start unpacks the engine files once to `%LOCALAPPDATA%\OMugen\engine\`, never
 into the game folder. Settings, logs, replays and reports go to the game's `save` folder.
 Files in the game folder always win over OMugen's built-in copies.
+
+### On Android
+
+1. Download `OMugen-<version>-android.apk` from [Releases](../../releases) and install it
+   (Android asks you to allow installing apps from your browser or file manager once).
+   Android 8 or newer, 64-bit phones.
+2. Copy your MUGEN game folder (the one with `data`, `chars` and `stages`) into a folder
+   named `OMugen` in your phone's internal storage.
+3. Open OMugen, tap **Allow file access**, then your game.
+
+The settings under the game list choose the on-screen controller (a DualShock 4 drawn over
+the game, with your pad layout) or Bluetooth controllers only, and the frame rate: 60 fps
+saves battery, more is smoother on 90-144 Hz screens. The Back button works as Escape (the
+pause menu in a fight, back in menus). If a game closes on an error, the app shows what
+went wrong the next time it opens, and can share it.
 
 ## Features
 

@@ -1,4 +1,4 @@
-# Builds OMugen for Windows and Linux.
+# Builds OMugen for Windows, Linux and Android.
 #
 # Runs when a version tag is pushed (v1.2.3: the builds become a GitHub
 # Release of this repository, with notes from docs/releases/<tag>.md), when
@@ -218,12 +218,28 @@ jobs:
           key: android-deps-v1-${{ hashFiles('build/build.sh') }}
           restore-keys: android-deps-v1-
 
+      # The APK is signed with the release key when the repository has one
+      # (secrets OMUGEN_KEYSTORE_BASE64: a PKCS12 file in base64,
+      # OMUGEN_KEYSTORE_PASSWORD, optional OMUGEN_KEY_ALIAS and
+      # OMUGEN_KEY_PASSWORD), else with android/omugen-test.p12.
       - name: Build
         id: build_android
         shell: bash
+        env:
+          OMUGEN_KEYSTORE_BASE64: ${{ secrets.OMUGEN_KEYSTORE_BASE64 }}
+          OMUGEN_KEYSTORE_PASSWORD: ${{ secrets.OMUGEN_KEYSTORE_PASSWORD }}
+          OMUGEN_KEY_ALIAS: ${{ secrets.OMUGEN_KEY_ALIAS }}
+          OMUGEN_KEY_PASSWORD: ${{ secrets.OMUGEN_KEY_PASSWORD }}
         run: |
           export ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME"
           echo "NDK: $ANDROID_NDK_HOME"
+          if [ -n "$OMUGEN_KEYSTORE_BASE64" ]; then
+            echo "$OMUGEN_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/omugen-release.p12"
+            export OMUGEN_KEYSTORE="$RUNNER_TEMP/omugen-release.p12"
+            echo "APK signing: the release key"
+          else
+            echo "APK signing: the test key"
+          fi
           bash ./build/omugen_build.sh Android
 
       - name: Save Android libraries
@@ -274,7 +290,7 @@ jobs:
   release:
     name: release
     if: github.ref_type == 'tag'
-    needs: build
+    needs: [build, android]
     runs-on: ubuntu-latest
     steps:
       # The release notes: docs/releases/<tag>.md.
@@ -292,6 +308,7 @@ jobs:
           mkdir release
           (cd dist/OMugen-windows && zip -9 "../../release/OMugen-$GITHUB_REF_NAME-windows.zip" OMugen.exe)
           cp dist/OMugen-linux/*.tar.gz release/
+          cp dist/OMugen-android/*.apk release/
           (cd release && sha256sum * > SHA256SUMS.txt)
           ls -la release
           notes="docs/releases/$GITHUB_REF_NAME.md"

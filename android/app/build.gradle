@@ -23,13 +23,23 @@ android {
     }
 
     signingConfigs {
-        // A test key that stays the same from build to build, so a new APK
-        // installs over the old one and keeps the app's settings.
+        // The release key when CI has one (OMUGEN_KEYSTORE, from the repository's
+        // secrets), else a test key. Either stays the same from build to build,
+        // so a new APK installs over the old one and keeps the app's settings
+        // (switching keys needs one reinstall).
         omugen {
-            storeFile rootProject.file('omugen-test.p12')
-            storePassword 'android'
-            keyAlias 'omugen'
-            keyPassword 'android'
+            def releaseStore = System.getenv('OMUGEN_KEYSTORE')
+            if (releaseStore) {
+                storeFile file(releaseStore)
+                storePassword System.getenv('OMUGEN_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('OMUGEN_KEY_ALIAS') ?: 'omugen'
+                keyPassword System.getenv('OMUGEN_KEY_PASSWORD') ?: System.getenv('OMUGEN_KEYSTORE_PASSWORD')
+            } else {
+                storeFile rootProject.file('omugen-test.p12')
+                storePassword 'android'
+                keyAlias 'omugen'
+                keyPassword 'android'
+            }
             storeType 'pkcs12'
         }
     }
