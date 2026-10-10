@@ -23,6 +23,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.libsdl.app.SDLActivity;
 
@@ -197,6 +198,12 @@ public class OMugenActivity extends SDLActivity {
         col.addView(fps);
         col.addView(text("The game itself always runs at its own speed; a higher frame rate only looks smoother "
                 + "and uses more battery.", 13, false));
+        col.addView(button("Send the last game's log", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                shareLastLog();
+            }
+        }));
 
         ScrollView scroll = new ScrollView(this);
         scroll.setBackgroundColor(0xF2101016);
@@ -347,11 +354,7 @@ public class OMugenActivity extends SDLActivity {
                     return; // closed some other way (swiped away, say)
                 }
                 StringBuilder r = new StringBuilder();
-                r.append("OMugen error report\n");
-                r.append("App: ").append(appVersion()).append('\n');
-                r.append("Device: ").append(Build.MANUFACTURER).append(' ').append(Build.MODEL)
-                        .append(" (").append(Build.DEVICE).append("), Android ").append(Build.VERSION.RELEASE)
-                        .append(" (API ").append(Build.VERSION.SDK_INT).append(")\n");
+                r.append("OMugen error report\n").append(aboutApp());
                 r.append("Game: ").append(game).append('\n');
                 r.append("Started: ").append(new Date(since)).append("\n\n");
                 r.append("== What went wrong ==\n");
@@ -458,22 +461,45 @@ public class OMugenActivity extends SDLActivity {
         new AlertDialog.Builder(this)
                 .setTitle("OMugen closed because of an error")
                 .setView(scroll)
-                .setPositiveButton("Share report", (d, w) -> {
-                    Intent send = new Intent(Intent.ACTION_SEND);
-                    send.setType("text/plain");
-                    send.putExtra(Intent.EXTRA_SUBJECT, "OMugen error report");
-                    // Binder transactions are limited: the start and end are what matter.
-                    String text = report.length() > 90000
-                            ? report.substring(0, 45000) + "\n...\n" + report.substring(report.length() - 45000)
-                            : report;
-                    send.putExtra(Intent.EXTRA_TEXT, text);
-                    try {
-                        startActivity(Intent.createChooser(send, "Share the OMugen error report"));
-                    } catch (Exception ignored) {
-                    }
-                })
+                .setPositiveButton("Share report", (d, w) -> shareText("OMugen error report", report))
                 .setNegativeButton("Close", null)
                 .show();
+    }
+
+    /** Shares the engine's log of the last game (last-run.log), for a problem that didn't close it. */
+    private void shareLastLog() {
+        List<String> lines = readLines(new File(new File(getFilesDir(), "OMugen"), "last-run.log"), 4000);
+        if (lines.isEmpty()) {
+            Toast.makeText(this, "No log yet: it is written while a game runs.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        StringBuilder b = new StringBuilder("OMugen log\n").append(aboutApp()).append('\n');
+        for (String l : lines) {
+            b.append(l).append('\n');
+        }
+        shareText("OMugen log", b.toString());
+    }
+
+    /** Sends text with an app of your choice (messages, mail, Drive...). */
+    private void shareText(String subject, String text) {
+        // Binder transactions are limited: the start and end are what matter.
+        if (text.length() > 90000) {
+            text = text.substring(0, 45000) + "\n...\n" + text.substring(text.length() - 45000);
+        }
+        Intent send = new Intent(Intent.ACTION_SEND);
+        send.setType("text/plain");
+        send.putExtra(Intent.EXTRA_SUBJECT, subject);
+        send.putExtra(Intent.EXTRA_TEXT, text);
+        try {
+            startActivity(Intent.createChooser(send, "Share the " + subject));
+        } catch (Exception ignored) {
+        }
+    }
+
+    /** The app's version and the phone, for reports. */
+    private String aboutApp() {
+        return "App: " + appVersion() + "\nDevice: " + Build.MANUFACTURER + " " + Build.MODEL + " (" + Build.DEVICE
+                + "), Android " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")\n";
     }
 
     @SuppressWarnings("deprecation")

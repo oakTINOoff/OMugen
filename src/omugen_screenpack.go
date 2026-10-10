@@ -231,8 +231,13 @@ func omugenMotifFallback(failed error) (*Motif, error) {
 	}
 	// The engine's old default (not shipped) is replaced quietly.
 	if !strings.EqualFold(mugenSlash(omugenUI.gameDef), legacyDefaultMotif) {
-		omugenUI.notice = fmt.Sprintf("The screenpack %s could not be loaded,\nso OMugen's built-in screenpack is used.\nDetails are in the log.",
-			mugenSlash(omugenUI.gameDef))
+		// The reason on screen too (a phone's log is out of reach).
+		why := strings.TrimSpace(strings.SplitN(failed.Error(), "\n", 2)[0])
+		if len(why) > 90 {
+			why = why[:87] + "..."
+		}
+		omugenUI.notice = fmt.Sprintf("The screenpack %s could not be loaded\n(%s),\nso OMugen's built-in screenpack is used.",
+			mugenSlash(omugenUI.gameDef), why)
 	}
 	return m, nil
 }

@@ -91,8 +91,10 @@ func TestMugenStandardLayoutForForeignCodes(t *testing.T) {
 	pt := newPadLayoutTest(t) // tests run outside a game folder: no layout of yours
 	pt.start(padLayoutForeign)
 	codes := mugenPlayerCodes(0)
-	if len(codes) != mugenStandardSlots || codes[0] != 13 || codes[4] != 18 || codes[10] != 21 || codes[ikemenMenuSlot] != 26 {
-		t.Fatalf("P1 codes = %v, want the standard layout (D-pad 13-16, a = Cross 18, start = L1 21, menu = Options 26)", codes)
+	if len(codes) != mugenStandardSlots || codes[0] != 1 || codes[4] != 17 || codes[7] != 18 || codes[10] != 21 ||
+		codes[ikemenMenuSlot] != 26 || codes[ikemenMenuSlot+1] != 13 {
+		t.Fatalf("P1 codes = %v, want the standard layout (stick 1-4, a = Square 17, x = Cross 18, start = L1 21, "+
+			"menu = Options 26, D-pad 13-16)", codes)
 	}
 	if replaced, yours := mugenReplacedLayout(0); !replaced || yours {
 		t.Errorf("replaced %v yours %v, want the standard layout recorded", replaced, yours)
@@ -106,8 +108,11 @@ func TestMugenStandardLayoutForForeignCodes(t *testing.T) {
 	if st := pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Axes[0] = -30000 })); !st[2] {
 		t.Errorf("left stick left isn't left: %v", st)
 	}
-	if st := pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 1 })); !st[4] {
-		t.Errorf("Cross isn't a: %v", st)
+	if st := pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 0 })); !st[4] {
+		t.Errorf("Square isn't a: %v", st)
+	}
+	if st := pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 1 })); !st[7] {
+		t.Errorf("Cross isn't x: %v", st)
 	}
 
 	// A layout that suits the pad is used as it is.
@@ -187,13 +192,13 @@ func TestMugenYourLayoutKeptLater(t *testing.T) {
 	if codes := mugenPlayerCodes(0); len(codes) != mugenStandardSlots {
 		t.Fatalf("P1 codes = %v, want the standard layout (nothing kept yet)", codes)
 	}
-	os.WriteFile(mugenYourLayouts.path, []byte("[PlayStation]\njump = 1\ncrouch = 2\nleft = 3\nright = 4\n"+
-		"a = 17\nb = 20\nc = 19\nx = 18\ny = 22\nz = 24\nstart = 21\nmenu = 26\n"), 0o644)
+	os.WriteFile(mugenYourLayouts.path, []byte("[PlayStation]\njump = 13\ncrouch = 14\nleft = 15\nright = 16\n"+
+		"a = 18\nb = 19\nc = 24\nx = 17\ny = 20\nz = 22\nstart = 21\nmenu = 26\n"), 0o644)
 
 	mugenResetPads() // Options > Input > Reassign Controllers
 	pt.feed(pt.with(func(s *mugenjoy.Snapshot) { s.Buttons = 1 << 1 }))
 	pt.feed(pt.rest)
-	if codes := mugenPlayerCodes(0); len(codes) < 14 || codes[0] != 1 || codes[4] != 17 {
+	if codes := mugenPlayerCodes(0); len(codes) < 14 || codes[0] != 13 || codes[4] != 18 {
 		t.Errorf("P1 codes = %v, want the layout kept meanwhile", codes)
 	}
 }

@@ -81,7 +81,9 @@ Files in the game folder always win over OMugen's built-in copies.
   they were set up on; on another kind they can land on its triggers (a menu that scrolls
   by itself). Then OMugen uses your own layout for that kind of controller: the first one
   you played with, or the last one saved in Options (kept in
-  `%LOCALAPPDATA%\OMugen\pad-layouts.ini`), or else a standard layout.
+  `%LOCALAPPDATA%\OMugen\pad-layouts.ini`), or else the standard layout: left stick and
+  D-pad to move, A B C on Square Triangle Circle, X Y Z on Cross R1 R2, MUGEN's Start
+  (energy charge in many games) on L1, the pause menu on Options (Xbox pads by position).
 - **Controller indicator:** P1-P4 tags in the corner show who has a controller, a notice
   appears when one joins, and the highlighted menu item shows who is selecting.
 - **Screenpack, resolution, window and fullscreen** come from `mugen.cfg`; changes made in

@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 
-	findfont "github.com/flopp/go-findfont"
 	"github.com/sqweek/dialog"
 )
 
@@ -37,17 +36,8 @@ func ShowErrorDialog(message string) {
 
 // TTF font loading
 func LoadFntTtf(f *Fnt, fontfile string, filename string, height int32) {
-	// Search in local directory
-	fileDir := SearchFile(filename, []string{fontfile, sys.motif.Def, "", "data/"}, "font/")
-	// Search in system directory
-	fp := fileDir
-	if fp = FileExist(fp); len(fp) == 0 {
-		var err error
-		fileDir, err = findfont.Find(fileDir)
-		if err != nil {
-			panic(fmt.Errorf("failed to find ttf font %v: %w", fileDir, err))
-		}
-	}
+	// The game's folders, then the system's fonts, then OMugen's own.
+	fileDir := omugenTtfPath(fontfile, filename)
 	// Load ttf
 	if height == -1 {
 		height = int32(f.Size[1])

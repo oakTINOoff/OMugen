@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -84,12 +85,37 @@ func sdlPadIsPS(c *sdl.GameController) bool {
 	return c.Vendor() == 0x054C
 }
 
-func (sdlJoyBackend) Enumerate() []mugenjoy.DeviceInfo {
-	var out []mugenjoy.DeviceInfo
+// androidTouchPadVendor/Product identify the app's on-screen controller
+// (android/, TouchPadView).
+const androidTouchPadVendor, androidTouchPadProduct = 0x054C, 0x4F4D
+
+// sdlMugenPads are the game controllers MUGEN-style input uses, in order. A
+// phone lists some of its own keys and sensors (fingerprint reader, volume
+// keys) as controllers without face buttons: those are left out, and the
+// on-screen controller comes first, so it is controller A (player 1's).
+func sdlMugenPads() []*sdl.GameController {
+	var first, rest []*sdl.GameController
 	for _, c := range input.controllers {
 		if c == nil || !c.Attached() || c.Joystick() == nil {
 			continue
 		}
+		if runtime.GOOS == "android" {
+			if !c.HasButton(sdl.CONTROLLER_BUTTON_A) || !c.HasButton(sdl.CONTROLLER_BUTTON_B) {
+				continue
+			}
+			if c.Vendor() == androidTouchPadVendor && c.Product() == androidTouchPadProduct {
+				first = append(first, c)
+				continue
+			}
+		}
+		rest = append(rest, c)
+	}
+	return append(first, rest...)
+}
+
+func (sdlJoyBackend) Enumerate() []mugenjoy.DeviceInfo {
+	var out []mugenjoy.DeviceInfo
+	for _, c := range sdlMugenPads() {
 		layout := mugenXboxLayout
 		if sdlPadIsPS(c) {
 			layout = mugenDS4Layout

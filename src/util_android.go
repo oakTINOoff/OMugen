@@ -57,7 +57,6 @@ import (
 	"time"
 	"unsafe"
 
-	findfont "github.com/flopp/go-findfont"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -121,29 +120,9 @@ func NewLogWriter() io.Writer {
 
 // TTF font loading
 func LoadFntTtf(f *Fnt, fontfile string, filename string, height int32) {
-	// 1. Path resolution
-	// Android paths are tricky.
-	// Attempt to find the file using the engine's SearchFile utility
-	fileDir := SearchFile(filename, []string{fontfile, sys.motif.Def, "", "data/"}, "font/")
-
-	// 2. Android Path Correction
-	// If the path isn't absolute and doesn't exist, anchor it to the SDL storage path
-	if !filepath.IsAbs(fileDir) && FileExist(fileDir) == "" {
-		fullPath := filepath.Join(getAndroidFilesDir(), fileDir)
-
-		if FileExist(fullPath) != "" {
-			fileDir = fullPath
-		}
-	}
-
-	// Fallback to findfont if still not found
-	if FileExist(fileDir) == "" {
-		if found, err := findfont.Find(fileDir); err == nil {
-			fileDir = found
-		} else {
-			Logcat(fmt.Sprintf("Font search failed for %s, trying direct path...", filename))
-		}
-	}
+	// 1. The game's folders, then OMugen's own font (phones have no Windows
+	// fonts such as Arial, which games often name without shipping it).
+	fileDir := omugenTtfPath(fontfile, filename)
 
 	// 2. Set dimensions
 	if height == -1 {
