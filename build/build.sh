@@ -904,6 +904,13 @@ function build_android_apk() {
 	( cd "$ANDROID_APP_DIR" && "${GRADLE:-gradle}" --no-daemon --stacktrace assembleRelease ) || exit 1
 	mkdir -p "$(dirname "$ANDROID_APK_OUT")"
 	cp -av "$ANDROID_APP_DIR/app/build/outputs/apk/release/app-release.apk" "$ANDROID_APK_OUT"
+	# Which key signed it (the release key's fingerprint is in its README).
+	local apksigner
+	apksigner="$(ls -d "$ANDROID_SDK_ROOT"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)"
+	if [[ -n "$apksigner" ]]; then
+		echo "==> APK signer:"
+		"$apksigner" verify --print-certs "$ANDROID_APK_OUT" | grep -E "certificate (DN|SHA-256)" || true
+	fi
 	echo "==> APK ready: $ANDROID_APK_OUT"
 }
 
