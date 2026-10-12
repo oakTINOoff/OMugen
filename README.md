@@ -72,7 +72,10 @@ Files in the game folder always win over OMugen's built-in copies.
    (Android asks you to allow installing apps from your browser or file manager once).
    Android 8 or newer, on 64-bit phones with OpenGL ES 3.2 (most phones since 2017).
 2. Copy your MUGEN game folder (the one with `data`, `chars` and `stages`) into a folder
-   named `OMugen` in your phone's internal storage.
+   named `OMugen` in your phone's internal storage. Too big for the phone? Leave it on a USB
+   drive or SD card (Android 11+): OMugen finds games in an `OMugen` folder there or at the
+   top of the drive, and **Add a game folder** picks any other folder. Games are played
+   where they are, nothing is copied.
 3. Open OMugen, tap **Allow file access**, then your game.
 
 The settings under the game list choose the on-screen controller (a DualShock 4 drawn over

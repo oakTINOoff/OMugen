@@ -2,7 +2,10 @@ package io.github.oaktinooff.omugen;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
@@ -37,10 +40,11 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * OMugen on Android: a game picker over SDL's activity. The engine
@@ -48,7 +52,8 @@ import java.util.Locale;
  * options; the on-screen controller (TouchPadView) is added once the engine
  * reads controllers.
  *
- * Games are MUGEN folders (data, chars, stages) in Internal storage/OMugen.
+ * Games are MUGEN folders (data, chars, stages): in Internal storage/OMugen,
+ * on USB drives and SD cards, or in folders the player added (GameLibrary).
  */
 public class OMugenActivity extends SDLActivity {
     private static final String PREFS = "OMugen";
@@ -63,9 +68,23 @@ public class OMugenActivity extends SDLActivity {
     private static native void nativeOnSDLReady(String gameDir, String filesDir, String cacheDir, String args);
 
     private SharedPreferences prefs, runPrefs;
+    private GameLibrary library;
     private View picker;
+    private LinearLayout gameList; // filled when the scan finishes
+    private int scans;             // the latest scan; older ones are dropped
     private TouchPadView touchPad;
     private boolean started;
+
+    // A drive plugged in or out: look for games again.
+    private final BroadcastReceiver drives = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (!started && picker != null) {
+                showPicker();
+            }
+        }
+    };
+    private boolean drivesWatched;
 
     @Override
     protected String[] getLibraries() {
@@ -77,6 +96,7 @@ public class OMugenActivity extends SDLActivity {
         super.onCreate(savedInstanceState);
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         runPrefs = getSharedPreferences(RUN_PREFS, MODE_PRIVATE);
+        library = new GameLibrary(this);
         prefs.edit().remove("running").remove("runningPid").remove("runningSince").apply(); // v0.1.3 kept them here
         showPicker();
         checkLastRun();
@@ -100,6 +120,35 @@ public class OMugenActivity extends SDLActivity {
         if (!started && picker != null) {
             showPicker(); // back from the file access settings
         }
+        if (!started && !drivesWatched) {
+            IntentFilter f = new IntentFilter();
+            f.addAction(Intent.ACTION_MEDIA_MOUNTED);
+            f.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
+            f.addAction(Intent.ACTION_MEDIA_REMOVED);
+            f.addAction(Intent.ACTION_MEDIA_EJECT);
+            f.addDataScheme("file");
+            try {
+                if (Build.VERSION.SDK_INT >= 33) {
+                    registerReceiver(drives, f, Context.RECEIVER_NOT_EXPORTED);
+                } else {
+                    registerReceiver(drives, f);
+                }
+                drivesWatched = true;
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        if (drivesWatched) {
+            try {
+                unregisterReceiver(drives);
+            } catch (Exception ignored) {
+            }
+            drivesWatched = false;
+        }
+        super.onPause();
     }
 
     @Override
@@ -171,36 +220,38 @@ public class OMugenActivity extends SDLActivity {
                 }
             }));
         } else {
-            File root = gamesFolder();
-            if (!root.isDirectory()) {
-                root.mkdirs();
-            }
-            List<File> games = findGames(root);
             col.addView(text("Your games", 20, true));
-            if (games.isEmpty()) {
-                col.addView(text("No games yet. Copy a MUGEN game folder (the one with data, chars and stages inside) "
-                        + "into the OMugen folder of your phone's internal storage, then tap Refresh.", 15, false));
-            }
-            String last = prefs.getString("last", "");
-            for (final File game : games) {
-                String name = game.getName();
-                if (game.getAbsolutePath().equals(last)) {
-                    name = "▶  " + name;
-                }
-                col.addView(button(name, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        startGame(game);
-                    }
-                }));
-            }
+            gameList = new LinearLayout(this);
+            gameList.setOrientation(LinearLayout.VERTICAL);
+            gameList.addView(text("Looking for games...", 15, false));
+            col.addView(gameList);
+            scanGames();
             col.addView(button("Refresh", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     showPicker();
                 }
             }));
-            col.addView(text("Folder: Internal storage/OMugen", 13, false));
+            col.addView(button("Add a game folder (USB drive, SD card...)", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    browse(null);
+                }
+            }));
+            for (final String folder : addedFolders()) {
+                col.addView(button("✕  " + folder, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        confirmRemoveFolder(folder);
+                    }
+                }));
+            }
+            String where = "Games go in the OMugen folder of your phone's storage or of a USB drive or SD card, "
+                    + "at the top of a drive, or in a folder you add. They're played where they are.";
+            if (!GameLibrary.drivesSupported()) {
+                where += " Games on USB drives and SD cards need Android 11 or newer.";
+            }
+            col.addView(text(where, 13, false));
         }
 
         col.addView(text("Settings", 20, true));
@@ -244,6 +295,13 @@ public class OMugenActivity extends SDLActivity {
 
     private void startGame(File game) {
         started = true;
+        if (drivesWatched) {
+            try {
+                unregisterReceiver(drives);
+            } catch (Exception ignored) {
+            }
+            drivesWatched = false;
+        }
         // "running" stays until the game is quit from its menu: if it is still
         // there next time, OMugen looks for what went wrong (checkLastRun).
         prefs.edit().putString("last", game.getAbsolutePath()).apply();
@@ -290,40 +348,123 @@ public class OMugenActivity extends SDLActivity {
         }
     }
 
-    /** Folders of the OMugen folder that hold a MUGEN game (a data folder). */
-    private static List<File> findGames(File root) {
-        List<File> games = new ArrayList<>();
-        if (isGame(root)) {
-            games.add(root);
-        }
-        File[] dirs = root.listFiles();
-        if (dirs != null) {
-            Arrays.sort(dirs);
-            for (File d : dirs) {
-                if (d.isDirectory() && isGame(d)) {
-                    games.add(d);
-                }
+    // ------------------------------------------------------------- game list
+
+    /** Looks for games off the UI thread (drives can be slow), then lists them. */
+    private void scanGames() {
+        final int scan = ++scans;
+        final List<String> added = addedFolders();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final List<GameLibrary.Game> games = library.scan(added);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (scan == scans && !started) {
+                            listGames(games);
+                        }
+                    }
+                });
             }
-        }
-        return games;
+        }).start();
     }
 
-    private static boolean isGame(File dir) {
-        String[] names = dir.list();
-        if (names == null) {
-            return false;
+    private void listGames(List<GameLibrary.Game> games) {
+        if (gameList == null) {
+            return;
         }
-        for (String n : names) {
-            if (n.equalsIgnoreCase("data") && new File(dir, n).isDirectory()) {
+        gameList.removeAllViews();
+        if (games.isEmpty()) {
+            gameList.addView(text("No games yet. Copy a MUGEN game folder (the one with data, chars and stages inside) "
+                    + "into the OMugen folder of your phone's storage, or plug in the drive that has your games, "
+                    + "then tap Refresh.", 15, false));
+        }
+        String last = prefs.getString("last", "");
+        for (final GameLibrary.Game game : games) {
+            String name = game.dir.getName();
+            if (!game.where.equals("Phone")) {
+                name += "   ·  " + game.where;
+            }
+            if (game.dir.getAbsolutePath().equals(last)) {
+                name = "▶  " + name;
+            }
+            gameList.addView(button(name, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startGame(game.dir);
+                }
+            }));
+        }
+    }
+
+    private List<String> addedFolders() {
+        List<String> l = new ArrayList<>(prefs.getStringSet("folders", new HashSet<String>()));
+        l.sort(String.CASE_INSENSITIVE_ORDER);
+        return l;
+    }
+
+    private void setAddedFolders(Set<String> folders) {
+        prefs.edit().putStringSet("folders", folders).apply();
+        showPicker();
+    }
+
+    /**
+     * A folder browser over the phone's storage and the drives (dir null: the
+     * list of them). "Use this folder" adds a game, or a folder of games.
+     */
+    private void browse(final File dir) {
+        final List<File> dirs = new ArrayList<>();
+        final List<String> names = new ArrayList<>();
+        String title;
+        if (dir == null) {
+            for (GameLibrary.Place p : library.places()) {
+                dirs.add(p.dir);
+                names.add(p.name);
+            }
+            title = "Choose a folder";
+        } else {
+            for (File d : GameLibrary.subFolders(dir)) {
+                dirs.add(d);
+                names.add(GameLibrary.isGame(d) ? d.getName() + "   (a game)" : d.getName());
+            }
+            title = dir.getAbsolutePath() + (GameLibrary.isGame(dir) ? "   (a game)" : "");
+        }
+        AlertDialog.Builder b = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setItems(names.toArray(new String[0]), (d, which) -> browse(dirs.get(which)))
+                .setNegativeButton("Cancel", null);
+        if (dir != null) {
+            b.setPositiveButton("Use this folder", (d, w) -> {
+                Set<String> folders = new HashSet<>(addedFolders());
+                folders.add(dir.getAbsolutePath());
+                setAddedFolders(folders);
+            });
+            b.setNeutralButton("Up", (d, w) -> browse(isPlace(dir) ? null : dir.getParentFile()));
+        }
+        b.show();
+    }
+
+    private boolean isPlace(File dir) {
+        for (GameLibrary.Place p : library.places()) {
+            if (p.dir.getAbsolutePath().equals(dir.getAbsolutePath())) {
                 return true;
             }
         }
-        return false;
+        return dir.getParentFile() == null;
     }
 
-    @SuppressWarnings("deprecation")
-    private static File gamesFolder() {
-        return new File(Environment.getExternalStorageDirectory(), "OMugen");
+    private void confirmRemoveFolder(final String folder) {
+        new AlertDialog.Builder(this)
+                .setTitle("Remove this folder from the list?")
+                .setMessage(folder + "\n\nNothing is deleted: its games just aren't listed anymore.")
+                .setPositiveButton("Remove", (d, w) -> {
+                    Set<String> folders = new HashSet<>(addedFolders());
+                    folders.remove(folder);
+                    setAddedFolders(folders);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private boolean hasFileAccess() {
@@ -503,7 +644,7 @@ public class OMugenActivity extends SDLActivity {
     }
 
     private File saveReport(String report) {
-        File f = new File(gamesFolder(), "OMugen-error-report.txt");
+        File f = new File(GameLibrary.phoneFolder(), "OMugen-error-report.txt");
         try (Writer w = new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)) {
             w.write(report);
             return f;

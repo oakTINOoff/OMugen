@@ -117,7 +117,8 @@ downloads). `BUILD_ANDROID_APK=0` stops before the APK; `./build/build.sh Androi
 makes just the APK (CI does that in a step of its own, the only one that gets the signing
 key).
 
-- `android/` is OMugen's app: a game picker (MUGEN folders in Internal storage/OMugen), the
+- `android/` is OMugen's app: a game picker (MUGEN folders in Internal storage/OMugen, on USB
+  drives and SD cards, or in added folders: `GameLibrary`), the
   settings (on-screen controller or Bluetooth controllers, frame rate) and the on-screen
   DualShock 4 (`TouchPadView`). SDL's own Java files are copied in from SDL's source at
   build time.
