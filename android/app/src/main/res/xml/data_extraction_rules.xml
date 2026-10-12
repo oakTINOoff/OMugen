@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ backups and device transfers (android:dataExtractionRules). -->
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- The engine's files (unpacked from the app on its first start) and
+             the last game's log and state: backups keep your pad layouts and
+             settings, and stay under Android's size limit. -->
+        <exclude domain="file" path="OMugen/engine/" />
+        <exclude domain="file" path="OMugen/last-run.log" />
+        <exclude domain="sharedpref" path="OMugenRun.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <!-- The engine's files (unpacked from the app on its first start) and
+             the last game's log and state: backups keep your pad layouts and
+             settings, and stay under Android's size limit. -->
+        <exclude domain="file" path="OMugen/engine/" />
+        <exclude domain="file" path="OMugen/last-run.log" />
+        <exclude domain="sharedpref" path="OMugenRun.xml" />
+    </device-transfer>
+</data-extraction-rules>

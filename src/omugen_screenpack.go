@@ -233,14 +233,33 @@ func omugenMotifFallback(failed error) (*Motif, error) {
 	// The engine's old default (not shipped) is replaced quietly.
 	if !strings.EqualFold(mugenSlash(omugenUI.gameDef), legacyDefaultMotif) {
 		// The reason on screen too (a phone's log is out of reach).
-		why := strings.TrimSpace(strings.SplitN(failed.Error(), "\n", 2)[0])
-		if len(why) > 90 {
-			why = why[:87] + "..."
-		}
+		why := omugenFailureReason(failed)
 		omugenUI.notice = fmt.Sprintf("The screenpack %s could not be loaded\n(%s),\nso OMugen's built-in screenpack is used.",
 			mugenSlash(omugenUI.gameDef), why)
 	}
 	return m, nil
+}
+
+// omugenFailureReason is the most telling line of a loading error, for the
+// screen: errors often start with the file's name alone ("data/system.def:").
+func omugenFailureReason(err error) string {
+	why := ""
+	for _, l := range strings.Split(err.Error(), "\n") {
+		l = strings.TrimSpace(l)
+		if strings.HasPrefix(l, "stack traceback") || strings.HasPrefix(l, "goroutine ") {
+			break
+		}
+		if l != "" && !strings.HasSuffix(l, ":") {
+			why = l
+		}
+	}
+	if why == "" {
+		why = strings.TrimSpace(err.Error())
+	}
+	if r := []rune(why); len(r) > 90 {
+		why = string(r[:87]) + "..."
+	}
+	return why
 }
 
 // legacyDefaultMotif is the default screenpack of config files written

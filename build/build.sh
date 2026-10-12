@@ -368,9 +368,15 @@ function main() {
 			varAndroid
 			build
 		;;
+		[aA][nN][dD][rR][oO][iI][dD][aA][pP][kK])
+			# Only the APK, after an Android build with BUILD_ANDROID_APK=0
+			# (CI signs it in a step of its own, the only one with the key).
+			varAndroid
+			build_android_apk
+		;;
 		*)
 			echo "Unknown target: ${targetOS}"
-			echo "Valid targets: Win64 Win32 MacOS MacOSARM Linux LinuxARM"
+			echo "Valid targets: Win64 Win32 MacOS MacOSARM Linux LinuxARM Android AndroidApk"
 			exit 1
 		;;
 	esac
@@ -683,7 +689,7 @@ function build_libxmp_android() {
 		return 0
 	fi
 	echo "==> Building LibXMP for Android..."
-	[[ -d "$src" ]] || git clone https://github.com/libxmp/libxmp.git "$src"
+	[[ -d "$src" ]] || git clone --depth=1 -b "${LIBXMP_REV:-libxmp-4.7.4}" https://github.com/libxmp/libxmp.git "$src"
 	
 	mkdir -p "$src/build-android"
 	pushd "$src/build-android" >/dev/null
@@ -818,7 +824,7 @@ function patch_go_sdl2_android() {
 			echo "ERROR: Cannot patch go-sdl2; directory is not writable:" >&2
 			echo "  $d" >&2
 			echo "If you want to use vendor/, run 'go mod vendor' and re-run the build." >&2
-			echo "Otherwise, fix module cache perms (or build via Docker ./build/build_android.sh)." >&2
+			echo "Otherwise, fix the module cache's permissions." >&2
 			exit 1
 		fi
 

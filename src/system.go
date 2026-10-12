@@ -544,8 +544,13 @@ func (s *System) shutdown() {
 	if sys.rollback.session != nil && sys.rollback.session.recording != nil {
 		sys.rollback.session.SaveReplay()
 	}
-	gfx.Close()
-	s.window.Close()
+	// Also after an error before the renderer or the window existed.
+	if gfx != nil {
+		gfx.Close()
+	}
+	if s.window != nil {
+		s.window.Close()
+	}
 	if speaker != nil {
 		speaker.Close()
 	}

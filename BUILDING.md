@@ -87,17 +87,21 @@ presses and saves screenshots to `save/shots` (see `src/omugen_inputscript.go`).
 
 ## GitHub Actions
 
-`.github/workflows/builds.yml` builds Windows and Linux and runs the tests on Linux.
+`.github/workflows/builds.yml` builds Windows, Linux and Android and runs the tests on
+Linux.
 
 - Push a version tag to publish a Release (notes from `docs/releases/<tag>.md`) with
-  `OMugen-<version>-windows.zip`, `OMugen-<version>-linux.tar.gz` and checksums:
-  `git tag v0.1.0 && git push origin v0.1.0`
+  `OMugen-<version>-windows.zip`, `OMugen-<version>-linux.tar.gz`,
+  `OMugen-<version>-android.apk` and checksums: `git tag v0.1.0 && git push origin v0.1.0`.
+  The Release waits for all three builds: a failed one publishes nothing.
 - Push the `ci` branch (`git push -f origin main:ci`), or start the workflow by hand
   (Actions > builds > Run workflow), for test builds kept a week on the run's page.
-- Each build also pushes its log and step results to `refs/ci-logs/<windows|linux>`,
-  readable without a browser:
+- Each build also pushes its log and step results to
+  `refs/ci-logs/<windows|linux|android|release>`, readable without a browser:
   `git fetch origin "+refs/ci-logs/*:refs/ci-logs/*"` then
   `git show ci-logs/linux:STATUS` (also `omugen_build.log`, `omugen_test.log`).
+- Gradle fetches its own parts from Maven Central and Google; when one of them is down the
+  Android build fails with "Could not find" for well-known packages. Run it again later.
 
 It doesn't run on every push to `main`, to save Actions minutes.
 
@@ -105,9 +109,13 @@ It doesn't run on every push to `main`, to save Actions minutes.
 
 `./build/omugen_build.sh Android` builds the engine as `libmain.so` (arm64, Android 8+) with
 its files embedded, the libraries it needs (SDL2, FFmpeg, libvpx, libxmp) and the app in
-`android/`, and writes `bin/OMugen.apk`. It needs the Android NDK (`ANDROID_NDK_HOME`), the
-Android SDK (`ANDROID_SDK_ROOT`), JDK 17 and Gradle 8 on the PATH. GitHub Actions has all of
-these, so the simplest way is the `android` job of `builds.yml` (the APK is in its downloads).
+`android/`, and writes `bin/OMugen.apk`. It runs on a Linux or macOS host (on Windows: WSL)
+and needs the Android NDK (`ANDROID_NDK_HOME`), the Android SDK (`ANDROID_SDK_ROOT`),
+JDK 17 and Gradle 8.7 or newer on the PATH (CI uses 8.10.2). GitHub Actions has all of
+these, so the simplest way is the `android` job of `builds.yml` (the APK is in its
+downloads). `BUILD_ANDROID_APK=0` stops before the APK; `./build/build.sh AndroidApk` then
+makes just the APK (CI does that in a step of its own, the only one that gets the signing
+key).
 
 - `android/` is OMugen's app: a game picker (MUGEN folders in Internal storage/OMugen), the
   settings (on-screen controller or Bluetooth controllers, frame rate) and the on-screen
@@ -116,8 +124,9 @@ these, so the simplest way is the `android` job of `builds.yml` (the APK is in i
 - `android/omugen-test.p12` signs the APK, always with the same key, so a new APK installs
   over the old one. With the repository secrets `OMUGEN_KEYSTORE_BASE64` (a PKCS12 key
   store in base64) and `OMUGEN_KEYSTORE_PASSWORD` (optional: `OMUGEN_KEY_ALIAS`,
-  `OMUGEN_KEY_PASSWORD`), CI signs with that release key instead; switching keys means
-  uninstalling the old app once.
+  `OMUGEN_KEY_PASSWORD`; the key's alias defaults to `omugen`), CI signs with that release
+  key instead. Switching keys means uninstalling the old app once (Android refuses an
+  update signed with another key), which also clears the app's settings.
 - Errors: the engine shows its error messages as Android dialogs and writes this run's log
   (with Go's own crash reports) to `last-run.log` in the app's storage. When a game closed
   without being quit from its menu, the app shows what went wrong on its next start

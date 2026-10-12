@@ -215,9 +215,12 @@ public class TouchPadView extends View {
                     if (t == DPAD) {
                         dirs.put(id, direction(e.getX(i), e.getY(i)));
                     } else {
-                        int n = hit(e.getX(i), e.getY(i)); // slide to another button, or off
-                        if (n != DPAD) {
-                            targets.put(id, n);
+                        // Slide to another button, off, or onto the D-pad (the
+                        // finger then steers it).
+                        int n = hit(e.getX(i), e.getY(i));
+                        targets.put(id, n);
+                        if (n == DPAD) {
+                            dirs.put(id, direction(e.getX(i), e.getY(i)));
                         }
                     }
                 }

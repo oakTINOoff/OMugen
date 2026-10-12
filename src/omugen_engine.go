@@ -18,7 +18,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"time"
 )
 
 // engineZipData is the embedded engine pack (nil in development builds, which
@@ -42,6 +44,7 @@ func prepareEngineDir() {
 	marker := filepath.Join(dir, ".complete")
 	if _, err := os.Stat(marker); err == nil {
 		engineDir = dir
+		pruneEngineDirs(dir)
 		return
 	}
 	tmp := fmt.Sprintf("%s.tmp%d", dir, os.Getpid())
@@ -65,6 +68,43 @@ func prepareEngineDir() {
 		}
 	}
 	engineDir = dir
+	pruneEngineDirs(dir)
+}
+
+// pruneEngineDirs removes the engine files of other OMugen versions, which
+// would pile up with every update (about 20 MB each). keep is marked as used.
+// On Android one engine runs per app, so every other copy goes. Elsewhere
+// another version may be running from another game folder: only copies
+// unused for a month go, and half-unpacked ones (a crash while unpacking)
+// after a day.
+func pruneEngineDirs(keep string) {
+	now := time.Now()
+	_ = os.Chtimes(filepath.Join(keep, ".complete"), now, now)
+	root := filepath.Dir(keep)
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return
+	}
+	for _, e := range entries {
+		p := filepath.Join(root, e.Name())
+		if !e.IsDir() || p == keep {
+			continue
+		}
+		if runtime.GOOS != "android" {
+			maxAge := 30 * 24 * time.Hour
+			info, err := os.Stat(filepath.Join(p, ".complete"))
+			if err != nil {
+				maxAge = 24 * time.Hour // half-unpacked
+				info, err = os.Stat(p)
+			}
+			if err != nil || now.Sub(info.ModTime()) < maxAge {
+				continue
+			}
+		}
+		if err := os.RemoveAll(p); err == nil {
+			LogMessage("OMugen: removed old engine files %s", p)
+		}
+	}
 }
 
 // engineCacheRoot is the per-user folder for OMugen's extracted engine files.

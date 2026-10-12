@@ -15,6 +15,7 @@ import android.provider.Settings;
 import android.util.TypedValue;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -51,6 +52,8 @@ import java.util.Locale;
  */
 public class OMugenActivity extends SDLActivity {
     private static final String PREFS = "OMugen";
+    // The game being played, kept apart so phone backups leave it out (res/xml).
+    private static final String RUN_PREFS = "OMugenRun";
     private static final int[] FRAME_RATES = { 60, 90, 120, 144 };
 
     /**
@@ -59,7 +62,7 @@ public class OMugenActivity extends SDLActivity {
      */
     private static native void nativeOnSDLReady(String gameDir, String filesDir, String cacheDir, String args);
 
-    private SharedPreferences prefs;
+    private SharedPreferences prefs, runPrefs;
     private View picker;
     private TouchPadView touchPad;
     private boolean started;
@@ -73,8 +76,22 @@ public class OMugenActivity extends SDLActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        runPrefs = getSharedPreferences(RUN_PREFS, MODE_PRIVATE);
+        prefs.edit().remove("running").remove("runningPid").remove("runningSince").apply(); // v0.1.3 kept them here
         showPicker();
         checkLastRun();
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        // Back on the game list closes the app (SDL's view would swallow it).
+        if (!started && event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+            if (event.getAction() == KeyEvent.ACTION_UP) {
+                finish();
+            }
+            return true;
+        }
+        return super.dispatchKeyEvent(event);
     }
 
     @Override
@@ -88,8 +105,19 @@ public class OMugenActivity extends SDLActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (!started) {
-            showPicker();
+        if (started) {
+            return;
+        }
+        showPicker();
+        // After "Don't ask again" (Android 8-10) only the app's settings can grant it.
+        if (requestCode == 1 && !hasFileAccess()
+                && !shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            Toast.makeText(this, "Allow Storage in OMugen's permissions, then come back.", Toast.LENGTH_LONG).show();
+            try {
+                startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:" + getPackageName())));
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -105,7 +133,7 @@ public class OMugenActivity extends SDLActivity {
 
     /** Called by the engine when the game is quit from its menu. */
     public void onEngineExit() {
-        prefs.edit().remove("running").commit();
+        runPrefs.edit().clear().commit();
     }
 
     /** Called by the engine once it reads controllers. */
@@ -218,8 +246,8 @@ public class OMugenActivity extends SDLActivity {
         started = true;
         // "running" stays until the game is quit from its menu: if it is still
         // there next time, OMugen looks for what went wrong (checkLastRun).
-        prefs.edit().putString("last", game.getAbsolutePath())
-                .putString("running", game.getAbsolutePath())
+        prefs.edit().putString("last", game.getAbsolutePath()).apply();
+        runPrefs.edit().putString("running", game.getAbsolutePath())
                 .putInt("runningPid", android.os.Process.myPid())
                 .putLong("runningSince", System.currentTimeMillis())
                 .commit();
@@ -234,7 +262,7 @@ public class OMugenActivity extends SDLActivity {
                     ViewGroup.LayoutParams.MATCH_PARENT));
         }
         nativeOnSDLReady(game.getAbsolutePath(), getFilesDir().getAbsolutePath(),
-                getCacheDir().getAbsolutePath(), "-framerate " + frameRate());
+                getCacheDir().getAbsolutePath(), "-omugenfps " + frameRate());
     }
 
     /** Asks for the screen mode closest to the frame rate (less battery at 60). */
@@ -328,26 +356,26 @@ public class OMugenActivity extends SDLActivity {
      * shows it, saved as OMugen-error-report.txt in the OMugen folder.
      */
     private void checkLastRun() {
-        final String game = prefs.getString("running", null);
+        final String game = runPrefs.getString("running", null);
         if (game == null) {
             return;
         }
-        final int pid = prefs.getInt("runningPid", -1);
-        final long since = prefs.getLong("runningSince", 0);
-        prefs.edit().remove("running").remove("runningPid").remove("runningSince").commit();
+        final int pid = runPrefs.getInt("runningPid", -1);
+        final long since = runPrefs.getLong("runningSince", 0);
+        runPrefs.edit().clear().commit();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 List<String> engineLog = readLines(new File(new File(getFilesDir(), "OMugen"), "last-run.log"), 400);
-                List<String> systemLog = systemLog(pid);
+                List<String> systemLog = systemLog(pid, since);
                 List<String> found = new ArrayList<>();
                 for (String l : engineLog) {
-                    if (isErrorLine(l)) {
+                    if (isEngineError(l)) {
                         found.add(l);
                     }
                 }
                 for (String l : systemLog) {
-                    if (isErrorLine(l)) {
+                    if (isSystemError(l)) {
                         found.add(l);
                     }
                 }
@@ -386,11 +414,42 @@ public class OMugenActivity extends SDLActivity {
         }).start();
     }
 
-    private static boolean isErrorLine(String l) {
-        String s = l.toLowerCase(Locale.ROOT);
-        return s.contains("critical error") || s.contains("panic") || s.contains("fatal")
-                || s.contains("sigsegv") || s.contains("sigabrt") || s.contains("application error")
-                || s.contains("engine error") || s.contains("unsatisfiedlinkerror");
+    // How the engine's log starts the lines that report an error: its own
+    // messages (util_android.go, main.go handlePanic) and Go's crash reports.
+    private static final String[] ENGINE_ERRORS = { "CRITICAL ERROR", "Panic:", "panic:", "fatal error:",
+            "SIGSEGV", "SIGABRT", "SIGBUS", "SIGILL", "unexpected signal" };
+
+    private static boolean isEngineError(String l) {
+        String s = l.trim();
+        for (String m : ENGINE_ERRORS) {
+            if (s.startsWith(m)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * A line of Android's log (threadtime: date time pid tid level tag: message)
+     * that reports an error: fatal ones, Java crashes, the Go runtime's and
+     * native crash reports. Only the level and tag count, so a game named
+     * "Fatal Fury" doesn't look like an error.
+     */
+    private static boolean isSystemError(String l) {
+        String[] f = l.trim().split("\\s+", 6);
+        if (f.length < 6) {
+            return false;
+        }
+        int colon = f[5].indexOf(':');
+        String tag = (colon >= 0 ? f[5].substring(0, colon) : f[5]).trim();
+        switch (f[4]) {
+            case "F":
+                return true;
+            case "E":
+                return tag.equals("AndroidRuntime") || tag.equals("Go") || tag.equals("DEBUG") || tag.equals("libc");
+            default:
+                return false;
+        }
     }
 
     /** The last lines of a text file (none if it is missing). */
@@ -409,19 +468,26 @@ public class OMugenActivity extends SDLActivity {
         return lines;
     }
 
-    /** This app's lines of Android's log from the last run (apps only see their own). */
-    private static List<String> systemLog(int pid) {
+    /**
+     * This app's lines of Android's log since the last game started (apps only
+     * see their own): the game's process, and native crash reports, which come
+     * from Android's crash_dump (tag DEBUG).
+     */
+    private static List<String> systemLog(int pid, long since) {
         List<String> lines = new ArrayList<>();
-        String p = " " + pid + " ";
+        // logcat -t takes a time as epoch seconds (Android 7+), or a line count.
+        String from = since > 0 ? String.format(Locale.ROOT, "%d.%03d", since / 1000, since % 1000) : "5000";
         try {
-            Process proc = new ProcessBuilder("logcat", "-d", "-v", "threadtime", "-t", "5000")
+            Process proc = new ProcessBuilder("logcat", "-d", "-v", "threadtime", "-t", from)
                     .redirectErrorStream(true).start();
+            String pidField = String.valueOf(pid);
             try (BufferedReader r = new BufferedReader(new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
                 String l;
                 while ((l = r.readLine()) != null) {
-                    // threadtime: date time pid tid level tag: message. Native
-                    // crash reports come from Android's crash_dump (tag DEBUG).
-                    if ((pid > 0 && l.contains(p)) || l.contains(" DEBUG ") || l.contains("crash_dump")) {
+                    String[] f = l.trim().split("\\s+", 7);
+                    boolean ours = f.length >= 6 && pid > 0 && f[2].equals(pidField);
+                    boolean crashReport = f.length >= 6 && (f[5].startsWith("DEBUG") || f[5].startsWith("crash_dump"));
+                    if (ours || crashReport) {
                         lines.add(l);
                         if (lines.size() > 1500) {
                             lines.remove(0);
@@ -520,26 +586,34 @@ public class OMugenActivity extends SDLActivity {
     }
 
     private String controlsLabel() {
-        return onScreenController() ? "Controls: on-screen controller" : "Controls: Bluetooth controller only";
+        return onScreenController() ? "Controls: on-screen controller" : "Controls: Bluetooth controllers only";
     }
 
-    /** The frame rates this screen can show (60 always). */
+    /** The frame rates the screen has a mode for at its current resolution (60 always). */
     private List<Integer> frameRates() {
-        float max = 60f;
-        try {
-            Display display = getWindowManager().getDefaultDisplay();
-            for (Display.Mode m : display.getSupportedModes()) {
-                max = Math.max(max, m.getRefreshRate());
-            }
-        } catch (Exception ignored) {
-        }
         List<Integer> rates = new ArrayList<>();
         for (int r : FRAME_RATES) {
-            if (r == 60 || r <= max + 1) {
+            if (r == 60 || hasRefreshRate(r)) {
                 rates.add(r);
             }
         }
         return rates;
+    }
+
+    private boolean hasRefreshRate(int rate) {
+        try {
+            Display display = getWindowManager().getDefaultDisplay();
+            Display.Mode current = display.getMode();
+            for (Display.Mode m : display.getSupportedModes()) {
+                if (m.getPhysicalWidth() == current.getPhysicalWidth()
+                        && m.getPhysicalHeight() == current.getPhysicalHeight()
+                        && Math.abs(m.getRefreshRate() - rate) < 1.5f) {
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return false;
     }
 
     private int frameRate() {

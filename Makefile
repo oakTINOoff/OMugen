@@ -104,9 +104,5 @@ appbundle:
 	cp build/icontmp/icon.icns OMugen.app/Contents/Resources/icon.icns
 	rm -rf build/icontmp
 
-.PHONY: android-apk
-android-apk:
-	bash ./build/build_android.sh
-
 clean_appbundle:
 	rm -rf OMugen.app

@@ -70,7 +70,7 @@ Files in the game folder always win over OMugen's built-in copies.
 
 1. Download `OMugen-<version>-android.apk` from [Releases](../../releases) and install it
    (Android asks you to allow installing apps from your browser or file manager once).
-   Android 8 or newer, 64-bit phones.
+   Android 8 or newer, on 64-bit phones with OpenGL ES 3.2 (most phones since 2017).
 2. Copy your MUGEN game folder (the one with `data`, `chars` and `stages`) into a folder
    named `OMugen` in your phone's internal storage.
 3. Open OMugen, tap **Allow file access**, then your game.
@@ -161,8 +161,8 @@ press; `tools/make_testgame.ps1` builds a zero-copy test folder from a MUGEN gam
 ## Building
 
 See [BUILDING.md](BUILDING.md). In short: on Windows (MSYS2 MINGW64) or Linux, run
-`build/omugen_build.sh` (`Win64` or `Linux`). GitHub Actions builds both; pushing a
-version tag publishes them as a Release.
+`build/omugen_build.sh` (`Win64`, `Linux` or, on Linux, `Android`). GitHub Actions builds
+all three; pushing a version tag publishes them as a Release.
 
 ## Credits
 

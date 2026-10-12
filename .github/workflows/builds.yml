@@ -218,29 +218,15 @@ jobs:
           key: android-deps-v1-${{ hashFiles('build/build.sh') }}
           restore-keys: android-deps-v1-
 
-      # The APK is signed with the release key when the repository has one
-      # (secrets OMUGEN_KEYSTORE_BASE64: a PKCS12 file in base64,
-      # OMUGEN_KEYSTORE_PASSWORD, optional OMUGEN_KEY_ALIAS and
-      # OMUGEN_KEY_PASSWORD), else with android/omugen-test.p12.
+      # The engine and the libraries (third-party code builds here: no
+      # secrets in this step).
       - name: Build
         id: build_android
         shell: bash
-        env:
-          OMUGEN_KEYSTORE_BASE64: ${{ secrets.OMUGEN_KEYSTORE_BASE64 }}
-          OMUGEN_KEYSTORE_PASSWORD: ${{ secrets.OMUGEN_KEYSTORE_PASSWORD }}
-          OMUGEN_KEY_ALIAS: ${{ secrets.OMUGEN_KEY_ALIAS }}
-          OMUGEN_KEY_PASSWORD: ${{ secrets.OMUGEN_KEY_PASSWORD }}
         run: |
           export ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME"
           echo "NDK: $ANDROID_NDK_HOME"
-          if [ -n "$OMUGEN_KEYSTORE_BASE64" ]; then
-            echo "$OMUGEN_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/omugen-release.p12"
-            export OMUGEN_KEYSTORE="$RUNNER_TEMP/omugen-release.p12"
-            echo "APK signing: the release key"
-          else
-            echo "APK signing: the test key"
-          fi
-          bash ./build/omugen_build.sh Android
+          BUILD_ANDROID_APK=0 bash ./build/omugen_build.sh Android
 
       - name: Save Android libraries
         if: always() && steps.deps.outputs.cache-hit != 'true' && hashFiles('build/android-deps/lib/pkgconfig/libavcodec.pc') != ''
@@ -252,6 +238,32 @@ jobs:
             build/libxmp-src
             build/ffmpeg-src/config_components.h
           key: android-deps-v1-${{ hashFiles('build/build.sh') }}
+
+      # The APK, signed with the release key when the repository has one
+      # (secrets OMUGEN_KEYSTORE_BASE64: a PKCS12 file in base64,
+      # OMUGEN_KEYSTORE_PASSWORD, optional OMUGEN_KEY_ALIAS and
+      # OMUGEN_KEY_PASSWORD), else with android/omugen-test.p12. Only this
+      # step (Gradle) gets the key.
+      - name: APK
+        id: apk
+        shell: bash
+        env:
+          OMUGEN_KEYSTORE_BASE64: ${{ secrets.OMUGEN_KEYSTORE_BASE64 }}
+          OMUGEN_KEYSTORE_PASSWORD: ${{ secrets.OMUGEN_KEYSTORE_PASSWORD }}
+          OMUGEN_KEY_ALIAS: ${{ secrets.OMUGEN_KEY_ALIAS }}
+          OMUGEN_KEY_PASSWORD: ${{ secrets.OMUGEN_KEY_PASSWORD }}
+        run: |
+          set -o pipefail
+          export ANDROID_NDK_HOME="$ANDROID_NDK_LATEST_HOME"
+          if [ -n "$OMUGEN_KEYSTORE_BASE64" ]; then
+            printf '%s' "$OMUGEN_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > "$RUNNER_TEMP/omugen-release.p12"
+            export OMUGEN_KEYSTORE="$RUNNER_TEMP/omugen-release.p12"
+            echo "APK signing: the release key" | tee -a build/omugen_build.log
+          else
+            echo "APK signing: the test key" | tee -a build/omugen_build.log
+          fi
+          bash ./build/build.sh AndroidApk 2>&1 | tee -a build/omugen_build.log
+          rm -f "$RUNNER_TEMP/omugen-release.p12"
 
       - name: Package
         id: package

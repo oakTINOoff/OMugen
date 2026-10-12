@@ -472,7 +472,7 @@ func mugenJoystickState(codes []int) [14]bool {
 		if i < len(out) {
 			out[i] = mugenJoy.Pressed(code)
 		} else if j := i - len(out); j < 4 {
-			// a standard layout's second codes for the directions (left stick)
+			// a standard layout's second codes for the directions (the D-pad)
 			out[j] = out[j] || mugenJoy.Pressed(code)
 		}
 	}

@@ -378,8 +378,8 @@ func (w *Window) pollEvents() {
 			w.closeflag = true
 		case sdl.KeyboardEvent:
 			sym := t.Keysym.Sym
-			if sym == sdl.K_AC_BACK {
-				sym = sdl.K_ESCAPE // Android's Back button
+			if sym == sdl.K_AC_BACK && runtime.GOOS == "android" {
+				sym = sdl.K_ESCAPE // Android's Back button (not a keyboard's Browser Back)
 			}
 			if t.State == sdl.PRESSED {
 				OnKeyPressed(sym, t.Keysym.Mod)

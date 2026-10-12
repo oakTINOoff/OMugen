@@ -126,6 +126,10 @@ func realMain() {
 		sdl.GLSetAttribute(sdl.GL_DEPTH_SIZE, 24)
 		// The engine's own files, in the app's storage (LOCALAPPDATA, set by the app).
 		prepareEngineDir()
+		if engineDirError != nil {
+			// Without them nothing starts: say why (a full phone, usually).
+			panic(fmt.Errorf("OMugen could not unpack its engine files (is the phone's storage full?): %w", engineDirError))
+		}
 	} else {
 		// OMugen: the game folder is the exe's folder (like MUGEN), even from a shortcut.
 		useExeDirAsGameDir()
@@ -202,8 +206,9 @@ func realMain() {
 	// Force to OpenGL ES 3.2 for Android
 	if runtime.GOOS == "android" {
 		cfg.Video.RenderMode = "OpenGL ES 3.2"
-		// The frame rate chosen in the app (for this session only).
-		if n := Atoi(sys.cmdFlags["-framerate"]); n > 0 {
+		// The frame rate chosen in the app, for this session only (Lua's
+		// -framerate would be saved with the game's settings).
+		if n := Atoi(sys.cmdFlags["-omugenfps"]); n > 0 {
 			cfg.Video.Framerate = int(n)
 		}
 	}
@@ -399,14 +404,22 @@ func handlePanic(r interface{}) {
 	version := fmt.Sprintf("Version: %s", Version)
 	buildTime := fmt.Sprintf("Build Time: %s", BuildTime)
 	platform := fmt.Sprintf("Platform: %s (%s)", runtime.GOOS, runtime.GOARCH)
-	render := gfx.GetName()
+	// Errors before the renderer exists (missing engine files, say) still get
+	// their message and log.
+	render := "no renderer yet"
+	if gfx != nil {
+		render = gfx.GetName()
+	}
 
 	// Prepare stats
 	memory := fmt.Sprintf("RAM in Use: %v MB / OS Reserved: %v MB", mem.Alloc/1024/1024, mem.Sys/1024/1024)
 	threads := fmt.Sprintf("Active Goroutines: %d", runtime.NumGoroutine())
 
 	// Renderer debug info (GPU memory stats, etc.)
-	rendererDebug := gfx.DebugInfo()
+	rendererDebug := ""
+	if gfx != nil {
+		rendererDebug = gfx.DebugInfo()
+	}
 
 	// Identify the crash type
 	crashType := "Fatal runtime error" // Default for unsafe crashes

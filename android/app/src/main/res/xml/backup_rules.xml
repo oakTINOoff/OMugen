@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 8-11 backups (android:fullBackupContent). -->
+<full-backup-content>
+    <!-- The engine's files (unpacked from the app on its first start) and
+         the last game's log and state: backups keep your pad layouts and
+         settings, and stay under Android's size limit. -->
+    <exclude domain="file" path="OMugen/engine/" />
+    <exclude domain="file" path="OMugen/last-run.log" />
+    <exclude domain="sharedpref" path="OMugenRun.xml" />
+</full-backup-content>
