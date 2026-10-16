@@ -25,7 +25,7 @@ Install [MSYS2](https://www.msys2.org), open **MSYS2 MINGW64** and install the t
 pacman -Syu --noconfirm
 pacman -S --noconfirm git make diffutils \
   mingw-w64-x86_64-go mingw-w64-x86_64-toolchain mingw-w64-x86_64-pkg-config \
-  mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm mingw-w64-x86_64-tools-git \
+  mingw-w64-x86_64-nasm mingw-w64-x86_64-tools-git \
   mingw-w64-x86_64-SDL2 mingw-w64-x86_64-libxmp
 ```
 
