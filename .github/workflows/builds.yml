@@ -1,20 +1,21 @@
 # Builds OMugen for Windows, Linux and Android.
 #
-# Runs when a version tag is pushed (v1.2.3: the builds become a GitHub
-# Release of this repository, with notes from docs/releases/<tag>.md), when
-# the `ci` branch is pushed, or by hand
+# Runs on every push to main (and the `ci` branch), on pull requests, when a
+# version tag is pushed (v1.2.3: the builds become a GitHub Release of this
+# repository, with notes from docs/releases/<tag>.md), or by hand
 # (Actions > builds > Run workflow). Builds that are not releases are kept
 # for a week as downloads on the run's page.
 #
-# Not on every push to main: this repository is private, so Actions minutes
-# are limited (Windows minutes count double).
+# Pull requests (from forks too) get no secrets: their APK is signed with the
+# test key, and their logs aren't pushed to refs/ci-logs.
 
 name: builds
 
 on:
   push:
     tags: [ 'v*' ]
-    branches: [ ci ]
+    branches: [ main, ci ]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -168,7 +169,7 @@ jobs:
       #   git fetch origin +refs/ci-logs/*:refs/ci-logs/*
       #   git show ci-logs/linux:omugen_build.log
       - name: Keep the log
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         continue-on-error: true
         shell: bash
         env:
@@ -307,7 +308,7 @@ jobs:
           retention-days: 7
 
       - name: Keep the log
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         continue-on-error: true
         shell: bash
         env:

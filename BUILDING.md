@@ -103,7 +103,8 @@ Linux.
 - Gradle fetches its own parts from Maven Central and Google; when one of them is down the
   Android build fails with "Could not find" for well-known packages. Run it again later.
 
-It doesn't run on every push to `main`, to save Actions minutes.
+It runs on every push to `main` and on pull requests too (those get no secrets: their APK
+is signed with the test key).
 
 ## Android
 
