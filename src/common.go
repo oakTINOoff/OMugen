@@ -1235,14 +1235,14 @@ func (l *Layout) Read(pre string, is IniSection) {
 		l.window[2] -= l.window[0]
 		l.window[3] -= l.window[1]
 	} else {
-		l.window = sys.scrrect
+		l.window = [4]int32{} // OMugen: none, the whole frame at its current size (calcLBRect)
 	}
 }
 
 // Calculates the fight screen window local coordinates into real screen pixels,
 // taking the FightAspect ratio into account
 func (l *Layout) calcLBRect(window [4]int32) [4]int32 {
-	if window[2] == sys.scrrect[2] && window[3] == sys.scrrect[3] {
+	if window == [4]int32{} || (window[2] == sys.scrrect[2] && window[3] == sys.scrrect[3]) {
 		return sys.scrrect
 	}
 

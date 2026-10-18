@@ -40,6 +40,9 @@ type Renderer interface {
 	BeginFrame(clearColor bool)
 	EndFrame()
 	Await()
+	// Resize makes the frame-sized targets match sys.scrrect (OMugen: the
+	// frame follows the window's size where the renderer supports it).
+	Resize()
 
 	IsModelEnabled() bool
 	IsShadowEnabled() bool

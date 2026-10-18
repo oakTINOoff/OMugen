@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
+	"math"
 	"runtime"
+	"strings"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -215,14 +217,31 @@ func (w *Window) GetSize() (int, int) {
 	return int(w2), int(h2)
 }
 
+// drawableSize is the window's size in pixels, as the renderer draws into it.
+func (w *Window) drawableSize() (int32, int32) {
+	if strings.HasPrefix(gfx.GetName(), "OpenGL") {
+		return w.Window.GLGetDrawableSize()
+	}
+	ww, wh := w.GetSize()
+	return int32(ww), int32(wh)
+}
+
 // Calculates a position and size for the viewport to fill the window while centered (see render_gl.go)
 // Returns x, y, width, height respectively
 func (w *Window) GetScaledViewportSize() (int32, int32, int32, int32) {
-	winWidth, winHeight := w.GetSize()
+	dw, dh := w.drawableSize()
+	winWidth, winHeight := int(dw), int(dh)
 
 	// If aspect ratio should not be kept, just return full window
 	if !sys.cfg.Video.KeepAspect {
 		return 0, 0, int32(winWidth), int32(winHeight)
+	}
+
+	// OMugen: a frame drawn at the window's own resolution goes there 1:1,
+	// centered (unless a fight's aspect differs from the frame's).
+	if fw, fh := sys.scrrect[2], sys.scrrect[3]; sys.nativeRender && fw <= dw && fh <= dh &&
+		math.Abs(float64(sys.getCurrentAspect()-sys.getMotifAspect())) < 0.001 {
+		return (dw - fw) / 2, (dh - fh) / 2, fw, fh
 	}
 
 	var x, y, resizedWidth, resizedHeight int32 = 0, 0, int32(winWidth), int32(winHeight)

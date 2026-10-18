@@ -462,7 +462,8 @@ type Renderer_GL33 struct {
 	enableModel  bool
 	enableShadow bool
 	debugMode    bool
-	glow         glowGL33 // OMugen glow targets (render_gl33_glow.go)
+	glow         glowGL33  // OMugen glow targets (render_gl33_glow.go)
+	scale        scaleGL33 // OMugen final scaling (render_gl33_scale.go)
 	GL33State
 }
 
@@ -709,6 +710,45 @@ func (r *Renderer_GL33) Init() {
 		gl.Disable(gl.MULTISAMPLE)
 	}
 
+	// The frame-sized targets (OMugen: made again when the frame's size changes, Resize)
+	r.createScreenTargets()
+
+	// create an FBO for our model stuff
+	if r.enableModel {
+		if r.enableShadow {
+			gl.GenFramebuffers(1, &r.fbo_shadow)
+			r.SetActiveTexture0() //gl.ActiveTexture(gl.TEXTURE0)
+			gl.GenTextures(1, &r.fbo_shadow_cube_texture)
+			textureSerialNumber++
+
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, r.fbo_shadow_cube_texture)
+			gl.TexStorage3D(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, 1, gl.DEPTH_COMPONENT24, 1024, 1024, 4*6)
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+			gl.BindFramebuffer(gl.FRAMEBUFFER, r.fbo_shadow)
+			gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, r.fbo_shadow_cube_texture, 0)
+			gl.DrawBuffer(gl.NONE)
+			gl.ReadBuffer(gl.NONE)
+
+			if status := gl.CheckFramebufferStatus(gl.FRAMEBUFFER); status != gl.FRAMEBUFFER_COMPLETE {
+				LogMessage("Shadow framebuffer creation failed: 0x%x", status)
+			}
+		}
+		gl.GenFramebuffers(1, &r.fbo_env)
+	}
+
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+	r.InitStateCache()
+}
+
+// createScreenTargets makes the targets the size of the frame (sys.scrrect):
+// the frame itself (multisampled with MSAA, then resolved), the
+// post-processing pair, the depth buffer and the grab texture.
+func (r *Renderer_GL33) createScreenTargets() {
 	r.SetActiveTexture0() //gl.ActiveTexture(gl.TEXTURE0)
 	r.grabTexture = r.newTexture(sys.scrrect[2], sys.scrrect[3], 32, true).(*Texture_GL33)
 	r.grabTexture.SetData(nil)
@@ -835,41 +875,38 @@ func (r *Renderer_GL33) Init() {
 		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, r.fbo_pp_texture[i], 0)
 	}
 
-	// create an FBO for our model stuff
-	if r.enableModel {
-		if r.enableShadow {
-			gl.GenFramebuffers(1, &r.fbo_shadow)
-			r.SetActiveTexture0() //gl.ActiveTexture(gl.TEXTURE0)
-			gl.GenTextures(1, &r.fbo_shadow_cube_texture)
-			textureSerialNumber++
-
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, r.fbo_shadow_cube_texture)
-			gl.TexStorage3D(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, 1, gl.DEPTH_COMPONENT24, 1024, 1024, 4*6)
-			gl.TexParameteri(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-			gl.TexParameteri(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-			gl.TexParameteri(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-			gl.TexParameteri(gl.TEXTURE_CUBE_MAP_ARRAY_ARB, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-
-			gl.BindFramebuffer(gl.FRAMEBUFFER, r.fbo_shadow)
-			gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, r.fbo_shadow_cube_texture, 0)
-			gl.DrawBuffer(gl.NONE)
-			gl.ReadBuffer(gl.NONE)
-
-			if status := gl.CheckFramebufferStatus(gl.FRAMEBUFFER); status != gl.FRAMEBUFFER_COMPLETE {
-				LogMessage("Shadow framebuffer creation failed: 0x%x", status)
-			}
-		}
-		gl.GenFramebuffers(1, &r.fbo_env)
-	}
-
 	if sys.msaa > 0 {
 		gl.GenFramebuffers(1, &r.grabFbo)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, r.grabFbo)
 		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, r.grabTexture.handle, 0)
 	}
-	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+}
 
-	r.InitStateCache()
+// deleteScreenTargets frees what createScreenTargets made. The grab and
+// resolve textures are Texture_GL33s, freed by their finalizers once dropped.
+func (r *Renderer_GL33) deleteScreenTargets() {
+	fbos := []uint32{r.fbo}
+	if sys.msaa > 0 {
+		fbos = append(fbos, r.fbo_f, r.grabFbo)
+	}
+	fbos = append(fbos, r.fbo_pp...)
+	gl.DeleteFramebuffers(int32(len(fbos)), &fbos[0])
+	textures := append([]uint32{r.fbo_texture}, r.fbo_pp_texture...)
+	gl.DeleteTextures(int32(len(textures)), &textures[0])
+	gl.DeleteRenderbuffers(1, &r.rbo_depth)
+	r.grabTexture, r.fbo_f_texture = nil, nil
+}
+
+// Resize makes the frame-sized targets match sys.scrrect again (OMugen draws
+// at the window's own resolution, which changes with the window).
+func (r *Renderer_GL33) Resize() {
+	if r.grabTexture == nil || (r.grabTexture.width == sys.scrrect[2] && r.grabTexture.height == sys.scrrect[3]) {
+		return
+	}
+	r.deleteScreenTargets()
+	r.createScreenTargets()
+	gl.BindFramebuffer(gl.FRAMEBUFFER, r.fbo)
+	gl.Viewport(0, 0, sys.scrrect[2], sys.scrrect[3])
 }
 
 func (r *Renderer_GL33) Close() {
@@ -1158,6 +1195,11 @@ func (r *Renderer_GL33) EndFrame() {
 			gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 			// clear FB0 just to make sure
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+			// OMugen: not the picture's size (stretched, 4:3 fight, fixed
+			// resolution): resample cleanly instead of nearest pixels.
+			if r.drawScaled(sys.scrrect[2], sys.scrrect[3], width, height) {
+				continue
+			}
 		}
 
 		// set post-processing parameters

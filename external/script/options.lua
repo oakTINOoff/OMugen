@@ -202,6 +202,7 @@ options.t_itemname = {
 			modifyGameOption('Video.KeepAspect', true)
 			modifyGameOption('Video.EnableModel', true)
 			modifyGameOption('Video.EnableModelShadow', true)
+			modifyGameOption('Video.NativeResolution', true)
 			modifyGameOption('Video.Glow', false)
 			modifyGameOption('Video.GlowIntensity', 0.8)
 			modifyGameOption('Video.GlowRadius', 2.5)
@@ -906,6 +907,16 @@ options.t_itemname = {
 			t.items[item].vardisplay = options.t_vardisplay['msaa']()
 			options.modified = true
 			options.needReload = true
+		end
+		return true
+	end,
+	--OMugen: draw at the window's own resolution (applies at once)
+	['nativeresolution'] = function(t, item, cursorPosY, moveTxt)
+		if getInput(-1, motif.option_info.menu.add.key, motif.option_info.menu.subtract.key, motif.option_info.menu.done.key) then
+			sndPlay(motif.Snd, motif.option_info.cursor.move.snd[1], motif.option_info.cursor.move.snd[2])
+			modifyGameOption('Video.NativeResolution', not gameOption('Video.NativeResolution'))
+			t.items[item].vardisplay = options.t_vardisplay['nativeresolution']()
+			options.modified = true
 		end
 		return true
 	end,
@@ -1673,6 +1684,9 @@ options.t_vardisplay = {
 	end,
 	['vsync'] = function()
 		return options.f_definedDisplay(gameOption('Video.VSync'), {[1] = motif.option_info.menu.valuename.enabled}, motif.option_info.menu.valuename.disabled)
+	end,
+	['nativeresolution'] = function()
+		return options.f_boolDisplay(gameOption('Video.NativeResolution'))
 	end,
 	['glow'] = function()
 		return options.f_boolDisplay(gameOption('Video.Glow'))

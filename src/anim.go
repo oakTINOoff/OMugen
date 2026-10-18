@@ -2235,7 +2235,7 @@ func (a *Anim) SetWindow(window [4]float32) {
 
 func (a *Anim) drawWindow() [4]int32 {
 	if a.windowInit == [4]float32{0, 0, 0, 0} {
-		return a.window
+		return sys.scrrect // no window of its own: the whole frame, at its current size
 	}
 	// Pixel bounds depend on the aspect state selected for this draw pass.
 	window := a.windowInit

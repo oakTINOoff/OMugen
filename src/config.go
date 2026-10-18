@@ -168,9 +168,10 @@ type Config struct {
 		ImageSuballocThresholdKB int      `ini:"ImageSuballocThresholdKB"` // ≤ this (KB) suballocated; 0 to disable
 		ImageSuballocBlockSizeMB int      `ini:"ImageSuballocBlockSizeMB"` // block size (MB) for suballocation pool
 		// OMugen graphics options (off by default: MUGEN look)
-		Glow          bool    `ini:"Glow"`
-		GlowIntensity float32 `ini:"GlowIntensity"`
-		GlowRadius    float32 `ini:"GlowRadius"`
+		NativeResolution bool    `ini:"NativeResolution"`
+		Glow             bool    `ini:"Glow"`
+		GlowIntensity    float32 `ini:"GlowIntensity"`
+		GlowRadius       float32 `ini:"GlowRadius"`
 	} `ini:"Video"`
 	Sound struct {
 		SampleRate           int32   `ini:"SampleRate"`

@@ -12,6 +12,8 @@ package main
 //	down KEY        press KEY (until "up KEY")
 //	up KEY          release KEY
 //	shot NAME       save a screenshot to save/shots/NAME.png
+//	window W H      resize the window to W x H pixels (the frame follows it)
+//	fullscreen      switch between window and fullscreen (Alt+Enter)
 //	quit            close the game
 //
 // KEY uses OMugen key names (RETURN, ESCAPE, UP, DOWN, LEFT, RIGHT, a, z, F1...).
@@ -158,6 +160,14 @@ func omugenInputScriptTick() {
 			_ = os.MkdirAll(filepath.Join("save", "shots"), 0o755)
 			sys.isTakingScreenshot = true
 			sys.screenshotName = filepath.Join("save", "shots", c.arg+".png")
+			return
+		case "window":
+			if w := int32(Atoi(c.arg)); w > 0 && c.n > 0 {
+				sys.window.Window.SetSize(w, int32(c.n))
+			}
+			return
+		case "fullscreen":
+			sys.window.toggleFullscreen()
 			return
 		case "quit":
 			sys.window.closeflag = true

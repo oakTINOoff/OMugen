@@ -1158,6 +1158,9 @@ func (r *Renderer_GLES32) EndFrame() {
 	}
 }
 
+// Resize: this renderer keeps the frame's first size (scaled to the window).
+func (r *Renderer_GLES32) Resize() {}
+
 func (r *Renderer_GLES32) Await() {
 	gl.Finish()
 }

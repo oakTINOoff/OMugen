@@ -5723,6 +5723,9 @@ func (r *Renderer_VK) PrintVkState() {
 	return
 }
 
+// Resize: this renderer keeps the frame's first size (scaled to the window).
+func (r *Renderer_VK) Resize() {}
+
 func (r *Renderer_VK) Await() {
 	vk.QueueWaitIdle(r.queue)
 }

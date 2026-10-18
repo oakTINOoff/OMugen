@@ -337,7 +337,7 @@ func (r *Rect) SetWindow(window [4]float32) {
 
 func (r *Rect) drawWindow() [4]int32 {
 	if r.windowInit == [4]float32{0, 0, 0, 0} {
-		return r.window
+		return sys.scrrect // no window of its own: the whole frame, at its current size
 	}
 	// Pixel bounds depend on the aspect state selected for this draw pass.
 	window := r.windowInit

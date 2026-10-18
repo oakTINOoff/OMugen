@@ -948,7 +948,7 @@ func (ts *TextSprite) SetWindow(window [4]float32) {
 
 func (ts *TextSprite) drawWindow() [4]int32 {
 	if ts.windowInit == [4]float32{0, 0, 0, 0} {
-		return ts.window
+		return sys.scrrect // no window of its own: the whole frame, at its current size
 	}
 	// Pixel bounds depend on the aspect state selected for this draw pass.
 	window := ts.windowInit

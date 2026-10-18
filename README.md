@@ -93,9 +93,12 @@ went wrong the next time it opens, and can share it.
 replays, stats, and `save/logs` (crash logs, `controllers.txt`). OMugen's own files (its
 engine files, your pad layouts) are in `%LOCALAPPDATA%\OMugen`, never in a game folder.
 
-**The window is too big, or blurry.** OMugen draws at your screen's own resolution, also
-with Windows' display scaling (125%, 150%), and shrinks a window that wouldn't fit the
-screen. Alt+Enter switches to fullscreen; Options > Video Settings sets the resolution.
+**The window is too big, or blurry.** OMugen draws each frame at the window's own
+resolution, in your screen's real pixels (also with Windows' display scaling, 125% or
+150%), and shrinks a window that wouldn't fit the screen. Alt+Enter switches to
+fullscreen. Options > Video Settings > Resolution sets the window's size and shape;
+Native Resolution off draws at that resolution instead and scales it (lighter on old
+PCs).
 
 **My controller does the wrong moves.** A game's `mugen.cfg` is set up for one kind of
 controller. When it doesn't fit yours, OMugen uses your own layout for that kind of
@@ -143,6 +146,10 @@ log** in its settings).
   (energy charge in many games) on L1, the pause menu on Options (Xbox pads by position).
 - **Controller indicator:** P1-P4 tags in the corner show who has a controller, a notice
   appears when one joins, and the highlighted menu item shows who is selecting.
+- **Sharp at any size.** Every frame is drawn at the window's own resolution and reaches the
+  screen 1:1: resize the window or go fullscreen and it stays sharp (MUGEN stretches a
+  fixed resolution). It also respects Windows' display scaling and keeps windows on the
+  screen.
 - **Screenpack, resolution, window and fullscreen** come from `mugen.cfg`; changes made in
   Options are saved back to it (a backup goes to `save/backups` first).
 - **The game's own rules:** the first start takes life, round time, difficulty, game

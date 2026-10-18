@@ -65,6 +65,7 @@ type SystemStateVars struct {
 	envcol_time int32
 
 	scrrect                 [4]int32
+	nativeRender            bool // OMugen: scrrect is the window's picture (omugen_render.go)
 	gameWidth, gameHeight   float32
 	widthScale, heightScale float32
 	gameEnd, frameSkip      bool
@@ -461,6 +462,13 @@ func (s *System) init(w, h int32) *lua.LState {
 		}
 	}
 	// PS: The "\x00" is what is know as Null Terminator.
+
+	// OMugen: draw at the window's own resolution (omugen_render.go).
+	if w, h, native := s.renderSize(); native {
+		s.setGameSize(w, h)
+		s.nativeRender = true
+		LogMessage("OMugen: drawing at %dx%d, the window's own resolution", w, h)
+	}
 
 	// Init renderer
 	Logcat("Check B: Initializing GFX")
@@ -873,7 +881,7 @@ func (s *System) await(fps int) bool {
 		}
 		// Begin the next frame after events have been processed. Do not clear
 		// the screen if network input is present.
-		defer gfx.BeginFrame(sys.netConnection == nil)
+		defer s.beginFrame(sys.netConnection == nil)
 	}
 
 	s.runMainThreadTask()
