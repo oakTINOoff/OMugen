@@ -1,0 +1,387 @@
+==> OMugen build started 2026-10-18 13:36:05
+==> git: /usr/bin/git
+==> Generating the OMugen screenpack sprites
+wrote screenpack/omugen/system.sff: 40 sprites, 2.8 MB
+==> Generating the new-game template (Proto, Proto Arena)
+wrote templates/newgame/chars/proto/proto.sff (1112.6 KB)
+wrote templates/newgame/chars/proto/proto.air (31.9 KB)
+  93 animations, 169 sprites
+wrote templates/newgame/stages/proto_arena.sff (610.6 KB)
+==> Generating the OMugen lifebars
+  screenpack/lifebars/fight.sff (1752.7 KB)
+  screenpack/lifebars/fight.def (16.9 KB)
+  screenpack/lifebars/fight.snd (3277.1 KB)
+  screenpack/lifebars/fonts/name.def (0.3 KB)
+  screenpack/lifebars/fonts/time.def (0.3 KB)
+  screenpack/lifebars/fonts/combo.def (0.3 KB)
+  screenpack/lifebars/fonts/small.def (0.3 KB)
+  screenpack/lifebars/fonts/win.def (0.3 KB)
+  screenpack/lifebars/fightfx.sff (6435.2 KB)
+  screenpack/lifebars/fightfx.air (3.8 KB)
+  screenpack/lifebars/common.snd (569.6 KB)
+  screenpack/engine/gofx/gofx.def (0.5 KB)
+  screenpack/engine/gofx/gofx.sff (316.9 KB)
+  screenpack/engine/gofx/gofx.air (3.0 KB)
+  screenpack/engine/gofx/gofx.snd (227.9 KB)
+  screenpack/engine/glyphs.sff (241.3 KB)
+==> Packing engine files
+wrote src/omugen_engine.zip: 86 files, 18.5 MB -> 16.0 MB
+==> SDL2 Android build already exists in build/sdl2-src/build-android, skipping clone and build (delete that directory to force rebuild)
+==> LibXMP sources already exist in build/libxmp-src, skipping clone and build (delete that directory to force rebuild)
+==> Patching go-sdl2 AndroidRequestPermission() SDL_bool->bool conversion...
+==> Building Go binary (this may take a while)...
+go: downloading github.com/leonkasovan/gl v0.0.0-20251110213347-e04040ce71e2
+internal/goarch
+internal/unsafeheader
+internal/byteorder
+internal/cpu
+internal/coverage/rtcov
+internal/abi
+internal/godebugs
+internal/goexperiment
+internal/bytealg
+internal/chacha8rand
+internal/goos
+internal/profilerecord
+internal/runtime/atomic
+internal/runtime/syscall/linux
+math/bits
+internal/runtime/gc
+internal/strconv
+internal/runtime/sys
+internal/runtime/exithook
+internal/runtime/gc/scan
+internal/asan
+internal/msan
+internal/runtime/math
+internal/race
+internal/runtime/pprof/label
+internal/stringslite
+internal/runtime/maps
+internal/trace/tracev2
+internal/runtime/cgroup
+sync/atomic
+internal/synctest
+unicode
+unicode/utf8
+internal/sync
+cmp
+math
+container/list
+crypto/internal/fips140/alias
+crypto/internal/fips140deps/byteorder
+crypto/internal/fips140deps/cpu
+crypto/internal/constanttime
+runtime
+crypto/internal/fips140deps/time
+crypto/internal/fips140/subtle
+crypto/internal/boring/sig
+encoding
+crypto/subtle
+unicode/utf16
+golang.org/x/image/math/f32
+image/color
+github.com/gopxl/beep/v2/internal/util
+log/internal
+github.com/hajimehoshi/go-mp3/internal/bits
+github.com/hajimehoshi/go-mp3/internal/imdct
+golang.org/x/exp/constraints
+internal/nettrace
+database/sql/internal
+github.com/tidwall/match
+golang.org/x/exp/maps
+golang.org/x/text/encoding/internal/identifier
+internal/reflectlite
+iter
+weak
+sync
+slices
+maps
+errors
+arena
+sort
+internal/testlog
+internal/bisect
+io
+strconv
+internal/oserror
+reflect
+bytes
+strings
+path
+syscall
+hash
+bufio
+hash/crc32
+internal/godebug
+crypto
+crypto/internal/impl
+crypto/internal/entropy/v1.0.0
+crypto/internal/fips140deps/godebug
+encoding/base64
+crypto/internal/fips140
+crypto/internal/fips140/sha256
+crypto/internal/fips140/sha3
+crypto/internal/fips140/sha512
+time
+internal/syscall/unix
+internal/syscall/execenv
+crypto/internal/fips140/hmac
+crypto/internal/fips140/check
+internal/saferio
+crypto/internal/fips140/aes
+crypto/fips140
+encoding/json/internal
+encoding/json/internal/jsonflags
+encoding/json/internal/jsonopts
+encoding/json/internal/jsonwire
+encoding/base32
+image
+internal/fmtsort
+encoding/binary
+io/fs
+internal/poll
+context
+encoding/json/jsontext
+internal/filepathlite
+embed
+image/internal/imageutil
+github.com/icza/bitio
+image/draw
+github.com/mewkiz/flac/internal/hashutil
+github.com/mewkiz/flac/internal/hashutil/crc16
+os
+github.com/mewkiz/flac/internal/hashutil/crc8
+github.com/mewkiz/flac/internal/ioutilx
+github.com/mewkiz/pkg/term
+github.com/mewkiz/flac/internal/bufseekio
+github.com/jfreymuth/vorbis
+github.com/ikemen-engine/ggpo/internal/buffer
+github.com/ikemen-engine/ggpo/internal/polling
+vendor/golang.org/x/net/dns/dnsmessage
+github.com/jfreymuth/oggvorbis
+internal/singleflight
+unique
+net/netip
+math/rand
+math/rand/v2
+crypto/internal/randutil
+github.com/mdouchement/hdr/format
+golang.org/x/text/transform
+fmt
+path/filepath
+crypto/internal/sysrand
+crypto/internal/fips140/drbg
+crypto/internal/fips140/aes/gcm
+crypto/internal/fips140only
+crypto/md5
+io/ioutil
+crypto/cipher
+compress/flate
+encoding/gob
+crypto/internal/boring
+crypto/sha256
+encoding/hex
+encoding/json/v2
+archive/zip
+os/user
+github.com/flopp/go-findfont
+text/tabwriter
+github.com/go-gl/mathgl/mgl32
+golang.org/x/image/math/fixed
+github.com/golang/freetype/raster
+golang.org/x/image/font
+github.com/golang/freetype/truetype
+github.com/golang/freetype
+github.com/pkg/errors
+encoding/json
+github.com/mewkiz/flac/internal/bits
+github.com/gopxl/beep/v2
+github.com/mewkiz/pkg/errutil
+github.com/mewkiz/flac/internal/utf8
+github.com/gopxl/beep/v2/effects
+log
+github.com/mewkiz/flac/meta
+github.com/samhocevar/go-meltysynth/meltysynth
+github.com/hajimehoshi/go-mp3/internal/consts
+github.com/mewkiz/flac/frame
+github.com/hajimehoshi/go-mp3/internal/frameheader
+github.com/hajimehoshi/go-mp3/internal/huffman
+github.com/mewkiz/flac
+github.com/hajimehoshi/go-mp3/internal/sideinfo
+github.com/hajimehoshi/go-mp3/internal/maindata
+github.com/gopxl/beep/v2/flac
+github.com/hajimehoshi/go-mp3/internal/frame
+github.com/gopxl/beep/v2/midi
+github.com/gopxl/beep/v2/vorbis
+github.com/gopxl/beep/v2/wav
+github.com/ikemen-engine/ggpo/internal/util
+github.com/hajimehoshi/go-mp3
+github.com/ikemen-engine/ggpo/internal/input
+github.com/ikemen-engine/ggpo/internal/messages
+github.com/gopxl/beep/v2/mp3
+github.com/lukegb/dds
+github.com/ikemen-engine/ggpo/internal/sync
+crypto/internal/rand
+math/big
+github.com/oakTINOoff/OMugen/src/mugenjoy
+net/url
+github.com/tidwall/pretty
+github.com/tidwall/gjson
+github.com/qmuntal/gltf
+github.com/qmuntal/gltf/binary
+github.com/tidwall/sjson
+github.com/yuin/gopher-lua/ast
+github.com/yuin/gopher-lua/parse
+crypto/rand
+uuid
+database/sql/driver
+github.com/qmuntal/gltf/modeler
+github.com/lucasb-eyer/go-colorful
+github.com/yuin/gopher-lua/pm
+os/exec
+golang.org/x/mobile/exp/f32
+github.com/mdouchement/hdr/hdrcolor
+github.com/yuin/gopher-lua
+github.com/mdouchement/hdr
+golang.org/x/text/encoding
+golang.org/x/text/encoding/internal
+github.com/mdouchement/hdr/codec/rgbe
+golang.org/x/text/encoding/charmap
+golang.org/x/text/encoding/japanese
+regexp/syntax
+hash/fnv
+html
+image/jpeg
+regexp
+hash/adler32
+compress/zlib
+image/png
+runtime/debug
+gopkg.in/ini.v1
+compress/gzip
+runtime/cgo
+runtime/pprof
+net
+github.com/ikemen-engine/ggpo/transport
+github.com/ikemen-engine/ggpo/internal/protocol
+github.com/ikemen-engine/ggpo
+github.com/ikemen-engine/reisen
+# github.com/leonkasovan/gl/v3.2/gles2
+../../../go/pkg/mod/github.com/leonkasovan/gl@v0.0.0-20251110213347-e04040ce71e2/v3.2/gles2/procaddr.go:32:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+github.com/leonkasovan/gl/v3.2/gles2
+github.com/veandco/go-sdl2/sdl
+github.com/oakTINOoff/OMugen/src
+==> Bundling Android dependencies from /home/runner/work/OMugen/OMugen/build/android-deps...
+'/home/runner/work/OMugen/OMugen/build/android-deps/lib/libSDL2.so' -> 'lib/libSDL2.so'
+'/home/runner/work/OMugen/OMugen/build/android-deps/lib/libavcodec.so' -> 'lib/libavcodec.so'
+'/home/runner/work/OMugen/OMugen/build/android-deps/lib/libavdevice.so' -> 'lib/libavdevice.so'
+'/home/runner/work/OMugen/OMugen/build/android-deps/lib/libavfilter.so' -> 'lib/libavfilter.so'
+'/home/runner/work/OMugen/OMugen/build/android-deps/lib/libavformat.so' -> 'lib/libavformat.so'
+'/home/runner/work/OMugen/OMugen/build/android-deps/lib/libavutil.so' -> 'lib/libavutil.so'
+'/home/runner/work/OMugen/OMugen/build/android-deps/lib/libswresample.so' -> 'lib/libswresample.so'
+'/home/runner/work/OMugen/OMugen/build/android-deps/lib/libswscale.so' -> 'lib/libswscale.so'
+'/home/runner/work/OMugen/OMugen/build/android-deps/lib/libxmp.so' -> 'lib/libxmp.so'
+==> BUILD_ANDROID_APK=0: skipping APK build
+==> Build successful
+    Binary: bin/libmain.so
+    Runtime libs (if any): lib/
+==> OMugen build finished with exit code 0
+APK signing: the release key
+==> Native libraries in the APK:
+total 41232
+drwxr-xr-x 2 runner runner     4096 Oct 18 13:37 .
+drwxr-xr-x 3 runner runner     4096 Oct 18 13:37 ..
+-rw-r--r-- 1 runner runner  4764360 Oct 17 00:09 libSDL2.so
+-rwxr-xr-x 1 runner runner   988800 Oct 17 00:10 libavcodec.so
+-rwxr-xr-x 1 runner runner     9152 Oct 17 00:10 libavdevice.so
+-rwxr-xr-x 1 runner runner   175752 Oct 17 00:10 libavfilter.so
+-rwxr-xr-x 1 runner runner   301784 Oct 17 00:10 libavformat.so
+-rwxr-xr-x 1 runner runner   710024 Oct 17 00:10 libavutil.so
+-rw-r--r-- 1 runner runner 31778752 Oct 18 13:37 libmain.so
+-rwxr-xr-x 1 runner runner    96496 Oct 17 00:10 libswresample.so
+-rwxr-xr-x 1 runner runner   758584 Oct 17 00:10 libswscale.so
+-rw-r--r-- 1 runner runner  2608520 Oct 17 00:09 libxmp.so
+==> libmain.so needs:
+ 0x0000000000000001 (NEEDED)             Shared library: [libSDL2.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libxmp.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libavformat.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libavcodec.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libavutil.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libswscale.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libswresample.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libavfilter.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libGLESv2.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libOpenSLES.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [liblog.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libEGL.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libandroid.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libdl.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so]
+==> Building the APK with Gradle...
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:javaPreCompileRelease
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseNativeLibs
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+
+> Task :app:stripReleaseDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libSDL2.so, libavcodec.so, libavdevice.so, libavfilter.so, libavformat.so, libavutil.so, libmain.so, libswresample.so, libswscale.so, libxmp.so.
+
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:desugarReleaseFileDependencies
+> Task :app:mergeReleaseStartupProfile
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseShaders
+> Task :app:mergeExtDexRelease
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:collectReleaseDependencies
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseJavaResource
+> Task :app:sdkReleaseDependencyData
+
+> Task :app:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :app:dexBuilderRelease
+> Task :app:mergeReleaseGlobalSynthetics
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:optimizeReleaseResources
+> Task :app:mergeDexRelease
+> Task :app:compileReleaseArtProfile
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/apk-1792330676954.json
+
+BUILD SUCCESSFUL in 18s
+41 actionable tasks: 41 executed
+'/home/runner/work/OMugen/OMugen/android/app/build/outputs/apk/release/app-release.apk' -> '/home/runner/work/OMugen/OMugen/bin/OMugen.apk'
+==> APK signer:
+V2 Signer: certificate DN: CN=OMugen
+V2 Signer: certificate SHA-256 digest: 75bc0b649f8dd2433bc1570b5f5c27f4fd814b16896aa04f36872f3c83c8bf6a
+==> APK ready: /home/runner/work/OMugen/OMugen/bin/OMugen.apk
