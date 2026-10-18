@@ -1,0 +1,70 @@
+==> OMugen build started 2026-10-18 13:37:11
+==> git: /c/Program Files/Git/cmd/git
+==> First build: producing runtime DLLs in lib/
+==> Embedding Windows resources (icon + manifest) with windres...
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avcodec-61.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avdevice-61.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avfilter-10.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avformat-61.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avutil-59.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/swresample-5.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/swscale-8.dll] Found PE+ image
+ * [D:/a/_temp/msys64/mingw64/bin/libxmp.dll] Found PE+ image
+ * [D:/a/_temp/msys64/mingw64/bin/libwinpthread-1.dll] Found PE+ image
+ * [D:/a/_temp/msys64/mingw64/bin/SDL2.dll] Found PE+ image
+==> Building Go binary (this may take a while)...
+runtime/cgo
+github.com/Eiton/vulkan
+github.com/ikemen-engine/reisen
+github.com/veandco/go-sdl2/sdl
+github.com/go-gl/gl/v3.3-core/gl
+github.com/oakTINOoff/OMugen/src
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avcodec-61.dll' -> 'lib/avcodec-61.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avdevice-61.dll' -> 'lib/avdevice-61.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avfilter-10.dll' -> 'lib/avfilter-10.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avformat-61.dll' -> 'lib/avformat-61.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avutil-59.dll' -> 'lib/avutil-59.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/swresample-5.dll' -> 'lib/swresample-5.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/swscale-8.dll' -> 'lib/swscale-8.dll'
+'/mingw64/bin/libwinpthread-1.dll' -> 'lib/libwinpthread-1.dll'
+'/mingw64/bin/libgcc_s_seh-1.dll' -> 'lib/libgcc_s_seh-1.dll'
+'/mingw64/bin/libstdc++-6.dll' -> 'lib/libstdc++-6.dll'
+'/mingw64/bin/libxmp.dll' -> 'lib/libxmp.dll'
+'/mingw64/bin/SDL2.dll' -> 'lib/SDL2.dll'
+==> Build successful (Windows)
+    Binary: ./OMugen.exe
+    Runtime DLLs: lib/
+==> Generating the OMugen screenpack sprites
+wrote screenpack\omugen\system.sff: 40 sprites, 2.8 MB
+==> Generating the new-game template (Proto, Proto Arena)
+wrote templates\newgame\chars\proto\proto.sff (1112.6 KB)
+wrote templates\newgame\chars\proto\proto.air (31.9 KB)
+  93 animations, 169 sprites
+wrote templates\newgame\stages\proto_arena.sff (610.6 KB)
+==> Generating the OMugen lifebars
+  screenpack/lifebars/fight.sff (1752.7 KB)
+  screenpack/lifebars/fight.def (16.9 KB)
+  screenpack/lifebars/fight.snd (3277.1 KB)
+  screenpack/lifebars/fonts/name.def (0.3 KB)
+  screenpack/lifebars/fonts/time.def (0.3 KB)
+  screenpack/lifebars/fonts/combo.def (0.3 KB)
+  screenpack/lifebars/fonts/small.def (0.3 KB)
+  screenpack/lifebars/fonts/win.def (0.3 KB)
+  screenpack/lifebars/fightfx.sff (6435.2 KB)
+  screenpack/lifebars/fightfx.air (3.8 KB)
+  screenpack/lifebars/common.snd (569.6 KB)
+  screenpack/engine/gofx/gofx.def (0.5 KB)
+  screenpack/engine/gofx/gofx.sff (316.9 KB)
+  screenpack/engine/gofx/gofx.air (3.0 KB)
+  screenpack/engine/gofx/gofx.snd (227.9 KB)
+  screenpack/engine/glyphs.sff (241.3 KB)
+==> Packing engine files
+wrote src\omugen_engine.zip: 98 files, 27.9 MB -> 20.0 MB
+==> Embedding Windows resources (icon + manifest) with windres...
+==> Delay-load import libs already exist in build/delaylib, skipping generation (delete that directory to force regeneration)
+==> Building Go binary (this may take a while)...
+github.com/oakTINOoff/OMugen/src
+==> Build successful (Windows)
+    Binary: ./OMugen.exe
+    Runtime DLLs: lib/
+==> OMugen build finished with exit code 0
