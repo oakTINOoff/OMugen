@@ -141,6 +141,11 @@ func (s *System) newWindow(w, h int) (*Window, error) {
 			if s.cfg.Video.WindowCentered {
 				window.SetPosition(x, y)
 			}
+			// OMugen: too big for this screen (with Windows' display
+			// scaling, say): shrink it to fit, keeping its shape.
+			if fw, fh, fx, fy, ok := omugenFitWindow(window, w2, h2, !s.cfg.Video.Borderless); ok {
+				w, h, x, y = int(fw), int(fh), fx, fy
+			}
 		}
 	}
 
@@ -255,6 +260,9 @@ func (w *Window) toggleFullscreen() {
 				displayIndex = 0 // default to primary monitor if we have no success
 			}
 			w.Window.SetPosition(sdl.WINDOWPOS_CENTERED_MASK|int32(displayIndex), sdl.WINDOWPOS_CENTERED_MASK|int32(displayIndex))
+		}
+		if runtime.GOOS != "android" {
+			omugenFitWindow(w.Window, int32(w.w), int32(w.h), !sys.cfg.Video.Borderless)
 		}
 		sdl.ShowCursor(sdl.ENABLE)
 	} else {
