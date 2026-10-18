@@ -1,0 +1,8 @@
+success v0.1.5 32d89df763354a62b8978fbdf4da492bed315979 run 39132192403
+total 75116
+drwxr-xr-x 2 runner runner     4096 Oct 18 13:42 .
+drwxr-xr-x 6 runner runner     4096 Oct 18 13:42 ..
+-rw-r--r-- 1 runner runner 25445753 Oct 18 13:42 OMugen-v0.1.5-android.apk
+-rw-r--r-- 1 runner runner 24587378 Oct 18 13:42 OMugen-v0.1.5-linux.tar.gz
+-rw-r--r-- 1 runner runner 26866816 Oct 18 13:42 OMugen-v0.1.5-windows.zip
+-rw-r--r-- 1 runner runner      277 Oct 18 13:42 SHA256SUMS.txt
