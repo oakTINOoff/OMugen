@@ -1,0 +1,72 @@
+==> OMugen build started 2026-10-18 13:36:13
+==> git: /usr/bin/git
+==> Generating the OMugen screenpack sprites
+wrote screenpack/omugen/system.sff: 40 sprites, 2.8 MB
+==> Generating the new-game template (Proto, Proto Arena)
+wrote templates/newgame/chars/proto/proto.sff (1112.6 KB)
+wrote templates/newgame/chars/proto/proto.air (31.9 KB)
+  93 animations, 169 sprites
+wrote templates/newgame/stages/proto_arena.sff (610.6 KB)
+==> Generating the OMugen lifebars
+  screenpack/lifebars/fight.sff (1752.7 KB)
+  screenpack/lifebars/fight.def (16.9 KB)
+  screenpack/lifebars/fight.snd (3277.1 KB)
+  screenpack/lifebars/fonts/name.def (0.3 KB)
+  screenpack/lifebars/fonts/time.def (0.3 KB)
+  screenpack/lifebars/fonts/combo.def (0.3 KB)
+  screenpack/lifebars/fonts/small.def (0.3 KB)
+  screenpack/lifebars/fonts/win.def (0.3 KB)
+  screenpack/lifebars/fightfx.sff (6435.2 KB)
+  screenpack/lifebars/fightfx.air (3.8 KB)
+  screenpack/lifebars/common.snd (569.6 KB)
+  screenpack/engine/gofx/gofx.def (0.5 KB)
+  screenpack/engine/gofx/gofx.sff (316.9 KB)
+  screenpack/engine/gofx/gofx.air (3.0 KB)
+  screenpack/engine/gofx/gofx.snd (227.9 KB)
+  screenpack/engine/glyphs.sff (241.3 KB)
+==> Packing engine files
+wrote src/omugen_engine.zip: 86 files, 18.5 MB -> 16.0 MB
+==> Building Go binary (this may take a while)...
+runtime/cgo
+os/user
+github.com/flopp/go-findfont
+net
+github.com/ikemen-engine/ggpo/transport
+github.com/ikemen-engine/reisen
+github.com/Eiton/vulkan
+github.com/sqweek/dialog
+github.com/veandco/go-sdl2/sdl
+github.com/go-gl/gl/v3.3-core/gl
+github.com/oakTINOoff/OMugen/src
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavcodec.so' -> 'lib/libavcodec.so'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavcodec.so.61' -> 'lib/libavcodec.so.61'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavcodec.so.61.19.101' -> 'lib/libavcodec.so.61.19.101'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavdevice.so' -> 'lib/libavdevice.so'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavdevice.so.61' -> 'lib/libavdevice.so.61'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavdevice.so.61.3.100' -> 'lib/libavdevice.so.61.3.100'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavfilter.so' -> 'lib/libavfilter.so'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavfilter.so.10' -> 'lib/libavfilter.so.10'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavfilter.so.10.5.100' -> 'lib/libavfilter.so.10.5.100'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavformat.so' -> 'lib/libavformat.so'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavformat.so.61' -> 'lib/libavformat.so.61'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavformat.so.61.7.103' -> 'lib/libavformat.so.61.7.103'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavutil.so' -> 'lib/libavutil.so'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavutil.so.59' -> 'lib/libavutil.so.59'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libavutil.so.59.39.100' -> 'lib/libavutil.so.59.39.100'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libswresample.so' -> 'lib/libswresample.so'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libswresample.so.5' -> 'lib/libswresample.so.5'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libswresample.so.5.3.100' -> 'lib/libswresample.so.5.3.100'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libswscale.so' -> 'lib/libswscale.so'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libswscale.so.8' -> 'lib/libswscale.so.8'
+'/home/runner/work/OMugen/OMugen/build/ffmpeg/lib/libswscale.so.8.3.100' -> 'lib/libswscale.so.8.3.100'
+'/usr/lib/x86_64-linux-gnu/libxmp.so' -> 'lib/libxmp.so'
+'/usr/lib/x86_64-linux-gnu/libxmp.so.4' -> 'lib/libxmp.so.4'
+'/usr/lib/x86_64-linux-gnu/libxmp.so.4.5.0' -> 'lib/libxmp.so.4.5.0'
+'/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so' -> 'lib/libSDL2-2.0.so'
+'/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0' -> 'lib/libSDL2-2.0.so.0'
+'/usr/lib/x86_64-linux-gnu/libSDL2-2.0.so.0.18.2' -> 'lib/libSDL2-2.0.so.0.18.2'
+'/usr/lib/x86_64-linux-gnu/libSDL2.so' -> 'lib/libSDL2.so'
+==> Build successful
+    Binary: ./OMugen_Linux
+    Runtime libs (if any): lib/
+==> OMugen build finished with exit code 0
