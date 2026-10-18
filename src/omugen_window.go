@@ -26,7 +26,7 @@ func omugenFitWindow(win *sdl.Window, w, h int32, bordered bool) (nw, nh, nx, ny
 	}
 	var left, top, right, bottom int32
 	if bordered {
-		left, top, right, bottom = omugenWindowFrame()
+		left, top, right, bottom = omugenWindowFrame(uint32(math.Round(96 * omugenDisplayScale(d))))
 	}
 	nw, nh, nx, ny, ok = fitRect(w, h, ub, left, top, right, bottom)
 	if !ok {
@@ -52,4 +52,17 @@ func fitRect(w, h int32, area sdl.Rect, left, top, right, bottom int32) (nw, nh,
 	nx = area.X + left + (availW-nw)/2
 	ny = area.Y + top + (availH-nh)/2
 	return nw, nh, nx, ny, true
+}
+
+// omugenScaledWindow is a window size in a screen's pixels: the configured
+// size times the screen's display scaling, so a window looks as big as on an
+// unscaled screen, drawn at the screen's own resolution.
+func omugenScaledWindow(w, h int32, display int) (int32, int32) {
+	s := omugenDisplayScale(display)
+	if s < 1.01 {
+		return w, h
+	}
+	sw, sh := int32(math.Round(float64(w)*s)), int32(math.Round(float64(h)*s))
+	LogMessage("OMugen: display scaling %.0f%%: the %dx%d window is %dx%d pixels", s*100, w, h, sw, sh)
+	return sw, sh
 }

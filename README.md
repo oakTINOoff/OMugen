@@ -84,6 +84,43 @@ saves battery, more is smoother on 90-144 Hz screens. The Back button works as E
 pause menu in a fight, back in menus). If a game closes on an error, the app shows what
 went wrong the next time it opens, and can share it.
 
+## FAQ
+
+**Windows says the app is unrecognized.** `OMugen.exe` isn't code-signed yet: click
+**More info**, then **Run anyway**.
+
+**Where are my settings, saves and logs?** In the game's `save` folder: `config.ini`,
+replays, stats, and `save/logs` (crash logs, `controllers.txt`). OMugen's own files (its
+engine files, your pad layouts) are in `%LOCALAPPDATA%\OMugen`, never in a game folder.
+
+**The window is too big, or blurry.** OMugen draws at your screen's own resolution, also
+with Windows' display scaling (125%, 150%), and shrinks a window that wouldn't fit the
+screen. Alt+Enter switches to fullscreen; Options > Video Settings sets the resolution.
+
+**My controller does the wrong moves.** A game's `mugen.cfg` is set up for one kind of
+controller. When it doesn't fit yours, OMugen uses your own layout for that kind of
+controller, or the standard one (see Features); `save/logs/controllers.txt` says which.
+Options > Input Settings changes it. Which button does a special or an ultimate is up to
+each character: many need a full power bar.
+
+**The game's menus look different.** Its screenpack failed to load and OMugen's took over;
+the notice on the title screen says why. Options > Video Settings > OMugen Screenpack
+switches between them.
+
+**Android: the new version won't install over the old one.** v0.1.3 was signed with a test
+key: uninstall it once. Later versions install over each other.
+
+**Android: my USB drive or SD card isn't listed.** It needs Android 11 or newer and a format
+the phone reads (FAT32 or exFAT; most phones can't read NTFS). Tap Refresh, or **Add a game
+folder** to pick the game's folder.
+
+**Android: the phone gets warm.** HD resolution (Options > Video Settings) and 60 fps run
+the coolest.
+
+**A game crashes or misbehaves.** Please [open an issue](../../issues) with the log: from
+`save/logs` on a PC; on a phone, the error report the app shows (or **Send the last game's
+log** in its settings).
+
 ## Features
 
 - **Controls** come straight from `mugen.cfg`: keyboard keys (SDL 1.2 key codes) and

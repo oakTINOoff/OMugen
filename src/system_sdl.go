@@ -48,6 +48,7 @@ func (s *System) newWindow(w, h int) (*Window, error) {
 			// Android ignores these anyway, but WINDOW_FULLSCREEN is the safest anchor
 			windowFlags |= sdl.WINDOW_FULLSCREEN | sdl.WINDOW_SHOWN
 		} else {
+			omugenBeforeVideoInit()
 			chk(sdl.Init(sdl.INIT_AUDIO | sdl.INIT_VIDEO | sdl.INIT_JOYSTICK | sdl.INIT_EVENTS | sdl.INIT_GAMECONTROLLER | sdl.INIT_HAPTIC | sdl.INIT_TIMER))
 		}
 
@@ -71,6 +72,13 @@ func (s *System) newWindow(w, h int) (*Window, error) {
 		// Override default sizes if config specifies
 		if sys.cfg.Video.WindowWidth > 0 || sys.cfg.Video.WindowHeight > 0 {
 			w2, h2 = int32(sys.cfg.Video.WindowWidth), int32(sys.cfg.Video.WindowHeight)
+		}
+		if runtime.GOOS != "android" {
+			// OMugen: as big as on an unscaled screen, in this screen's pixels
+			// (sharp with Windows' display scaling); also its size back from
+			// fullscreen.
+			w2, h2 = omugenScaledWindow(w2, h2, 0)
+			w, h = int(w2), int(h2)
 		}
 
 		if runtime.GOOS != "android" {
