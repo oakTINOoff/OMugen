@@ -78,8 +78,54 @@ local function playersWithPads(t)
 	return n
 end
 
+-- Adding characters and stages (omugen_addcontent_ui.go): files dropped on
+-- the window or picked in Options are read, the player is asked, they are
+-- installed and OMugen restarts. Meanwhile a progress screen covers the menu.
+local adding = false
+
+local function addScreen(s, frac)
+	init()
+	box(back, W, H, 0, 0, W, H, {10, 10, 16}, 235)
+	label(W, H, 'Adding characters and stages', W / 2, H / 2 - 44, 1.25, {255, 255, 255}, 255)
+	label(W, H, s, W / 2, H / 2 + 2, 0.85, {205, 205, 215}, 255)
+	local bw, x1, y1 = 600, W / 2 - 300, H / 2 + 28
+	box(back, W, H, x1, y1, x1 + bw, y1 + 12, {60, 60, 72}, 255)
+	if frac >= 0 then
+		box(fill, W, H, x1, y1, x1 + bw * math.min(1, frac), y1 + 12, colors[1], 255)
+	else
+		-- unknown length: a block going back and forth
+		local p = (math.sin(os.clock() * 3) + 1) / 2
+		box(fill, W, H, x1 + p * (bw - 120), y1, x1 + p * (bw - 120) + 120, y1 + 12, colors[1], 255)
+	end
+end
+
+local function addContent()
+	if adding or omugenAddBusy == nil or not omugenAddBusy() then
+		return
+	end
+	adding = true
+	while true do
+		local state, s, frac = omugenAddStep()
+		if state == 'idle' then
+			break
+		elseif state == 'confirm' then
+			omugenAddConfirm()
+		elseif state == 'done' then
+			if omugenAddFinish() then
+				omugenRestart()
+			end
+			break
+		else
+			addScreen(s, frac)
+			refresh()
+		end
+	end
+	adding = false
+end
+
 -- draw runs before every refresh() of a menu screen.
 function hud.draw()
+	addContent()
 	local t = info()
 	if t == nil then
 		return

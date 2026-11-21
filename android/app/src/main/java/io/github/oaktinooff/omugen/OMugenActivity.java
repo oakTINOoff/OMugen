@@ -67,6 +67,11 @@ public class OMugenActivity extends SDLActivity {
      */
     private static native void nativeOnSDLReady(String gameDir, String filesDir, String cacheDir, String args);
 
+    /** Hands the engine the files picked to add (one path per line; none if cancelled). */
+    private static native void nativeOnContentPicked(String paths);
+
+    private static final int ADD_CONTENT = 7;
+
     private SharedPreferences prefs, runPrefs;
     private GameLibrary library;
     private View picker;
@@ -99,6 +104,15 @@ public class OMugenActivity extends SDLActivity {
         library = new GameLibrary(this);
         prefs.edit().remove("running").remove("runningPid").remove("runningSince").apply(); // v0.1.3 kept them here
         showPicker();
+        // Restarted by the engine (characters were added): back into the game.
+        String auto = prefs.getString("autostart", null);
+        long at = prefs.getLong("autostartAt", 0);
+        prefs.edit().remove("autostart").remove("autostartAt").apply();
+        if (auto != null && Math.abs(System.currentTimeMillis() - at) < 60000 && hasFileAccess()
+                && new File(auto).isDirectory()) {
+            startGame(new File(auto));
+            return;
+        }
         checkLastRun();
     }
 
@@ -183,6 +197,117 @@ public class OMugenActivity extends SDLActivity {
     /** Called by the engine when the game is quit from its menu. */
     public void onEngineExit() {
         runPrefs.edit().clear().commit();
+    }
+
+    /**
+     * Called by the engine to restart on the same game (characters were added:
+     * the roster is read at startup). RestartActivity, in its own process,
+     * ends this one and opens the app again, which goes back into the game.
+     */
+    public void restartGame() {
+        String game = runPrefs.getString("running", prefs.getString("last", null));
+        runPrefs.edit().clear().commit();
+        if (game != null) {
+            prefs.edit().putString("autostart", game).putLong("autostartAt", System.currentTimeMillis()).commit();
+        }
+        Intent i = new Intent(this, RestartActivity.class);
+        i.putExtra(RestartActivity.PID, android.os.Process.myPid());
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(i);
+    }
+
+    /** Called by the engine (Options > Add Characters and Stages): the phone's file picker. */
+    public void pickContent() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("*/*");
+                i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                try {
+                    startActivityForResult(i, ADD_CONTENT);
+                } catch (Exception e) {
+                    Toast.makeText(OMugenActivity.this, "No file picker on this phone.", Toast.LENGTH_LONG).show();
+                    nativeOnContentPicked("");
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != ADD_CONTENT) {
+            return;
+        }
+        final List<Uri> uris = new ArrayList<>();
+        if (resultCode == RESULT_OK && data != null) {
+            if (data.getClipData() != null) {
+                for (int i = 0; i < data.getClipData().getItemCount(); i++) {
+                    uris.add(data.getClipData().getItemAt(i).getUri());
+                }
+            } else if (data.getData() != null) {
+                uris.add(data.getData());
+            }
+        }
+        if (uris.isEmpty()) {
+            nativeOnContentPicked("");
+            return;
+        }
+        // The engine reads files by path: copy them into the game folder
+        // (save/omugen-add), where it unpacks them; it deletes them after.
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                StringBuilder paths = new StringBuilder();
+                String game = runPrefs.getString("running", prefs.getString("last", null));
+                File dir = new File(game != null ? new File(game) : getCacheDir(),
+                        "save/omugen-add/incoming-" + System.currentTimeMillis());
+                dir.mkdirs();
+                for (Uri u : uris) {
+                    File out = new File(dir, displayName(u));
+                    for (int n = 2; out.exists(); n++) {
+                        out = new File(dir, n + "-" + displayName(u));
+                    }
+                    try (java.io.InputStream in = getContentResolver().openInputStream(u);
+                         FileOutputStream os = new FileOutputStream(out)) {
+                        if (in == null) {
+                            continue;
+                        }
+                        byte[] buf = new byte[1 << 16];
+                        for (int r; (r = in.read(buf)) > 0; ) {
+                            os.write(buf, 0, r);
+                        }
+                    } catch (Exception e) {
+                        out.delete();
+                        continue;
+                    }
+                    paths.append(out.getAbsolutePath()).append('\n');
+                }
+                nativeOnContentPicked(paths.toString());
+            }
+        }).start();
+    }
+
+    /** A picked file's name, safe as a file name. */
+    private String displayName(Uri u) {
+        String name = null;
+        try (android.database.Cursor c = getContentResolver().query(u,
+                new String[] { android.provider.OpenableColumns.DISPLAY_NAME }, null, null, null)) {
+            if (c != null && c.moveToFirst()) {
+                name = c.getString(0);
+            }
+        } catch (Exception ignored) {
+        }
+        if (name == null || name.isEmpty()) {
+            name = u.getLastPathSegment();
+        }
+        if (name == null || name.isEmpty()) {
+            name = "file";
+        }
+        name = name.substring(name.lastIndexOf('/') + 1).replaceAll("[\\\\:*?\"<>|]", "_");
+        return name.isEmpty() ? "file" : name;
     }
 
     /** Called by the engine once it reads controllers. */

@@ -1380,6 +1380,19 @@ options.t_itemname = {
 		return true
 	end,
 	--Save and Return
+	--OMugen: add characters and stages (zip, rar, 7z, folders); the next
+	--frame shows the progress, then OMugen restarts (omugen_hud.lua)
+	['addcontent'] = function(t, item, cursorPosY, moveTxt)
+		if getInput(-1, motif.option_info.menu.done.key) then
+			sndPlay(motif.Snd, motif.option_info.cursor.done.snd[1], motif.option_info.cursor.done.snd[2])
+			if options.modified then
+				options.f_saveCfg(false)
+				options.modified = false
+			end
+			omugenAddPick()
+		end
+		return true
+	end,
 	['savereturn'] = function(t, item, cursorPosY, moveTxt)
 		if getInput(-1, motif.option_info.menu.done.key) then
 			sndPlay(motif.Snd, motif.option_info.cursor.done.snd[1], motif.option_info.cursor.done.snd[2])

@@ -260,10 +260,11 @@ func realMain() {
 // Loops through given comand line arguments and processes them for later use by the game
 func processCommandLine() {
 	// If there are command line arguments
-	if len(os.Args[1:]) > 0 {
+	// OMugen: files dropped on OMugen.exe are characters and stages to add.
+	rawArgs := omugenTakeContentArgs(os.Args[1:])
+	if len(rawArgs) > 0 {
 		sys.cmdFlags = make(map[string]string)
 		// PowerShell can split an unquoted native-arg that starts with '-' at the first '.'
-		rawArgs := os.Args[1:]
 		args := make([]string, 0, len(rawArgs))
 		rPnum := regexp.MustCompile(`^-p[0-9]+$`)
 		// Only join simple ".suffix" tokens (no slashes/backslashes), to avoid breaking paths.

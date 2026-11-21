@@ -435,6 +435,17 @@ func (w *Window) pollEvents() {
 			if len(t.Text) > 0 {
 				OnTextEntered(t.Text)
 			}
+		case sdl.DropEvent:
+			// OMugen: characters and stages dropped on the window are added
+			// (omugen_addcontent_ui.go).
+			switch t.Type {
+			case sdl.DROPBEGIN:
+				omugenAddDropping(true)
+			case sdl.DROPCOMPLETE:
+				omugenAddDropping(false)
+			case sdl.DROPFILE:
+				omugenAddQueue(t.File)
+			}
 		case sdl.JoyDeviceAddedEvent:
 			attachController(int(t.Which))
 		case sdl.JoyDeviceRemovedEvent:

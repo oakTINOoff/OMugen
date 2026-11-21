@@ -110,6 +110,13 @@ each character: many need a full power bar.
 the notice on the title screen says why. Options > Video Settings > OMugen Screenpack
 switches between them.
 
+**Android: Play Protect says the app is unsafe or unknown.** Play Protect warns about apps
+installed from outside the Play Store that it hasn't seen much, more so when they ask for
+access to all files (OMugen needs it to open game folders and USB drives). OMugen has no
+ads or trackers, and every APK is built from this repository by GitHub's servers, so you
+can see exactly what's in it. Tap **More details**, then **Install anyway**.
+`SHA256SUMS.txt` on each release lets you check the download.
+
 **Android: the new version won't install over the old one.** v0.1.3 was signed with a test
 key: uninstall it once. Later versions install over each other.
 

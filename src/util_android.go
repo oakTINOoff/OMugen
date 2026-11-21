@@ -109,6 +109,34 @@ func androidEngineReady() {
 	C.free(unsafe.Pointer(cs))
 }
 
+// omugenAddPick opens the phone's file picker (OMugenActivity.pickContent).
+// The app copies the files into the game folder, then hands them over
+// (nativeOnContentPicked).
+func omugenAddPick() {
+	omugenAddWaiting(true)
+	cs := C.CString("pickContent")
+	C.omugen_notify_activity(cs)
+	C.free(unsafe.Pointer(cs))
+}
+
+// omugenRestart has the app start the game again (OMugenActivity.restartGame
+// ends this process: the engine runs once per process).
+func omugenRestart() {
+	cs := C.CString("restartGame")
+	C.omugen_notify_activity(cs)
+	C.free(unsafe.Pointer(cs))
+	time.Sleep(10 * time.Second)
+	handleExit()
+}
+
+// The files the player picked to add (one per line; none if cancelled).
+//
+//export Java_io_github_oaktinooff_omugen_OMugenActivity_nativeOnContentPicked
+func Java_io_github_oaktinooff_omugen_OMugenActivity_nativeOnContentPicked(env *C.JNIEnv, clazz C.jclass, jPaths C.jstring) {
+	omugenAddQueue(strings.Split(jniString(env, jPaths), "\n")...)
+	omugenAddWaiting(false)
+}
+
 func init() {
 }
 

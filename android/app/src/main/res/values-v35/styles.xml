@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 15 draws apps under the status and navigation bars (and the
+         camera cutout) when they target it. OMugen is fullscreen and lays out
+         its own screens, so it keeps the old behavior. -->
+    <style name="OMugenTheme" parent="android:Theme.NoTitleBar.Fullscreen">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    </style>
+</resources>

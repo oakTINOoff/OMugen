@@ -9,12 +9,12 @@ def omugenVersionCode = (System.getenv('OMUGEN_VERSION_CODE') ?: '1') as int
 
 android {
     namespace 'io.github.oaktinooff.omugen'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId 'io.github.oaktinooff.omugen'
         minSdk 26
-        targetSdk 34
+        targetSdk 35
         versionCode omugenVersionCode
         versionName omugenVersion
         ndk {

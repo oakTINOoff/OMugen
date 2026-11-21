@@ -6,6 +6,7 @@ replace github.com/gopxl/beep/v2 => github.com/gopxl/beep/v2 v2.1.1-0.2024092113
 
 require (
 	github.com/Eiton/vulkan v0.0.0-20251125114215-6585a2a8590b
+	github.com/bodgit/sevenzip v1.6.0
 	github.com/flopp/go-findfont v0.1.0
 	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71
 	github.com/go-gl/mathgl v1.0.0
@@ -14,6 +15,7 @@ require (
 	github.com/ikemen-engine/reisen v0.1.10-0.20260911210321-7972c2bbc957
 	github.com/leonkasovan/gl v0.0.0-20251110213347-e04040ce71e2
 	github.com/lukegb/dds v0.0.0-20190402175749-8b7170e64003
+	github.com/nwaples/rardecode/v2 v2.0.1
 	github.com/qmuntal/gltf v0.24.2
 	github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
 	github.com/tidwall/gjson v1.18.0
@@ -26,11 +28,21 @@ require (
 )
 
 require (
+	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/bodgit/plumbing v1.3.0 // indirect
+	github.com/bodgit/windows v1.0.1 // indirect
+	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/icza/bitio v1.1.0 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/mewkiz/flac v1.0.12 // indirect
 	github.com/mewkiz/pkg v0.0.0-20230226050401-4010bf0fec14 // indirect
+	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/ulikunitz/xz v0.5.12 // indirect
+	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
 )
 
 require (
