@@ -1532,7 +1532,11 @@ func (s *System) onSyncConfigChanged() {
 // roster (select.def).
 func (s *System) currentContentFingerprint() string {
 	h := sha1.New()
-	io.WriteString(h, Version+"|"+BuildTime+"|")
+	build := Version // a release (v0.1.6) or a CI build (dev-1a2b3c4): the same on every platform
+	if !strings.HasPrefix(build, "v") && !strings.HasPrefix(build, "dev-") {
+		build += "|" + BuildTime // a local build
+	}
+	io.WriteString(h, build+"|")
 	if p, _ := omugenGameSelect(); p != "" {
 		if b, err := os.ReadFile(p); err == nil {
 			h.Write(bytes.ReplaceAll(b, []byte{13, 10}, []byte{10}))

@@ -16,8 +16,8 @@
 ## Why OMugen
 
 - **One file, any MUGEN game.** Copy `OMugen.exe` next to `data`, `chars` and `stages`.
-  The engine's own files live inside the exe; OMugen never changes the game's files and
-  only adds a `save` folder.
+  The engine's own files live inside the exe; OMugen never changes the game's files on its
+  own and only adds a `save` folder.
 - **Your controls, as they are.** Keys and pad buttons come from the game's `mugen.cfg`,
   with MUGEN 1.1's exact codes. Changes made in Options are written back to it.
 - **Plug-and-play controllers for up to 4 players.** DualShock 4, DualSense and Xbox pads,
@@ -26,7 +26,13 @@
 - **Fast with huge rosters.** A 1,580-character game reaches the menu in about 2 seconds.
 - **Smooth on 120-240 Hz monitors.** The game still runs at 60 ticks per second and plays
   exactly the same; characters, camera and stages are drawn smoothly in between.
-- **Online and LAN play**, delay-based or with rollback netcode.
+- **Online with a room code.** No port forwarding and no server: the host's router opens
+  the way by itself, and a friend types the 12-character code. PC and phone play together.
+  LAN and IP play too, delay-based or with rollback netcode.
+- **Add characters by dropping them in.** Drop a zip, rar or 7z (or a folder) on the window:
+  OMugen puts the characters and stages in place and adds them to the select screen.
+- **Training tools:** hitboxes, an input display, frame data (startup, active, recovery,
+  plus or minus on hit and block) and a dummy that records and plays back what you do.
 - **Nothing breaks the game.** If a screenpack or lifebars fail to load, OMugen's own take
   over and say so. `OMugen.exe -doctor` checks every character and stage and writes a report.
 - **Make your own game.** `OMugen.exe -newgame "My Game"` creates a playable game: a full
@@ -42,7 +48,9 @@
 | Your game folder | as is | as is (OMugen adds only `save`) |
 | Controls | `mugen.cfg` | the same `mugen.cfg` and codes, plus pads assigned automatically for up to 4 players |
 | Above 60 fps | the game itself speeds up | up to 240 fps or the monitor's rate, same gameplay (checked tick by tick) |
-| Online | no | online and LAN (delay-based or rollback netcode) |
+| Online | no | with a room code, no port forwarding, PC vs phone; LAN and IP (delay-based or rollback) |
+| Adding a character | unzip, copy, edit `select.def` | drop the download on the window |
+| Training | dummy settings | plus hitboxes, input display, frame data, dummy recording |
 | A broken screenpack or lifebars | error | OMugen's built-in ones take over |
 | Checking a big game | one character at a time | `-doctor`: a report on every character and stage |
 | Starting a new game | from an empty folder | `-newgame`: a playable template |
@@ -110,6 +118,12 @@ each character: many need a full power bar.
 the notice on the title screen says why. Options > Video Settings > OMugen Screenpack
 switches between them.
 
+**Online: the room code doesn't work.** Hosting needs a router that opens ports by itself
+(UPnP, on by default on most home routers) and an internet address of your own: on mobile
+data or behind two routers, OMugen says so; then let your friend host. Both players need
+the same OMugen version and the same game (the same `select.def`). Windows asks once
+whether OMugen may use the network: allow it.
+
 **Android: Play Protect says the app is unsafe or unknown.** Play Protect warns about apps
 installed from outside the Play Store that it hasn't seen much, more so when they ask for
 access to all files (OMugen needs it to open game folders and USB drives). OMugen has no
@@ -151,6 +165,24 @@ log** in its settings).
   `%LOCALAPPDATA%\OMugen\pad-layouts.ini`), or else the standard layout: left stick and
   D-pad to move, A B C on Square Triangle Circle, X Y Z on Cross R1 R2, MUGEN's Start
   (energy charge in many games) on L1, the pause menu on Options (Xbox pads by position).
+- **Online with a room code:** ONLINE / LAN > Host with Room Code in the OMugen
+  screenpack, or Options > Play Online with any screenpack. The host's router opens the
+  netplay ports (UPnP) and the code, its internet address and port, is copied to the
+  clipboard; Join with Room Code takes it (pasted, typed, or straight from the clipboard).
+  The ports close when online play ends. The games talk directly, with no server in between,
+  and compute the same frames on a PC and a phone. `-room <code>` joins from the command line.
+- **Adding characters and stages:** drop zip, rar or 7z archives, folders or `.def` files
+  on the window (or on `OMugen.exe`), or pick them in Options > Add Characters and Stages
+  (on Android, the phone's file picker opens). OMugen shows what it found and asks first; a
+  character goes to `chars/` as is, a stage to `stages/` with the files it names, and both
+  are added to `select.def` (a backup goes to `save/backups`), in the next free box of the
+  select screen. Programs (`.exe`, `.bat`...) in a download are left out. Then OMugen
+  restarts to load them.
+- **Training Tools** (training pause menu): Hitboxes, Input Display (P1, or P1 and P2),
+  Frame Data (startup, active and recovery frames of each player's last move, and the frame
+  advantage on hit or block), and Record Dummy: P1's controller plays the dummy until the
+  pause menu opens again (up to 10 seconds), then Dummy Playback: Loop replays it, from
+  either side.
 - **Controller indicator:** P1-P4 tags in the corner show who has a controller, a notice
   appears when one joins, and the highlighted menu item shows who is selecting.
 - **Sharp at any size.** Every frame is drawn at the window's own resolution and reaches the
