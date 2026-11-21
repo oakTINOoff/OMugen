@@ -549,6 +549,8 @@ func (s *System) shutdown() {
 	if !sys.gameEnd {
 		sys.gameEnd = true
 	}
+	omugenShimClose()
+	omugenRoomClose() // OMugen: the router's ports a room code opened
 	if sys.rollback.session != nil && sys.rollback.session.recording != nil {
 		sys.rollback.session.SaveReplay()
 	}
@@ -6873,13 +6875,13 @@ func (es *EnvShake) update() {
 	// Mul is applied once per cycle
 	if es.mul != 0 && es.mul != 1 {
 		cycles := math.Floor(float64(es.freq*elapsed) / 360.0)
-		factor *= math.Pow(float64(es.mul), cycles)
+		factor *= detPow(float64(es.mul), cycles)
 	}
 
 	// Apply decay
 	t := float64(es.curTime) / float64(es.time)
 	if es.decay != 0 && t > 0 {
-		factor *= math.Pow(t, float64(es.decay))
+		factor *= detPow(t, float64(es.decay))
 	}
 
 	ampl := float64(es.ampl) * factor

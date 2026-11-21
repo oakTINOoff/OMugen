@@ -95,8 +95,10 @@ menu.itemname.menuversus.freebattle = QUICK MATCH
 menu.itemname.menuversus.back = BACK
 
 menu.itemname.menunetwork = ONLINE / LAN
-menu.itemname.menunetwork.serverhost = HOST GAME
-menu.itemname.menunetwork.serverjoin = JOIN GAME
+menu.itemname.menunetwork.roomhost = HOST WITH ROOM CODE
+menu.itemname.menunetwork.roomjoin = JOIN WITH ROOM CODE
+menu.itemname.menunetwork.serverhost = HOST ON LAN / BY IP
+menu.itemname.menunetwork.serverjoin = JOIN BY IP
 menu.itemname.menunetwork.back = BACK
 menu.itemname.menunetwork.serverjoin.joinadd = NEW ADDRESS
 menu.itemname.menunetwork.serverjoin.back = BACK

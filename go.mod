@@ -11,6 +11,7 @@ require (
 	github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71
 	github.com/go-gl/mathgl v1.0.0
 	github.com/gopxl/beep/v2 v2.1.1-0.20240921133731-defe79638e99
+	github.com/huin/goupnp v1.3.1
 	github.com/ikemen-engine/ggpo v0.0.0-20260413180701-b08e7d27b7f2
 	github.com/ikemen-engine/reisen v0.1.10-0.20260911210321-7972c2bbc957
 	github.com/leonkasovan/gl v0.0.0-20251110213347-e04040ce71e2
@@ -43,6 +44,7 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/ulikunitz/xz v0.5.12 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
+	golang.org/x/sync v0.9.0 // indirect
 )
 
 require (

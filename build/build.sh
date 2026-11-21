@@ -1012,11 +1012,18 @@ function build() {
 		# -tags here replaces GOFLAGS' tags: keep omugen_engine (the embedded engine files).
 		local tags="android,gles2"
 		[[ " ${GOFLAGS:-} " == *omugen_engine* ]] && tags+=",omugen_engine"
+		# fmahash=n: no fused multiply-add on ARM, so the game logic computes
+		# exactly what it does on a PC (online play between the two). The
+		# compiler lists each place it leaves unfused ("fmahash triggered").
 		go build -buildmode=c-shared -trimpath -v -tags="$tags" \
+		-gcflags=all=-d=fmahash=n \
 		-ldflags="-s -w -X 'main.Version=${APP_VERSION}' -X 'main.BuildTime=${APP_BUILDTIME}' -X 'runtime.godebugDefault=asyncpreemptoff=1,sigaltstack=0'" \
 		-o "$OUTDIR/$binName" ./src
 	else
-		go build -trimpath -v \
+		# ARM (Apple silicon, Linux on ARM): no fused multiply-add, as above.
+		local gcflags=()
+		[[ "$(go env GOARCH)" == arm64 ]] && gcflags=(-gcflags=all=-d=fmahash=n)
+		go build -trimpath -v ${gcflags[@]+"${gcflags[@]}"} \
 		-ldflags "-s -w -X 'main.Version=${APP_VERSION}' -X 'main.BuildTime=${APP_BUILDTIME}'" \
 		-o "$OUTDIR/$binName" ./src
 	fi

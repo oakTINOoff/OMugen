@@ -1689,7 +1689,7 @@ func (BytecodeExp) exp(v1 *BytecodeValue) {
 	//if v1.IsUndefined() {
 	//	return
 	//}
-	v1.SetF(float32(math.Exp(v1.value)))
+	v1.SetF(float32(detExp(v1.value)))
 }
 
 func (BytecodeExp) ln(v1 *BytecodeValue) {
@@ -1700,7 +1700,7 @@ func (BytecodeExp) ln(v1 *BytecodeValue) {
 		*v1 = BytecodeUndefined()
 		sys.printBytecodeError("Invalid logarithm")
 	} else {
-		v1.SetF(float32(math.Log(v1.value)))
+		v1.SetF(float32(detLog(v1.value)))
 	}
 }
 
@@ -1713,7 +1713,7 @@ func (BytecodeExp) log(v1 *BytecodeValue, v2 BytecodeValue) {
 		*v1 = BytecodeUndefined()
 		sys.printBytecodeError("Invalid logarithm")
 	} else {
-		v1.SetF(float32(math.Log(v2.value) / math.Log(v1.value)))
+		v1.SetF(float32(detLog(v2.value) / detLog(v1.value)))
 	}
 }
 
@@ -1824,7 +1824,7 @@ func (BytecodeExp) round(v1 *BytecodeValue, v2 BytecodeValue) {
 		*v1 = BytecodeUndefined()
 		return
 	}
-	shift := math.Pow(10, v2.value)
+	shift := detPow(10, v2.value)
 	v1.SetF(float32(math.Floor((v1.value*shift)+0.5) / shift))
 }
 

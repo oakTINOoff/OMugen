@@ -14326,7 +14326,7 @@ func (cl *CharList) enemyNear(c *Char, n int32, p2list bool) *Char {
 					if p2list {
 						distZ *= 4.0
 					}
-					dist = float32(math.Hypot(float64(distX), float64(distZ)))
+					dist = float32(detHypot(float64(distX), float64(distZ)))
 				}
 				// Append this enemy and their distance
 				pairs = append(pairs, enemyDist{id: e.id, dist: dist})

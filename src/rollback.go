@@ -94,11 +94,25 @@ func (rs *RollbackSystem) preMatchSetup() {
 	if rs.session != nil && sys.netConnection != nil {
 		if rs.session.host != "" {
 			// Initialize client as P2
-			rs.session.InitP2(2, 7550, 7600, rs.session.host)
+			// OMugen: a room code gives the host's port on its router
+			remotePort := 7600
+			if omugenRoom.joinUDP > 0 {
+				remotePort = omugenRoom.joinUDP
+			}
+			rs.session.InitP2(2, roomGuestUDP, remotePort, rs.session.host)
 			rs.session.playerNo = 2
 		} else {
 			// Initialize host as P1
-			rs.session.InitP1(2, 7600, 7550, rs.session.remoteIp)
+			// OMugen: through a relay that answers the guest from wherever
+			// its packets come (its router may change their port)
+			omugenShimClose()
+			if shim, err := newUDPShim(7600, rs.session.remoteIp, roomGuestUDP); err == nil {
+				omugenShim = shim
+				rs.session.InitP1(2, shim.ggpoPort, shim.localPort(), "127.0.0.1")
+			} else {
+				LogMessage("OMugen: rollback relay: %v", err)
+				rs.session.InitP1(2, 7600, roomGuestUDP, rs.session.remoteIp)
+			}
 			rs.session.playerNo = 1
 		}
 
@@ -140,6 +154,7 @@ func (rs *RollbackSystem) postMatchSetup() {
 	sys.netConnection = rs.netConnection
 	rs.netConnection = nil
 	rs.session.backend.Close()
+	omugenShimClose()
 
 	// Prep for the next match.
 	if sys.netConnection != nil {

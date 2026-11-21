@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/draw"
 	"math"
+	"os"
 	"runtime"
 	"strings"
 
@@ -274,6 +275,24 @@ func (w *Window) GetClipboardString() string {
 		return ""
 	}
 	return s
+}
+
+// omugenSetClipboard copies a text (a room code) to the clipboard.
+func omugenSetClipboard(s string) {
+	if os.Getenv("OMUGEN_ROOM_FAKE") != "" {
+		return // scripted tests leave the clipboard alone
+	}
+	sdl.SetClipboardText(s)
+}
+
+// omugenSetTextInput starts or stops text input; on phones it shows or hides
+// the keyboard.
+func omugenSetTextInput(on bool) {
+	if on {
+		sdl.StartTextInput()
+	} else if runtime.GOOS == "android" {
+		sdl.StopTextInput() // desktop SDL keeps text input on, as the menus expect
+	}
 }
 
 func (w *Window) toggleFullscreen() {

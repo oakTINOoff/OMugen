@@ -2526,7 +2526,11 @@ func systemScriptInit(l *lua.LState) {
 				sys.rollback.session.host = host
 			}
 
-			sys.netConnection.Connect(host, sys.cfg.Netplay.ListenPort)
+			port := sys.cfg.Netplay.ListenPort
+			if omugenRoom.joinPort > 0 {
+				port = omugenRoom.joinPort // OMugen: a room code's port
+			}
+			sys.netConnection.Connect(host, port)
 		} else {
 			if err := sys.netConnection.Accept(sys.cfg.Netplay.ListenPort); err != nil {
 				l.RaiseError(err.Error())
@@ -2590,6 +2594,9 @@ func systemScriptInit(l *lua.LState) {
 			sys.netConnection.end()
 			sys.netConnection = nil
 		}
+		// OMugen: close the router's ports a room code opened
+		omugenShimClose()
+		omugenRoomClose()
 		return 0
 	})
 	luaRegister(l, "exitReplay", func(*lua.LState) int {

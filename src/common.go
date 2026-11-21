@@ -127,7 +127,7 @@ func Abs[T int | int32 | int64 | float32 | float64](val T) (res T) {
 }
 
 func Pow(x, y float32) float32 {
-	return float32(math.Pow(float64(x), float64(y)))
+	return float32(detPow(float64(x), float64(y))) // OMugen: the same on every processor (online play)
 }
 
 func Lerp(x, y, a float32) float32 {

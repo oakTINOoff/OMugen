@@ -1173,6 +1173,15 @@ function main.f_commandLine()
 		end
 	end
 	hook.run("main.f_commandLine", t, flags, t_teamMode, t_numChars, t_matchWins, t_params)
+	--OMugen: -room <code> joins a room by its code
+	if flags['-room'] ~= nil then
+		local ip, err = omugenRoomJoin(flags['-room'])
+		if ip == nil then
+			print('OMugen: -room: ' .. err)
+			os.exit()
+		end
+		flags['-ip'] = ip
+	end
 	if flags['-ip'] ~= nil then
 		enterNetPlay(flags['-ip'])
 		while not connected() do
@@ -2029,6 +2038,7 @@ local function enterSyncedNetplayMenu()
 	fadeInInit(motif[main.group].fadein.FadeData)
 	main.menu.submenu.server.loop()
 end
+main.f_enterSyncedNetplayMenu = enterSyncedNetplayMenu
 
 local function isValidIp(address)
 	local a, b, c, d = address:match('^(%d+)%.(%d+)%.(%d+)%.(%d+)$')
@@ -2427,6 +2437,21 @@ main.t_itemname = {
 			exitReplay()
 			showSessionWarning()
 		end
+		return nil
+	end,
+	--OMugen: HOST / JOIN WITH ROOM CODE
+	['roomhost'] = function(t, item)
+		local doneSnd = motif[main.group].cursor.done.snd.serverhost or motif[main.group].cursor.done.snd.default
+		sndPlay(motif.Snd, doneSnd[1], doneSnd[2])
+		hook.run("main.t_itemname", t, item)
+		main.f_roomPlay(true)
+		return nil
+	end,
+	['roomjoin'] = function(t, item)
+		local doneSnd = motif[main.group].cursor.done.snd.serverconnect or motif[main.group].cursor.done.snd.default
+		sndPlay(motif.Snd, doneSnd[1], doneSnd[2])
+		hook.run("main.t_itemname", t, item)
+		main.f_roomPlay(false)
 		return nil
 	end,
 	--SERVER HOST
@@ -3046,6 +3071,22 @@ end
 
 -- Dynamically generates all menus and submenus
 function main.f_start()
+	--OMugen: online play (Options > Play Online) ends in the menu of the
+	--connected players, which screenpacks made for MUGEN don't have
+	local hasServer = false
+	for _, suffix in ipairs(motif[main.group].menu.itemname_order) do
+		if suffix:match('^server_') then
+			hasServer = true
+			break
+		end
+	end
+	if not hasServer then
+		for _, v in ipairs({{'server_netplayversus', 'VERSUS'}, {'server_netplayteamcoop', 'ARCADE CO-OP'},
+			{'server_netplaysurvivalcoop', 'SURVIVAL CO-OP'}, {'server_back', 'LEAVE'}}) do
+			table.insert(motif[main.group].menu.itemname_order, v[1])
+			motif[main.group].menu.itemname[v[1]] = v[2]
+		end
+	end
 	main.menu = {title = main.f_itemnameUpper(motif[main.group].title.text, motif[main.group].menu.title.uppercase), submenu = {}, items = {}}
 	main.menu.loop = main.f_createMenu(main.menu, true, main.group == 'title_info', main.group == 'title_info', false)
 	local w = main.f_menuWindow(motif[main.group].menu)
@@ -3327,6 +3368,108 @@ function main.f_connect(server, str)
 	end
 	replayRecord('save/replays/' .. os.date("%Y-%m-%d_%Hh%Mm%Ss") .. '.replay')
 	return true
+end
+
+--OMugen: online play with a room code (omugen_room.go). The host's router
+--opens the way (UPnP); the code is its address, copied to the clipboard.
+local function f_wrapLines(text, width)
+	local out, line = {}, ''
+	for word in text:gmatch('%S+') do
+		if line ~= '' and #line + 1 + #word > width then
+			table.insert(out, line)
+			line = word
+		else
+			line = line == '' and word or line .. ' ' .. word
+		end
+	end
+	if line ~= '' then
+		table.insert(out, line)
+	end
+	return table.concat(out, '\\n')
+end
+
+local function f_connectingDraw(txt)
+	clearColor(motif[main.background].bgclearcolor[1], motif[main.background].bgclearcolor[2], motif[main.background].bgclearcolor[3])
+	bgDraw(motif[main.background].BGDef, 0)
+	rectDraw(motif.title_info.connecting.overlay.RectData)
+	textImgReset(motif.title_info.connecting.TextSpriteData)
+	textImgSetText(motif.title_info.connecting.TextSpriteData, txt)
+	textImgDraw(motif.title_info.connecting.TextSpriteData)
+	bgDraw(motif[main.background].BGDef, 1)
+end
+
+-- Opens the host's router and returns the room code (nil if it failed or
+-- was cancelled).
+function main.f_roomHost()
+	omugenRoomHost()
+	while true do
+		local state, s = omugenRoomStatus()
+		if state == 'ready' then
+			omugenClipboardSet(s)
+			return s
+		elseif state == 'failed' then
+			omugenRoomClose()
+			main.f_warning(f_wrapLines(s, 44), motif[main.group], motif[main.background])
+			return nil
+		end
+		if esc() or getInput(-1, motif.title_info.menu.cancel.key) then
+			sndPlay(motif.Snd, motif.title_info.cancel.snd[1], motif.title_info.cancel.snd[2])
+			omugenRoomClose()
+			return nil
+		end
+		f_connectingDraw('Opening your router for online play...')
+		refresh()
+	end
+end
+
+-- Asks for a room code (the clipboard's, when it holds one) and returns the
+-- host's address and the code (nil if cancelled or wrong).
+function main.f_roomJoin()
+	local clip = os.getenv('OMUGEN_ROOM_JOIN') or getClipboardString() or '' --the variable: scripted tests
+	local default = omugenRoomValid(clip) and clip:upper():gsub('%s', '') or ''
+	omugenTextInput(true)
+	local code = main.f_drawInput(
+		motif.title_info.textinput.TextSpriteData,
+		'Room code (from your friend):',
+		motif.title_info,
+		motif[main.background],
+		motif.title_info.textinput.overlay.RectData,
+		default
+	)
+	omugenTextInput(false)
+	if code == '' then
+		return nil
+	end
+	local ip, err = omugenRoomJoin(code)
+	if ip == nil then
+		main.f_warning(f_wrapLines(err, 44), motif[main.group], motif[main.background])
+		return nil
+	end
+	return ip, code:upper()
+end
+
+-- Online play from a room code, to the end of the session; host: true to
+-- host, false to join.
+function main.f_roomPlay(host)
+	main.f_waitForPreloads(true)
+	local ok
+	if host then
+		local code = main.f_roomHost()
+		ok = code ~= nil and main.f_connect('', 'room code ' .. code .. ', copied')
+	else
+		local ip, code = main.f_roomJoin()
+		ok = ip ~= nil and main.f_connect(ip, code)
+	end
+	if ok then
+		if synchronize() then
+			main.f_enterSyncedNetplayMenu()
+		end
+		replayStop()
+		exitNetPlay()
+		exitReplay()
+		showSessionWarning()
+	end
+	omugenRoomClose()
 end
 
 --asserts content unlock conditions

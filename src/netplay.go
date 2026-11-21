@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -1509,7 +1511,7 @@ func applySyncSettings(cfg *Config, settings []SyncSetting, strict bool) error {
 
 func validateContentFingerprint(local, remote string) error {
 	if local != "" && remote != "" && local != remote {
-		return Error("Content/build mismatch between peers")
+		return Error("Your games differ: both players need the same OMugen version and the same game (select.def)")
 	}
 	return nil
 }
@@ -1525,9 +1527,18 @@ func (s *System) onSyncConfigChanged() {
 	}
 }
 
+// currentContentFingerprint tells the peers' games apart: OMugen's build
+// (the same moves must give the same results on both sides) and the game's
+// roster (select.def).
 func (s *System) currentContentFingerprint() string {
-	// TODO: replace with real content/build fingerprint handshake.
-	return ""
+	h := sha1.New()
+	io.WriteString(h, Version+"|"+BuildTime+"|")
+	if p, _ := omugenGameSelect(); p != "" {
+		if b, err := os.ReadFile(p); err == nil {
+			h.Write(bytes.ReplaceAll(b, []byte{13, 10}, []byte{10}))
+		}
+	}
+	return hex.EncodeToString(h.Sum(nil))[:16]
 }
 
 func (s *System) beginSessionOverride(source string, strict, host []SyncSetting, contentFingerprint string) error {

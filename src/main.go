@@ -339,6 +339,7 @@ Quick VS Options:
 -s <stagename>          Loads stage <stagename>
 -loadmotif              Fully loads motif/chars/stages
 -ip <hostip>            Connect to <hostip> for netplay; leave blank for host
+-room <code>            Join an online room by its code
 	
 Debug Options:
 -nojoy                  Disables joysticks
