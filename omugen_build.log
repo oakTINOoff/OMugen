@@ -1,0 +1,1691 @@
+==> OMugen build started 2026-11-21 00:50:43
+==> git: /c/Program Files/Git/cmd/git
+==> First build: producing runtime DLLs in lib/
+==> Embedding Windows resources (icon + manifest) with windres...
+==> Building decoder-only libvpx v1.15.2 to /d/a/OMugen/OMugen/build/ffmpeg
+Cloning into 'build/libvpx-src'...
+warning: refs/tags/v1.15.2 16fc99a350efdcf12e795e89cf237118c424e3af is not a commit!
+Note: switching to 'd168454ecd099805c675d4a98c66f4891373302a'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+  enabling pic
+  disabling shared
+  disabling examples
+  disabling tools
+  disabling docs
+  disabling unit_tests
+  disabling install_bins
+  disabling install_docs
+  disabling vp8_encoder
+  disabling vp9_encoder
+  enabling vp8_decoder
+  enabling vp9_decoder
+  disabling webm_io
+Configuring for target 'x86_64-win64-gcc'
+  enabling x86_64
+  enabling runtime_cpu_detect
+  enabling mmx
+  enabling sse
+  enabling sse2
+  enabling sse3
+  enabling ssse3
+  enabling sse4_1
+  enabling avx
+  enabling avx2
+  enabling avx512
+  using nasm
+  enabling postproc
+  enabling libyuv
+Creating makefiles for x86_64-win64-gcc libs
+    [CREATE] vpx_scale_rtcd.h
+    [CREATE] vpx_dsp_rtcd.h
+    [CREATE] vp8_rtcd.h
+    [CREATE] vp9_rtcd.h
+    [DEP] vpx/src/vpx_decoder.c.d
+    [DEP] vpx/src/vpx_encoder.c.d
+    [DEP] vpx/src/vpx_codec.c.d
+    [DEP] vpx/src/vpx_image.c.d
+    [DEP] vpx_mem/vpx_mem.c.d
+    [DEP] vpx_scale/generic/vpx_scale.c.d
+    [DEP] vpx_scale/generic/yv12config.c.d
+    [DEP] vpx_scale/generic/yv12extend.c.d
+    [DEP] vpx_scale/generic/gen_scalers.c.d
+    [DEP] vpx_scale/vpx_scale_rtcd.c.d
+    [DEP] vpx_dsp/prob.c.d
+    [DEP] vpx_dsp/bitreader.c.d
+    [DEP] vpx_dsp/bitreader_buffer.c.d
+    [DEP] vpx_dsp/intrapred.c.d
+    [DEP] vpx_dsp/add_noise.c.d
+    [DEP] vpx_dsp/deblock.c.d
+    [DEP] vpx_dsp/x86/post_proc_sse2.c.d
+    [DEP] vpx_dsp/vpx_convolve.c.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_4t_intrin_sse2.c.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_8t_intrin_avx2.c.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_8t_intrin_ssse3.c.d
+    [DEP] vpx_dsp/loopfilter.c.d
+    [DEP] vpx_dsp/x86/loopfilter_sse2.c.d
+    [DEP] vpx_dsp/x86/loopfilter_avx2.c.d
+    [DEP] vpx_dsp/inv_txfm.c.d
+    [DEP] vpx_dsp/x86/inv_txfm_sse2.c.d
+    [DEP] vpx_dsp/x86/inv_txfm_avx2.c.d
+    [DEP] vpx_dsp/x86/inv_txfm_ssse3.c.d
+    [DEP] vpx_dsp/skin_detection.c.d
+    [DEP] vpx_dsp/variance.c.d
+    [DEP] vpx_dsp/x86/avg_pred_sse2.c.d
+    [DEP] vpx_dsp/x86/avg_pred_avx2.c.d
+    [DEP] vpx_dsp/x86/variance_sse2.c.d
+    [DEP] vpx_dsp/x86/variance_avx2.c.d
+    [DEP] vpx_dsp/vpx_dsp_rtcd.c.d
+    [DEP] vpx_util/vpx_thread.c.d
+    [DEP] vpx_util/vpx_write_yuv_frame.c.d
+    [DEP] vp8/common/alloccommon.c.d
+    [DEP] vp8/common/blockd.c.d
+    [DEP] vp8/common/dequantize.c.d
+    [DEP] vp8/common/entropy.c.d
+    [DEP] vp8/common/entropymode.c.d
+    [DEP] vp8/common/entropymv.c.d
+    [DEP] vp8/common/extend.c.d
+    [DEP] vp8/common/filter.c.d
+    [DEP] vp8/common/findnearmv.c.d
+    [DEP] vp8/common/generic/systemdependent.c.d
+    [DEP] vp8/common/idct_blk.c.d
+    [DEP] vp8/common/idctllm.c.d
+    [DEP] vp8/common/rtcd.c.d
+    [DEP] vp8/common/vp8_loopfilter.c.d
+    [DEP] vp8/common/loopfilter_filters.c.d
+    [DEP] vp8/common/mbpitch.c.d
+    [DEP] vp8/common/modecont.c.d
+    [DEP] vp8/common/quant_common.c.d
+    [DEP] vp8/common/reconinter.c.d
+    [DEP] vp8/common/reconintra.c.d
+    [DEP] vp8/common/reconintra4x4.c.d
+    [DEP] vp8/common/setupintrarecon.c.d
+    [DEP] vp8/common/swapyv12buffer.c.d
+    [DEP] vp8/common/treecoder.c.d
+    [DEP] vp8/common/x86/vp8_asm_stubs.c.d
+    [DEP] vp8/common/x86/loopfilter_x86.c.d
+    [DEP] vp8/common/mfqe.c.d
+    [DEP] vp8/common/postproc.c.d
+    [DEP] vp8/common/x86/idct_blk_mmx.c.d
+    [DEP] vp8/common/x86/idct_blk_sse2.c.d
+    [DEP] vp8/common/x86/bilinear_filter_sse2.c.d
+    [DEP] vp8/vp8_dx_iface.c.d
+    [DEP] vp8/decoder/dboolhuff.c.d
+    [DEP] vp8/decoder/decodemv.c.d
+    [DEP] vp8/decoder/decodeframe.c.d
+    [DEP] vp8/decoder/onyxd_if.c.d
+    [DEP] vp8/decoder/detokenize.c.d
+    [DEP] vp8/decoder/threading.c.d
+    [DEP] vp9/vp9_iface_common.c.d
+    [DEP] vp9/common/vp9_alloccommon.c.d
+    [DEP] vp9/common/vp9_blockd.c.d
+    [DEP] vp9/common/vp9_entropy.c.d
+    [DEP] vp9/common/vp9_entropymode.c.d
+    [DEP] vp9/common/vp9_entropymv.c.d
+    [DEP] vp9/common/vp9_frame_buffers.c.d
+    [DEP] vp9/common/vp9_idct.c.d
+    [DEP] vp9/common/vp9_filter.c.d
+    [DEP] vp9/common/vp9_pred_common.c.d
+    [DEP] vp9/common/vp9_rtcd.c.d
+    [DEP] vp9/common/vp9_scale.c.d
+    [DEP] vp9/common/vp9_seg_common.c.d
+    [DEP] vp9/common/vp9_tile_common.c.d
+    [DEP] vp9/common/vp9_loopfilter.c.d
+    [DEP] vp9/common/vp9_thread_common.c.d
+    [DEP] vp9/common/vp9_mvref_common.c.d
+    [DEP] vp9/common/vp9_quant_common.c.d
+    [DEP] vp9/common/vp9_reconinter.c.d
+    [DEP] vp9/common/vp9_reconintra.c.d
+    [DEP] vp9/common/vp9_common_data.c.d
+    [DEP] vp9/common/vp9_scan.c.d
+    [DEP] vp9/common/x86/vp9_idct_intrin_sse2.c.d
+    [DEP] vp9/vp9_dx_iface.c.d
+    [DEP] vp9/decoder/vp9_decodemv.c.d
+    [DEP] vp9/decoder/vp9_decodeframe.c.d
+    [DEP] vp9/decoder/vp9_detokenize.c.d
+    [DEP] vp9/decoder/vp9_decoder.c.d
+    [DEP] vp9/decoder/vp9_dsubexp.c.d
+    [DEP] vp9/decoder/vp9_job_queue.c.d
+    [DEP] vpx_config.c.d
+    [DEP] vpx_ports/emms_mmx.asm.d
+    [DEP] vpx_dsp/x86/intrapred_sse2.asm.d
+    [DEP] vpx_dsp/x86/intrapred_ssse3.asm.d
+    [DEP] vpx_dsp/x86/add_noise_sse2.asm.d
+    [DEP] vpx_dsp/x86/deblock_sse2.asm.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_8t_sse2.asm.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_bilinear_sse2.asm.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_8t_ssse3.asm.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_bilinear_ssse3.asm.d
+    [DEP] vpx_dsp/x86/vpx_convolve_copy_sse2.asm.d
+    [DEP] vpx_dsp/x86/inv_wht_sse2.asm.d
+    [DEP] vpx_dsp/x86/ssim_opt_x86_64.asm.d
+    [DEP] vpx_dsp/x86/subpel_variance_sse2.asm.d
+    [DEP] vp8/common/x86/dequantize_mmx.asm.d
+    [DEP] vp8/common/x86/idctllm_mmx.asm.d
+    [DEP] vp8/common/x86/recon_mmx.asm.d
+    [DEP] vp8/common/x86/subpixel_mmx.asm.d
+    [DEP] vp8/common/x86/idctllm_sse2.asm.d
+    [DEP] vp8/common/x86/recon_sse2.asm.d
+    [DEP] vp8/common/x86/subpixel_sse2.asm.d
+    [DEP] vp8/common/x86/loopfilter_sse2.asm.d
+    [DEP] vp8/common/x86/iwalsh_sse2.asm.d
+    [DEP] vp8/common/x86/subpixel_ssse3.asm.d
+    [DEP] vp8/common/x86/mfqe_sse2.asm.d
+    [DEP] vp8/common/x86/loopfilter_block_sse2_x86_64.asm.d
+    [CREATE] vpx_config.asm
+    [DEP] vpx_ports/emms_mmx.asm.d
+    [DEP] vpx_dsp/x86/intrapred_sse2.asm.d
+    [DEP] vpx_dsp/x86/intrapred_ssse3.asm.d
+    [DEP] vpx_dsp/x86/add_noise_sse2.asm.d
+    [DEP] vpx_dsp/x86/deblock_sse2.asm.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_8t_sse2.asm.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_bilinear_sse2.asm.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_8t_ssse3.asm.d
+    [DEP] vpx_dsp/x86/vpx_subpixel_bilinear_ssse3.asm.d
+    [DEP] vpx_dsp/x86/vpx_convolve_copy_sse2.asm.d
+    [DEP] vpx_dsp/x86/inv_wht_sse2.asm.d
+    [DEP] vpx_dsp/x86/ssim_opt_x86_64.asm.d
+    [DEP] vpx_dsp/x86/subpel_variance_sse2.asm.d
+    [DEP] vp8/common/x86/dequantize_mmx.asm.d
+    [DEP] vp8/common/x86/idctllm_mmx.asm.d
+    [DEP] vp8/common/x86/recon_mmx.asm.d
+    [DEP] vp8/common/x86/subpixel_mmx.asm.d
+    [DEP] vp8/common/x86/idctllm_sse2.asm.d
+    [DEP] vp8/common/x86/recon_sse2.asm.d
+    [DEP] vp8/common/x86/subpixel_sse2.asm.d
+    [DEP] vp8/common/x86/loopfilter_sse2.asm.d
+    [DEP] vp8/common/x86/iwalsh_sse2.asm.d
+    [DEP] vp8/common/x86/subpixel_ssse3.asm.d
+    [DEP] vp8/common/x86/mfqe_sse2.asm.d
+    [DEP] vp8/common/x86/loopfilter_block_sse2_x86_64.asm.d
+    [CC] vpx/src/vpx_decoder.c.o
+    [CC] vpx/src/vpx_encoder.c.o
+    [CC] vpx/src/vpx_codec.c.o
+    [CC] vpx/src/vpx_image.c.o
+    [CC] vpx_mem/vpx_mem.c.o
+    [CC] vpx_scale/generic/vpx_scale.c.o
+    [CC] vpx_scale/generic/yv12config.c.o
+    [CC] vpx_scale/generic/yv12extend.c.o
+    [CC] vpx_scale/generic/gen_scalers.c.o
+    [CC] vpx_scale/vpx_scale_rtcd.c.o
+    [CC] vpx_dsp/prob.c.o
+    [CC] vpx_dsp/bitreader.c.o
+    [CC] vpx_dsp/bitreader_buffer.c.o
+    [CC] vpx_dsp/intrapred.c.o
+    [CC] vpx_dsp/add_noise.c.o
+    [CC] vpx_dsp/deblock.c.o
+    [CC] vpx_dsp/x86/post_proc_sse2.c.o
+    [CC] vpx_dsp/vpx_convolve.c.o
+    [CC] vpx_dsp/x86/vpx_subpixel_4t_intrin_sse2.c.o
+    [CC] vpx_dsp/x86/vpx_subpixel_8t_intrin_avx2.c.o
+    [CC] vpx_dsp/x86/vpx_subpixel_8t_intrin_ssse3.c.o
+    [CC] vpx_dsp/loopfilter.c.o
+    [CC] vpx_dsp/x86/loopfilter_sse2.c.o
+    [CC] vpx_dsp/x86/loopfilter_avx2.c.o
+    [CC] vpx_dsp/inv_txfm.c.o
+    [CC] vpx_dsp/x86/inv_txfm_sse2.c.o
+    [CC] vpx_dsp/x86/inv_txfm_avx2.c.o
+    [CC] vpx_dsp/x86/inv_txfm_ssse3.c.o
+    [CC] vpx_dsp/skin_detection.c.o
+    [CC] vpx_dsp/variance.c.o
+    [CC] vpx_dsp/x86/avg_pred_sse2.c.o
+    [CC] vpx_dsp/x86/avg_pred_avx2.c.o
+    [CC] vpx_dsp/x86/variance_sse2.c.o
+    [CC] vpx_dsp/x86/variance_avx2.c.o
+    [CC] vpx_dsp/vpx_dsp_rtcd.c.o
+    [CC] vpx_util/vpx_thread.c.o
+    [CC] vpx_util/vpx_write_yuv_frame.c.o
+    [CC] vp8/common/alloccommon.c.o
+    [CC] vp8/common/blockd.c.o
+    [CC] vp8/common/dequantize.c.o
+    [CC] vp8/common/entropy.c.o
+    [CC] vp8/common/entropymode.c.o
+    [CC] vp8/common/entropymv.c.o
+    [CC] vp8/common/extend.c.o
+    [CC] vp8/common/filter.c.o
+    [CC] vp8/common/findnearmv.c.o
+    [CC] vp8/common/generic/systemdependent.c.o
+    [CC] vp8/common/idct_blk.c.o
+    [CC] vp8/common/idctllm.c.o
+    [CC] vp8/common/rtcd.c.o
+    [CC] vp8/common/vp8_loopfilter.c.o
+    [CC] vp8/common/loopfilter_filters.c.o
+    [CC] vp8/common/mbpitch.c.o
+    [CC] vp8/common/modecont.c.o
+    [CC] vp8/common/quant_common.c.o
+    [CC] vp8/common/reconinter.c.o
+    [CC] vp8/common/reconintra.c.o
+    [CC] vp8/common/reconintra4x4.c.o
+    [CC] vp8/common/setupintrarecon.c.o
+    [CC] vp8/common/swapyv12buffer.c.o
+    [CC] vp8/common/treecoder.c.o
+    [CC] vp8/common/x86/vp8_asm_stubs.c.o
+    [CC] vp8/common/x86/loopfilter_x86.c.o
+    [CC] vp8/common/mfqe.c.o
+    [CC] vp8/common/postproc.c.o
+    [CC] vp8/common/x86/idct_blk_mmx.c.o
+    [CC] vp8/common/x86/idct_blk_sse2.c.o
+    [CC] vp8/common/x86/bilinear_filter_sse2.c.o
+    [CC] vp8/vp8_dx_iface.c.o
+    [CC] vp8/decoder/dboolhuff.c.o
+    [CC] vp8/decoder/decodemv.c.o
+    [CC] vp8/decoder/decodeframe.c.o
+    [CC] vp8/decoder/detokenize.c.o
+    [CC] vp8/decoder/onyxd_if.c.o
+    [CC] vp8/decoder/threading.c.o
+    [CC] vp9/vp9_iface_common.c.o
+    [CC] vp9/common/vp9_alloccommon.c.o
+    [CC] vp9/common/vp9_blockd.c.o
+    [CC] vp9/common/vp9_entropy.c.o
+    [CC] vp9/common/vp9_entropymode.c.o
+    [CC] vp9/common/vp9_entropymv.c.o
+    [CC] vp9/common/vp9_frame_buffers.c.o
+    [CC] vp9/common/vp9_idct.c.o
+    [CC] vp9/common/vp9_filter.c.o
+    [CC] vp9/common/vp9_pred_common.c.o
+    [CC] vp9/common/vp9_rtcd.c.o
+    [CC] vp9/common/vp9_scale.c.o
+    [CC] vp9/common/vp9_seg_common.c.o
+    [CC] vp9/common/vp9_tile_common.c.o
+    [CC] vp9/common/vp9_loopfilter.c.o
+    [CC] vp9/common/vp9_thread_common.c.o
+    [CC] vp9/common/vp9_mvref_common.c.o
+    [CC] vp9/common/vp9_quant_common.c.o
+    [CC] vp9/common/vp9_reconinter.c.o
+    [CC] vp9/common/vp9_reconintra.c.o
+    [CC] vp9/common/vp9_common_data.c.o
+    [CC] vp9/common/vp9_scan.c.o
+    [CC] vp9/common/x86/vp9_idct_intrin_sse2.c.o
+    [CC] vp9/vp9_dx_iface.c.o
+    [CC] vp9/decoder/vp9_decodemv.c.o
+    [CC] vp9/decoder/vp9_decodeframe.c.o
+    [CC] vp9/decoder/vp9_detokenize.c.o
+    [CC] vp9/decoder/vp9_decoder.c.o
+    [CC] vp9/decoder/vp9_dsubexp.c.o
+    [CC] vp9/decoder/vp9_job_queue.c.o
+    [CC] vpx_config.c.o
+    [AS] vpx_ports/emms_mmx.asm.o
+    [AS] vpx_dsp/x86/intrapred_sse2.asm.o
+    [AS] vpx_dsp/x86/intrapred_ssse3.asm.o
+    [AS] vpx_dsp/x86/add_noise_sse2.asm.o
+    [AS] vpx_dsp/x86/deblock_sse2.asm.o
+    [AS] vpx_dsp/x86/vpx_subpixel_8t_sse2.asm.o
+    [AS] vpx_dsp/x86/vpx_subpixel_bilinear_sse2.asm.o
+    [AS] vpx_dsp/x86/vpx_subpixel_8t_ssse3.asm.o
+    [AS] vpx_dsp/x86/vpx_subpixel_bilinear_ssse3.asm.o
+    [AS] vpx_dsp/x86/vpx_convolve_copy_sse2.asm.o
+    [AS] vpx_dsp/x86/inv_wht_sse2.asm.o
+    [AS] vpx_dsp/x86/ssim_opt_x86_64.asm.o
+    [AS] vpx_dsp/x86/subpel_variance_sse2.asm.o
+    [AS] vp8/common/x86/dequantize_mmx.asm.o
+    [AS] vp8/common/x86/idctllm_mmx.asm.o
+    [AS] vp8/common/x86/recon_mmx.asm.o
+    [AS] vp8/common/x86/subpixel_mmx.asm.o
+    [AS] vp8/common/x86/idctllm_sse2.asm.o
+    [AS] vp8/common/x86/recon_sse2.asm.o
+    [AS] vp8/common/x86/subpixel_sse2.asm.o
+    [AS] vp8/common/x86/loopfilter_sse2.asm.o
+    [AS] vp8/common/x86/iwalsh_sse2.asm.o
+    [AS] vp8/common/x86/subpixel_ssse3.asm.o
+    [AS] vp8/common/x86/mfqe_sse2.asm.o
+    [AS] vp8/common/x86/loopfilter_block_sse2_x86_64.asm.o
+    [CREATE] vpx.pc
+    [AR] libvpx_g.a
+    [STRIP] libvpx.a < libvpx_g.a
+    [INSTALL] /d/a/OMugen/OMugen/build/ffmpeg/include/vpx/vp8.h
+    [INSTALL] /d/a/OMugen/OMugen/build/ffmpeg/include/vpx/vp8dx.h
+    [INSTALL] /d/a/OMugen/OMugen/build/ffmpeg/include/vpx/vpx_codec.h
+    [INSTALL] /d/a/OMugen/OMugen/build/ffmpeg/include/vpx/vpx_frame_buffer.h
+    [INSTALL] /d/a/OMugen/OMugen/build/ffmpeg/include/vpx/vpx_image.h
+    [INSTALL] /d/a/OMugen/OMugen/build/ffmpeg/include/vpx/vpx_integer.h
+    [INSTALL] /d/a/OMugen/OMugen/build/ffmpeg/include/vpx/vpx_decoder.h
+    [INSTALL] /d/a/OMugen/OMugen/build/ffmpeg/lib/libvpx.a
+    [INSTALL] /d/a/OMugen/OMugen/build/ffmpeg/lib/pkgconfig/vpx.pc
+==> Building minimal FFmpeg to /d/a/OMugen/OMugen/build/ffmpeg (sources in build/ffmpeg-src)
+Cloning into 'build/ffmpeg-src'...
+Updating files:  60% (5180/8568)Updating files:  61% (5227/8568)Updating files:  62% (5313/8568)Updating files:  63% (5398/8568)Updating files:  64% (5484/8568)Updating files:  65% (5570/8568)Updating files:  66% (5655/8568)Updating files:  67% (5741/8568)Updating files:  68% (5827/8568)Updating files:  69% (5912/8568)Updating files:  70% (5998/8568)Updating files:  71% (6084/8568)Updating files:  72% (6169/8568)Updating files:  73% (6255/8568)Updating files:  74% (6341/8568)Updating files:  75% (6426/8568)Updating files:  76% (6512/8568)Updating files:  77% (6598/8568)Updating files:  78% (6684/8568)Updating files:  79% (6769/8568)Updating files:  80% (6855/8568)Updating files:  81% (6941/8568)Updating files:  82% (7026/8568)Updating files:  83% (7112/8568)Updating files:  84% (7198/8568)Updating files:  85% (7283/8568)Updating files:  86% (7369/8568)Updating files:  87% (7455/8568)Updating files:  88% (7540/8568)Updating files:  89% (7626/8568)Updating files:  90% (7712/8568)Updating files:  91% (7797/8568)Updating files:  92% (7883/8568)Updating files:  93% (7969/8568)Updating files:  94% (8054/8568)Updating files:  95% (8140/8568)Updating files:  96% (8226/8568)Updating files:  97% (8311/8568)Updating files:  98% (8397/8568)Updating files:  99% (8483/8568)Updating files: 100% (8568/8568)Updating files: 100% (8568/8568), done.
+Already on 'release/7.1'
+Your branch is up to date with 'origin/release/7.1'.
+==> Starting configure...
+install prefix            /d/a/OMugen/OMugen/build/ffmpeg
+source path               .
+C compiler                gcc
+C library                 mingw64
+ARCH                      x86 (generic)
+big-endian                no
+runtime cpu detection     yes
+standalone assembly       yes
+x86 assembler             nasm
+MMX enabled               yes
+MMXEXT enabled            yes
+3DNow! enabled            yes
+3DNow! extended enabled   yes
+SSE enabled               yes
+SSSE3 enabled             yes
+AESNI enabled             yes
+AVX enabled               yes
+AVX2 enabled              yes
+AVX-512 enabled           yes
+AVX-512ICL enabled        yes
+XOP enabled               yes
+FMA3 enabled              yes
+FMA4 enabled              yes
+i686 features enabled     yes
+CMOV is fast              yes
+EBX available             yes
+EBP available             yes
+debug symbols             no
+strip symbols             yes
+optimize for size         no
+optimizations             yes
+static                    no
+shared                    yes
+postprocessing support    no
+network support           yes
+threading support         w32threads
+safe bitstream reader     yes
+texi2html enabled         no
+perl enabled              yes
+pod2man enabled           yes
+makeinfo enabled          no
+makeinfo supports HTML    no
+xmllint enabled           yes
+
+External libraries:
+libvpx
+
+External libraries providing hardware acceleration:
+
+Libraries:
+avcodec                 avformat                swscale
+avdevice                avutil
+avfilter                swresample
+
+Programs:
+
+Enabled decoders:
+libvpx_vp8              opus
+libvpx_vp9              vorbis
+
+Enabled encoders:
+
+Enabled hwaccels:
+
+Enabled parsers:
+opus                    vp8
+vorbis                  vp9
+
+Enabled demuxers:
+matroska
+
+Enabled muxers:
+
+Enabled protocols:
+file
+
+Enabled filters:
+crop                    pad
+format                  scale
+
+Enabled bsfs:
+
+Enabled indevs:
+
+Enabled outdevs:
+
+License: LGPL version 2.1 or later
+==> Configure complete. Starting make...
+GEN	libavdevice/libavdevice.version
+GEN	libavfilter/libavfilter.version
+GEN	libavformat/libavformat.version
+GEN	libavcodec/libavcodec.version
+GEN	libswresample/libswresample.version
+GEN	libswscale/libswscale.version
+GEN	libavutil/libavutil.version
+CC	libavdevice/alldevices.o
+CC	libavdevice/avdevice.o
+CC	libavdevice/utils.o
+CC	libavdevice/version.o
+WINDRES	libavdevice/avdeviceres.o
+CC	libavformat/allformats.o
+CC	libavformat/avformat.o
+CC	libavformat/avio.o
+CC	libavformat/aviobuf.o
+CC	libavformat/demux.o
+libavformat/demux.c: In function 'read_frame_internal':
+libavformat/demux.c:1388:9: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 1388 |         int new_extradata = !!av_packet_side_data_get(pkt->side_data, pkt->side_data_elems,
+      |         ^~~
+CC	libavformat/demux_utils.o
+CC	libavformat/dovi_isom.o
+CC	libavformat/dump.o
+CC	libavformat/dv.o
+CC	libavformat/file.o
+CC	libavformat/flac_picture.o
+CC	libavformat/format.o
+CC	libavformat/id3v1.o
+CC	libavformat/id3v2.o
+CC	libavformat/isom_tags.o
+CC	libavformat/matroska.o
+CC	libavformat/matroskadec.o
+CC	libavformat/metadata.o
+CC	libavformat/mux.o
+CC	libavformat/mux_utils.o
+CC	libavformat/network.o
+CC	libavformat/oggparsevorbis.o
+CC	libavformat/options.o
+CC	libavformat/os_support.o
+CC	libavformat/protocols.o
+CC	libavformat/qtpalette.o
+CC	libavformat/replaygain.o
+CC	libavformat/riff.o
+CC	libavformat/riffdec.o
+CC	libavformat/rmsipr.o
+CC	libavformat/sdp.o
+libavformat/os_support.c: In function 'ff_poll':
+libavformat/os_support.c:247:23: warning: comparison of unsigned expression in '< 0' is always false [-Wtype-limits]
+  247 |         if (fds[i].fd < 0)
+      |                       ^
+CC	libavformat/seek.o
+CC	libavformat/url.o
+CC	libavformat/utils.o
+CC	libavformat/version.o
+CC	libavformat/vorbiscomment.o
+libavformat/vorbiscomment.c: In function 'ff_vorbiscomment_write':
+libavformat/vorbiscomment.c:103:63: warning: '%03d' directive output may be truncated writing between 3 and 10 bytes into a region of size 4 [-Wformat-truncation=]
+  103 |             snprintf(chapter_number, sizeof(chapter_number), "%03d", i);
+      |                                                               ^~~~
+libavformat/vorbiscomment.c:103:62: note: directive argument in the range [0, 2147483647]
+  103 |             snprintf(chapter_number, sizeof(chapter_number), "%03d", i);
+      |                                                              ^~~~~~
+libavformat/vorbiscomment.c:103:13: note: 'snprintf' output between 4 and 11 bytes into a destination of size 4
+  103 |             snprintf(chapter_number, sizeof(chapter_number), "%03d", i);
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+libavformat/vorbiscomment.c:104:69: warning: '%02d' directive output may be truncated writing between 2 and 3 bytes into a region of size between 1 and 7 [-Wformat-truncation=]
+  104 |             snprintf(chapter_time, sizeof(chapter_time), "%02d:%02d:%02d.%03d", h, m, s, ms);
+      |                                                                     ^~~~
+libavformat/vorbiscomment.c:104:58: note: directive argument in the range [-59, 59]
+  104 |             snprintf(chapter_time, sizeof(chapter_time), "%02d:%02d:%02d.%03d", h, m, s, ms);
+      |                                                          ^~~~~~~~~~~~~~~~~~~~~
+libavformat/vorbiscomment.c:104:58: note: directive argument in the range [-999, 999]
+libavformat/vorbiscomment.c:104:13: note: 'snprintf' output between 13 and 21 bytes into a destination of size 13
+  104 |             snprintf(chapter_time, sizeof(chapter_time), "%02d:%02d:%02d.%03d", h, m, s, ms);
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+WINDRES	libavformat/avformatres.o
+CC	libavformat/log2_tab.o
+CC	libavformat/mpeg4audio_sample_rates.o
+CC	libavformat/to_upper4.o
+CC	libavcodec/ac3_parser.o
+CC	libavcodec/adts_parser.o
+CC	libavcodec/allcodecs.o
+CC	libavcodec/avcodec.o
+CC	libavcodec/avdct.o
+CC	libavcodec/avfft.o
+CC	libavcodec/bitstream.o
+CC	libavcodec/bitstream_filters.o
+CC	libavcodec/bsf.o
+CC	libavcodec/codec_desc.o
+CC	libavcodec/codec_par.o
+CC	libavcodec/d3d11va.o
+CC	libavcodec/decode.o
+CC	libavcodec/dirac.o
+CC	libavcodec/dv_profile.o
+CC	libavcodec/encode.o
+CC	libavcodec/faandct.o
+CC	libavcodec/faanidct.o
+CC	libavcodec/fdctdsp.o
+CC	libavcodec/get_buffer.o
+CC	libavcodec/idctdsp.o
+CC	libavcodec/imgconvert.o
+CC	libavcodec/jfdctfst.o
+CC	libavcodec/jfdctint.o
+CC	libavcodec/jni.o
+CC	libavcodec/jrevdct.o
+CC	libavcodec/libvpxdec.o
+libavcodec/jrevdct.c:215:28: warning: argument 1 of type 'int16_t[64]' {aka 'short int[64]'} with mismatched bound [-Warray-parameter=]
+  215 | void ff_j_rev_dct(DCTBLOCK data)
+      |                   ~~~~~~~~~^~~~
+In file included from libavcodec/jrevdct.c:70:
+libavcodec/dct.h:30:28: note: previously declared as 'int16_t *' {aka 'short int *'}
+   30 | void ff_j_rev_dct(int16_t *data);
+      |                   ~~~~~~~~~^~~~
+libavcodec/jrevdct.c:953:29: warning: argument 1 of type 'int16_t[64]' {aka 'short int[64]'} with mismatched bound [-Warray-parameter=]
+  953 | void ff_j_rev_dct4(DCTBLOCK data)
+      |                    ~~~~~~~~~^~~~
+libavcodec/dct.h:31:29: note: previously declared as 'int16_t *' {aka 'short int *'}
+   31 | void ff_j_rev_dct4(int16_t *data);
+      |                    ~~~~~~~~~^~~~
+libavcodec/jrevdct.c:1140:29: warning: argument 1 of type 'int16_t[64]' {aka 'short int[64]'} with mismatched bound [-Warray-parameter=]
+ 1140 | void ff_j_rev_dct2(DCTBLOCK data){
+      |                    ~~~~~~~~~^~~~
+libavcodec/dct.h:32:29: note: previously declared as 'int16_t *' {aka 'short int *'}
+   32 | void ff_j_rev_dct2(int16_t *data);
+      |                    ~~~~~~~~~^~~~
+libavcodec/jrevdct.c:1155:29: warning: argument 1 of type 'int16_t[64]' {aka 'short int[64]'} with mismatched bound [-Warray-parameter=]
+ 1155 | void ff_j_rev_dct1(DCTBLOCK data){
+      |                    ~~~~~~~~~^~~~
+libavcodec/dct.h:33:29: note: previously declared as 'int16_t *' {aka 'short int *'}
+   33 | void ff_j_rev_dct1(int16_t *data);
+      |                    ~~~~~~~~~^~~~
+CC	libavcodec/mathtables.o
+CC	libavcodec/mediacodec.o
+CC	libavcodec/mpeg12framerate.o
+CC	libavcodec/options.o
+CC	libavcodec/opus/celt.o
+CC	libavcodec/opus/dec.o
+CC	libavcodec/opus/dec_celt.o
+CC	libavcodec/opus/dsp.o
+CC	libavcodec/opus/parse.o
+CC	libavcodec/opus/parser.o
+CC	libavcodec/opus/pvq.o
+CC	libavcodec/opus/rc.o
+CC	libavcodec/opus/silk.o
+CC	libavcodec/opus/tab.o
+CC	libavcodec/packet.o
+CC	libavcodec/parser.o
+CC	libavcodec/parsers.o
+CC	libavcodec/profiles.o
+CC	libavcodec/pthread.o
+CC	libavcodec/pthread_frame.o
+CC	libavcodec/pthread_slice.o
+CC	libavcodec/qsv_api.o
+CC	libavcodec/raw.o
+CC	libavcodec/refstruct.o
+libavcodec/pthread_frame.c: In function 'init_thread':
+libavcodec/pthread_frame.c:890:5: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  890 |     const AVCodecContext *src = first ? copy : avctx;
+      |     ^~~~~
+CC	libavcodec/simple_idct.o
+CC	libavcodec/threadprogress.o
+CC	libavcodec/utils.o
+CC	libavcodec/version.o
+CC	libavcodec/vlc.o
+CC	libavcodec/vorbis.o
+CC	libavcodec/vorbis_data.o
+CC	libavcodec/vorbis_parser.o
+CC	libavcodec/vorbisdec.o
+CC	libavcodec/vorbisdsp.o
+CC	libavcodec/vp8_parser.o
+CC	libavcodec/vp9_parser.o
+In function 'add_level',
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'vlc_multi_gen' at libavcodec/vlc.c:508:5,
+    inlined from 'ff_vlc_init_multi_from_lengths' at libavcodec/vlc.c:564:11:
+libavcodec/vlc.c:443:36: warning: array subscript 3 is above array bounds of 'uint16_t[3]' {aka 'short unsigned int[3]'} [-Warray-bounds=]
+  443 |             if (is16bit) info.val16[curlevel] = sym;
+      |                          ~~~~~~~~~~^~~~~~~~~~
+In file included from libavcodec/vlc.c:39:
+libavcodec/vlc.h: In function 'ff_vlc_init_multi_from_lengths':
+libavcodec/vlc.h:45:18: note: while referencing 'val16'
+   45 |         uint16_t val16[VLC_MULTI_MAX_SYMBOLS / 2];
+      |                  ^~~~~
+In function 'add_level',
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'vlc_multi_gen' at libavcodec/vlc.c:508:5,
+    inlined from 'ff_vlc_init_multi_from_lengths' at libavcodec/vlc.c:564:11:
+libavcodec/vlc.c:443:36: warning: array subscript 4 is above array bounds of 'uint16_t[3]' {aka 'short unsigned int[3]'} [-Warray-bounds=]
+  443 |             if (is16bit) info.val16[curlevel] = sym;
+      |                          ~~~~~~~~~~^~~~~~~~~~
+libavcodec/vlc.h: In function 'ff_vlc_init_multi_from_lengths':
+libavcodec/vlc.h:45:18: note: while referencing 'val16'
+   45 |         uint16_t val16[VLC_MULTI_MAX_SYMBOLS / 2];
+      |                  ^~~~~
+In function 'add_level',
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'add_level' at libavcodec/vlc.c:457:17,
+    inlined from 'vlc_multi_gen' at libavcodec/vlc.c:508:5,
+    inlined from 'ff_vlc_init_multi_from_lengths' at libavcodec/vlc.c:564:11:
+libavcodec/vlc.c:443:36: warning: array subscript 5 is above array bounds of 'uint16_t[3]' {aka 'short unsigned int[3]'} [-Warray-bounds=]
+  443 |             if (is16bit) info.val16[curlevel] = sym;
+      |                          ~~~~~~~~~~^~~~~~~~~~
+libavcodec/vlc.h: In function 'ff_vlc_init_multi_from_lengths':
+libavcodec/vlc.h:45:18: note: while referencing 'val16'
+   45 |         uint16_t val16[VLC_MULTI_MAX_SYMBOLS / 2];
+      |                  ^~~~~
+CC	libavcodec/x86/constants.o
+CC	libavcodec/x86/fdct.o
+CC	libavcodec/x86/fdctdsp_init.o
+X86ASM	libavcodec/x86/idctdsp.o
+CC	libavcodec/x86/idctdsp_init.o
+X86ASM	libavcodec/x86/opusdsp.o
+CC	libavcodec/x86/opusdsp_init.o
+STRIP	libavcodec/x86/idctdsp.o
+X86ASM	libavcodec/x86/simple_idct10.o
+STRIP	libavcodec/x86/opusdsp.o
+X86ASM	libavcodec/x86/vorbisdsp.o
+CC	libavcodec/x86/vorbisdsp_init.o
+CC	libavcodec/xiph.o
+STRIP	libavcodec/x86/vorbisdsp.o
+WINDRES	libavcodec/avcodecres.o
+CC	libavcodec/log2_tab.o
+CC	libavcodec/reverse.o
+CC	libswresample/audioconvert.o
+CC	libswresample/dither.o
+CC	libswresample/options.o
+CC	libswresample/rematrix.o
+CC	libswresample/resample.o
+CC	libswresample/resample_dsp.o
+CC	libswresample/swresample.o
+CC	libswresample/swresample_frame.o
+CC	libswresample/version.o
+X86ASM	libswresample/x86/audio_convert.o
+CC	libswresample/x86/audio_convert_init.o
+X86ASM	libswresample/x86/rematrix.o
+CC	libswresample/x86/rematrix_init.o
+X86ASM	libswresample/x86/resample.o
+STRIP	libswresample/x86/rematrix.o
+CC	libswresample/x86/resample_init.o
+CC	libswresample/log2_tab.o
+WINDRES	libswresample/swresampleres.o
+CC	libavutil/adler32.o
+CC	libavutil/aes.o
+STRIP	libswresample/x86/resample.o
+CC	libavutil/aes_ctr.o
+CC	libavutil/ambient_viewing_environment.o
+CC	libavutil/audio_fifo.o
+CC	libavutil/avsscanf.o
+CC	libavutil/avstring.o
+CC	libavutil/base64.o
+CC	libavutil/blowfish.o
+CC	libavutil/bprint.o
+CC	libavutil/buffer.o
+CC	libavutil/camellia.o
+CC	libavutil/cast5.o
+CC	libavutil/channel_layout.o
+STRIP	libavcodec/x86/simple_idct10.o
+CC	libavutil/cpu.o
+CC	libavutil/crc.o
+STRIP	libswresample/x86/audio_convert.o
+CC	libavutil/csp.o
+CC	libavutil/des.o
+CC	libavutil/detection_bbox.o
+CC	libavutil/dict.o
+CC	libavutil/display.o
+CC	libavutil/dovi_meta.o
+CC	libavutil/downmix_info.o
+CC	libavutil/encryption_info.o
+CC	libavutil/error.o
+CC	libavutil/eval.o
+libavutil/eval.c: In function 'make_eval_expr':
+libavutil/eval.c:546:5: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  546 |     AVExpr *e = av_mallocz(sizeof(AVExpr));
+      |     ^~~~~~
+CC	libavutil/executor.o
+CC	libavutil/fifo.o
+CC	libavutil/file.o
+CC	libavutil/file_open.o
+CC	libavutil/film_grain_params.o
+CC	libavutil/fixed_dsp.o
+CC	libavutil/float_dsp.o
+CC	libavutil/frame.o
+CC	libavutil/hash.o
+CC	libavutil/hdr_dynamic_metadata.o
+CC	libavutil/hdr_dynamic_vivid_metadata.o
+CC	libavutil/hmac.o
+CC	libavutil/hwcontext.o
+CC	libavutil/hwcontext_stub.o
+CC	libavutil/iamf.o
+CC	libavutil/imgutils.o
+CC	libavutil/integer.o
+CC	libavutil/intmath.o
+CC	libavutil/lfg.o
+CC	libavutil/lls.o
+CC	libavutil/log.o
+CC	libavutil/log2_tab.o
+CC	libavutil/lzo.o
+CC	libavutil/mastering_display_metadata.o
+CC	libavutil/mathematics.o
+CC	libavutil/md5.o
+CC	libavutil/mem.o
+CC	libavutil/murmur3.o
+CC	libavutil/opt.o
+CC	libavutil/parseutils.o
+CC	libavutil/pixdesc.o
+CC	libavutil/pixelutils.o
+CC	libavutil/random_seed.o
+CC	libavutil/rational.o
+CC	libavutil/rc4.o
+CC	libavutil/reverse.o
+CC	libavutil/ripemd.o
+CC	libavutil/samplefmt.o
+CC	libavutil/sha.o
+CC	libavutil/sha512.o
+CC	libavutil/slicethread.o
+CC	libavutil/spherical.o
+CC	libavutil/stereo3d.o
+CC	libavutil/tea.o
+CC	libavutil/threadmessage.o
+CC	libavutil/time.o
+CC	libavutil/timecode.o
+libavutil/timecode.c: In function 'av_timecode_make_string':
+libavutil/timecode.c:124:60: warning: '%0*d' directive output may be truncated writing between 1 and 10 bytes into a region of size between 3 and 14 [-Wformat-truncation=]
+  124 |     snprintf(buf, AV_TIMECODE_STR_SIZE, "%s%02d:%02d:%02d%c%0*d",
+      |                                                            ^~~~
+libavutil/timecode.c:124:41: note: directive argument in the range [0, 2147483647]
+  124 |     snprintf(buf, AV_TIMECODE_STR_SIZE, "%s%02d:%02d:%02d%c%0*d",
+      |                                         ^~~~~~~~~~~~~~~~~~~~~~~~
+libavutil/timecode.c:124:5: note: 'snprintf' output between 11 and 31 bytes into a destination of size 23
+  124 |     snprintf(buf, AV_TIMECODE_STR_SIZE, "%s%02d:%02d:%02d%c%0*d",
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  125 |              neg ? "-" : "",
+      |              ~~~~~~~~~~~~~~~
+  126 |              hh, mm, ss, drop ? ';' : ':', ff_len, ff);
+      |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CC	libavutil/timestamp.o
+CC	libavutil/tree.o
+CC	libavutil/twofish.o
+CC	libavutil/tx.o
+CC	libavutil/tx_double.o
+CC	libavutil/tx_float.o
+CC	libavutil/tx_int32.o
+CC	libavutil/utils.o
+CC	libavutil/uuid.o
+CC	libavutil/version.o
+CC	libavutil/video_enc_params.o
+CC	libavutil/video_hint.o
+CC	libavutil/x86/cpu.o
+X86ASM	libavutil/x86/cpuid.o
+STRIP	libavutil/x86/cpuid.o
+X86ASM	libavutil/x86/fixed_dsp.o
+STRIP	libavutil/x86/fixed_dsp.o
+CC	libavutil/x86/fixed_dsp_init.o
+X86ASM	libavutil/x86/float_dsp.o
+STRIP	libavutil/x86/float_dsp.o
+CC	libavutil/x86/float_dsp_init.o
+X86ASM	libavutil/x86/imgutils.o
+CC	libavutil/x86/imgutils_init.o
+X86ASM	libavutil/x86/lls.o
+STRIP	libavutil/x86/imgutils.o
+CC	libavutil/x86/lls_init.o
+X86ASM	libavutil/x86/tx_float.o
+CC	libavutil/x86/tx_float_init.o
+STRIP	libavutil/x86/lls.o
+CC	libavutil/xga_font_data.o
+CC	libavutil/xtea.o
+WINDRES	libavutil/avutilres.o
+GEN	libavdevice/libavdevice.pc
+CC	libavfilter/allfilters.o
+CC	libavfilter/audio.o
+CC	libavfilter/avfilter.o
+CC	libavfilter/avfiltergraph.o
+CC	libavfilter/buffersink.o
+CC	libavfilter/buffersrc.o
+CC	libavfilter/ccfifo.o
+CC	libavfilter/colorspace.o
+CC	libavfilter/drawutils.o
+CC	libavfilter/formats.o
+CC	libavfilter/framepool.o
+CC	libavfilter/framequeue.o
+CC	libavfilter/framesync.o
+CC	libavfilter/graphdump.o
+CC	libavfilter/graphparser.o
+CC	libavfilter/pthread.o
+CC	libavfilter/scale_eval.o
+CC	libavfilter/version.o
+CC	libavfilter/vf_crop.o
+CC	libavfilter/vf_format.o
+CC	libavfilter/vf_pad.o
+CC	libavfilter/vf_scale.o
+CC	libavfilter/video.o
+WINDRES	libavfilter/avfilterres.o
+CC	libavfilter/log2_tab.o
+CC	libswscale/alphablend.o
+CC	libswscale/gamma.o
+CC	libswscale/half2float.o
+CC	libswscale/hscale.o
+CC	libswscale/hscale_fast_bilinear.o
+CC	libswscale/input.o
+CC	libswscale/options.o
+CC	libswscale/output.o
+CC	libswscale/rgb2rgb.o
+CC	libswscale/slice.o
+CC	libswscale/swscale.o
+CC	libswscale/swscale_unscaled.o
+CC	libswscale/utils.o
+libswscale/utils.c: In function 'sws_init_single_context':
+libswscale/utils.c:1422:5: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 1422 |     int64_t lumXInc      = (((int64_t)srcW << 16) + (dstW >> 1)) / dstW;
+      |     ^~~~~~~
+libswscale/utils.c:1594:5: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 1594 |     int64_t chrXInc = (((int64_t)c->chrSrcW << 16) + (c->chrDstW >> 1)) / c->chrDstW;
+      |     ^~~~~~~
+libswscale/utils.c:1916:9: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 1916 |         int usecascade = (ret == RETCODE_USE_CASCADE);
+      |         ^~~
+CC	libswscale/version.o
+CC	libswscale/vscale.o
+CC	libswscale/x86/hscale_fast_bilinear_simd.o
+X86ASM	libswscale/x86/input.o
+X86ASM	libswscale/x86/output.o
+X86ASM	libswscale/x86/range_convert.o
+STRIP	libswscale/x86/range_convert.o
+CC	libswscale/x86/rgb2rgb.o
+X86ASM	libswscale/x86/rgb_2_rgb.o
+STRIP	libswscale/x86/rgb_2_rgb.o
+X86ASM	libswscale/x86/scale.o
+STRIP	libswscale/x86/input.o
+X86ASM	libswscale/x86/scale_avx2.o
+STRIP	libswscale/x86/scale_avx2.o
+CC	libswscale/x86/swscale.o
+CC	libswscale/x86/yuv2rgb.o
+X86ASM	libswscale/x86/yuv2yuvX.o
+libswscale/x86/yuv2yuvX.asm:128: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:57: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1520: ... from macro `psrlq' defined here
+libavutil/x86/x86inc.asm:1427: ... from macro `RUN_AVX_INSTR' defined here
+libswscale/x86/yuv2yuvX.asm:128: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:58: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1520: ... from macro `psllq' defined here
+libavutil/x86/x86inc.asm:1427: ... from macro `RUN_AVX_INSTR' defined here
+libswscale/x86/yuv2yuvX.asm:128: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:97: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1293: ... from macro `add' defined here
+libswscale/x86/yuv2yuvX.asm:128: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:97: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1296: ... from macro `add' defined here
+libswscale/x86/yuv2yuvX.asm:130: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:57: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1520: ... from macro `psrlq' defined here
+libavutil/x86/x86inc.asm:1427: ... from macro `RUN_AVX_INSTR' defined here
+libswscale/x86/yuv2yuvX.asm:130: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:58: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1520: ... from macro `psllq' defined here
+libavutil/x86/x86inc.asm:1427: ... from macro `RUN_AVX_INSTR' defined here
+libswscale/x86/yuv2yuvX.asm:130: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:97: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1293: ... from macro `add' defined here
+libswscale/x86/yuv2yuvX.asm:130: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:97: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1296: ... from macro `add' defined here
+libswscale/x86/yuv2yuvX.asm:133: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:57: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1520: ... from macro `psrlq' defined here
+libavutil/x86/x86inc.asm:1482: ... from macro `RUN_AVX_INSTR' defined here
+libswscale/x86/yuv2yuvX.asm:133: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:58: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1520: ... from macro `psllq' defined here
+libavutil/x86/x86inc.asm:1482: ... from macro `RUN_AVX_INSTR' defined here
+libswscale/x86/yuv2yuvX.asm:133: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:97: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1293: ... from macro `add' defined here
+libswscale/x86/yuv2yuvX.asm:133: warning: $ prefix for hexadecimal is deprecated [-w+number-deprecated-hex]
+libswscale/x86/yuv2yuvX.asm:97: ... from macro `YUV2YUVX_FUNC' defined here
+libavutil/x86/x86inc.asm:1296: ... from macro `add' defined here
+STRIP	libswscale/x86/yuv2yuvX.o
+X86ASM	libswscale/x86/yuv_2_rgb.o
+STRIP	libswscale/x86/scale.o
+CC	libswscale/yuv2rgb.o
+STRIP	libswscale/x86/yuv_2_rgb.o
+CC	libswscale/log2_tab.o
+WINDRES	libswscale/swscaleres.o
+GEN	libavfilter/libavfilter.pc
+GEN	libavformat/libavformat.pc
+GEN	libavcodec/libavcodec.pc
+GEN	libswresample/libswresample.pc
+GEN	libswscale/libswscale.pc
+GEN	libavutil/libavutil.pc
+GEN	libavdevice/libavdevice.ver
+GEN	libavformat/libavformat.ver
+GEN	libavcodec/libavcodec.ver
+GEN	libswresample/libswresample.ver
+GEN	libavfilter/libavfilter.ver
+STRIP	libswscale/x86/output.o
+GEN	libswscale/libswscale.ver
+STRIP	libavutil/x86/tx_float.o
+GEN	libavutil/libavutil.ver
+EXTERN_PREFIX="" AR="ar" NM="nm -g" ./compat/windows/makedef libavutil/libavutil.ver libavutil/adler32.o libavutil/aes.o libavutil/aes_ctr.o libavutil/ambient_viewing_environment.o libavutil/audio_fifo.o libavutil/avsscanf.o libavutil/avstring.o libavutil/base64.o libavutil/blowfish.o libavutil/bprint.o libavutil/buffer.o libavutil/camellia.o libavutil/cast5.o libavutil/channel_layout.o libavutil/cpu.o libavutil/crc.o libavutil/csp.o libavutil/des.o libavutil/detection_bbox.o libavutil/dict.o libavutil/display.o libavutil/dovi_meta.o libavutil/downmix_info.o libavutil/encryption_info.o libavutil/error.o libavutil/eval.o libavutil/executor.o libavutil/fifo.o libavutil/file.o libavutil/file_open.o libavutil/film_grain_params.o libavutil/fixed_dsp.o libavutil/float_dsp.o libavutil/frame.o libavutil/hash.o libavutil/hdr_dynamic_metadata.o libavutil/hdr_dynamic_vivid_metadata.o libavutil/hmac.o libavutil/hwcontext.o libavutil/hwcontext_stub.o libavutil/iamf.o libavutil/imgutils.o libavutil/integer.o libavutil/intmath.o libavutil/lfg.o libavutil/lls.o libavutil/log.o libavutil/log2_tab.o libavutil/lzo.o libavutil/mastering_display_metadata.o libavutil/mathematics.o libavutil/md5.o libavutil/mem.o libavutil/murmur3.o libavutil/opt.o libavutil/parseutils.o libavutil/pixdesc.o libavutil/pixelutils.o libavutil/random_seed.o libavutil/rational.o libavutil/rc4.o libavutil/reverse.o libavutil/ripemd.o libavutil/samplefmt.o libavutil/sha.o libavutil/sha512.o libavutil/slicethread.o libavutil/spherical.o libavutil/stereo3d.o libavutil/tea.o libavutil/threadmessage.o libavutil/time.o libavutil/timecode.o libavutil/timestamp.o libavutil/tree.o libavutil/twofish.o libavutil/tx.o libavutil/tx_double.o libavutil/tx_float.o libavutil/tx_int32.o libavutil/utils.o libavutil/uuid.o libavutil/version.o libavutil/video_enc_params.o libavutil/video_hint.o libavutil/x86/cpu.o libavutil/x86/cpuid.o libavutil/x86/fixed_dsp.o libavutil/x86/fixed_dsp_init.o libavutil/x86/float_dsp.o libavutil/x86/float_dsp_init.o libavutil/x86/imgutils.o libavutil/x86/imgutils_init.o libavutil/x86/lls.o libavutil/x86/lls_init.o libavutil/x86/tx_float.o libavutil/x86/tx_float_init.o libavutil/xga_font_data.o libavutil/xtea.o libavutil/avutilres.o > libavutil/avutil-59.def
+LD	libavutil/avutil-59.dll
+dlltool -m i386:x86-64 -d libavutil/avutil-59.def -l libavutil/avutil.lib -D avutil-59.dll
+EXTERN_PREFIX="" AR="ar" NM="nm -g" ./compat/windows/makedef libswresample/libswresample.ver libswresample/audioconvert.o libswresample/dither.o libswresample/options.o libswresample/rematrix.o libswresample/resample.o libswresample/resample_dsp.o libswresample/swresample.o libswresample/swresample_frame.o libswresample/version.o libswresample/x86/audio_convert.o libswresample/x86/audio_convert_init.o libswresample/x86/rematrix.o libswresample/x86/rematrix_init.o libswresample/x86/resample.o libswresample/x86/resample_init.o libswresample/log2_tab.o libswresample/swresampleres.o > libswresample/swresample-5.def
+EXTERN_PREFIX="" AR="ar" NM="nm -g" ./compat/windows/makedef libswscale/libswscale.ver libswscale/alphablend.o libswscale/gamma.o libswscale/half2float.o libswscale/hscale.o libswscale/hscale_fast_bilinear.o libswscale/input.o libswscale/options.o libswscale/output.o libswscale/rgb2rgb.o libswscale/slice.o libswscale/swscale.o libswscale/swscale_unscaled.o libswscale/utils.o libswscale/version.o libswscale/vscale.o libswscale/x86/hscale_fast_bilinear_simd.o libswscale/x86/input.o libswscale/x86/output.o libswscale/x86/range_convert.o libswscale/x86/rgb2rgb.o libswscale/x86/rgb_2_rgb.o libswscale/x86/scale.o libswscale/x86/scale_avx2.o libswscale/x86/swscale.o libswscale/x86/yuv2rgb.o libswscale/x86/yuv2yuvX.o libswscale/x86/yuv_2_rgb.o libswscale/yuv2rgb.o libswscale/log2_tab.o libswscale/swscaleres.o > libswscale/swscale-8.def
+LD	libswresample/swresample-5.dll
+dlltool -m i386:x86-64 -d libswresample/swresample-5.def -l libswresample/swresample.lib -D swresample-5.dll
+LD	libswscale/swscale-8.dll
+EXTERN_PREFIX="" AR="ar" NM="nm -g" ./compat/windows/makedef libavcodec/libavcodec.ver libavcodec/ac3_parser.o libavcodec/adts_parser.o libavcodec/allcodecs.o libavcodec/avcodec.o libavcodec/avdct.o libavcodec/avfft.o libavcodec/bitstream.o libavcodec/bitstream_filters.o libavcodec/bsf.o libavcodec/codec_desc.o libavcodec/codec_par.o libavcodec/d3d11va.o libavcodec/decode.o libavcodec/dirac.o libavcodec/dv_profile.o libavcodec/encode.o libavcodec/faandct.o libavcodec/faanidct.o libavcodec/fdctdsp.o libavcodec/get_buffer.o libavcodec/idctdsp.o libavcodec/imgconvert.o libavcodec/jfdctfst.o libavcodec/jfdctint.o libavcodec/jni.o libavcodec/jrevdct.o libavcodec/libvpxdec.o libavcodec/mathtables.o libavcodec/mediacodec.o libavcodec/mpeg12framerate.o libavcodec/options.o libavcodec/opus/celt.o libavcodec/opus/dec.o libavcodec/opus/dec_celt.o libavcodec/opus/dsp.o libavcodec/opus/parse.o libavcodec/opus/parser.o libavcodec/opus/pvq.o libavcodec/opus/rc.o libavcodec/opus/silk.o libavcodec/opus/tab.o libavcodec/packet.o libavcodec/parser.o libavcodec/parsers.o libavcodec/profiles.o libavcodec/pthread.o libavcodec/pthread_frame.o libavcodec/pthread_slice.o libavcodec/qsv_api.o libavcodec/raw.o libavcodec/refstruct.o libavcodec/simple_idct.o libavcodec/threadprogress.o libavcodec/utils.o libavcodec/version.o libavcodec/vlc.o libavcodec/vorbis.o libavcodec/vorbis_data.o libavcodec/vorbis_parser.o libavcodec/vorbisdec.o libavcodec/vorbisdsp.o libavcodec/vp8_parser.o libavcodec/vp9_parser.o libavcodec/x86/constants.o libavcodec/x86/fdct.o libavcodec/x86/fdctdsp_init.o libavcodec/x86/idctdsp.o libavcodec/x86/idctdsp_init.o libavcodec/x86/opusdsp.o libavcodec/x86/opusdsp_init.o libavcodec/x86/simple_idct10.o libavcodec/x86/vorbisdsp.o libavcodec/x86/vorbisdsp_init.o libavcodec/xiph.o libavcodec/avcodecres.o libavcodec/log2_tab.o libavcodec/reverse.o > libavcodec/avcodec-61.def
+dlltool -m i386:x86-64 -d libswscale/swscale-8.def -l libswscale/swscale.lib -D swscale-8.dll
+EXTERN_PREFIX="" AR="ar" NM="nm -g" ./compat/windows/makedef libavfilter/libavfilter.ver libavfilter/allfilters.o libavfilter/audio.o libavfilter/avfilter.o libavfilter/avfiltergraph.o libavfilter/buffersink.o libavfilter/buffersrc.o libavfilter/ccfifo.o libavfilter/colorspace.o libavfilter/drawutils.o libavfilter/formats.o libavfilter/framepool.o libavfilter/framequeue.o libavfilter/framesync.o libavfilter/graphdump.o libavfilter/graphparser.o libavfilter/pthread.o libavfilter/scale_eval.o libavfilter/version.o libavfilter/vf_crop.o libavfilter/vf_format.o libavfilter/vf_pad.o libavfilter/vf_scale.o libavfilter/video.o libavfilter/avfilterres.o libavfilter/log2_tab.o > libavfilter/avfilter-10.def
+LD	libavfilter/avfilter-10.dll
+LD	libavcodec/avcodec-61.dll
+dlltool -m i386:x86-64 -d libavfilter/avfilter-10.def -l libavfilter/avfilter.lib -D avfilter-10.dll
+dlltool -m i386:x86-64 -d libavcodec/avcodec-61.def -l libavcodec/avcodec.lib -D avcodec-61.dll
+EXTERN_PREFIX="" AR="ar" NM="nm -g" ./compat/windows/makedef libavformat/libavformat.ver libavformat/allformats.o libavformat/avformat.o libavformat/avio.o libavformat/aviobuf.o libavformat/demux.o libavformat/demux_utils.o libavformat/dovi_isom.o libavformat/dump.o libavformat/dv.o libavformat/file.o libavformat/flac_picture.o libavformat/format.o libavformat/id3v1.o libavformat/id3v2.o libavformat/isom_tags.o libavformat/matroska.o libavformat/matroskadec.o libavformat/metadata.o libavformat/mux.o libavformat/mux_utils.o libavformat/network.o libavformat/oggparsevorbis.o libavformat/options.o libavformat/os_support.o libavformat/protocols.o libavformat/qtpalette.o libavformat/replaygain.o libavformat/riff.o libavformat/riffdec.o libavformat/rmsipr.o libavformat/sdp.o libavformat/seek.o libavformat/url.o libavformat/utils.o libavformat/version.o libavformat/vorbiscomment.o libavformat/avformatres.o libavformat/log2_tab.o libavformat/mpeg4audio_sample_rates.o libavformat/to_upper4.o > libavformat/avformat-61.def
+LD	libavformat/avformat-61.dll
+dlltool -m i386:x86-64 -d libavformat/avformat-61.def -l libavformat/avformat.lib -D avformat-61.dll
+EXTERN_PREFIX="" AR="ar" NM="nm -g" ./compat/windows/makedef libavdevice/libavdevice.ver libavdevice/alldevices.o libavdevice/avdevice.o libavdevice/utils.o libavdevice/version.o libavdevice/avdeviceres.o > libavdevice/avdevice-61.def
+LD	libavdevice/avdevice-61.dll
+dlltool -m i386:x86-64 -d libavdevice/avdevice-61.def -l libavdevice/avdevice.lib -D avdevice-61.dll
+==> Build complete. Installing...
+INSTALL	doc/examples/avio_http_serve_files.c
+INSTALL	doc/examples/avio_list_dir.c
+INSTALL	doc/examples/avio_read_callback.c
+INSTALL	doc/examples/decode_audio.c
+INSTALL	doc/examples/decode_filter_audio.c
+INSTALL	doc/examples/decode_filter_video.c
+INSTALL	doc/examples/decode_video.c
+INSTALL	doc/examples/demux_decode.c
+INSTALL	doc/examples/encode_audio.c
+INSTALL	doc/examples/encode_video.c
+INSTALL	doc/examples/extract_mvs.c
+INSTALL	doc/examples/filter_audio.c
+INSTALL	doc/examples/hw_decode.c
+INSTALL	doc/examples/mux.c
+INSTALL	doc/examples/qsv_decode.c
+INSTALL	doc/examples/qsv_transcode.c
+INSTALL	doc/examples/remux.c
+INSTALL	doc/examples/resample_audio.c
+INSTALL	doc/examples/scale_video.c
+INSTALL	doc/examples/show_metadata.c
+INSTALL	doc/examples/transcode.c
+INSTALL	doc/examples/transcode_aac.c
+INSTALL	doc/examples/vaapi_encode.c
+INSTALL	doc/examples/vaapi_transcode.c
+INSTALL	doc/examples/README
+INSTALL	doc/examples/Makefile
+INSTALL	doc/examples/avio_http_serve_files.c
+INSTALL	doc/examples/avio_list_dir.c
+INSTALL	doc/examples/avio_read_callback.c
+INSTALL	doc/examples/decode_audio.c
+INSTALL	doc/examples/decode_filter_audio.c
+INSTALL	doc/examples/decode_filter_video.c
+INSTALL	doc/examples/decode_video.c
+INSTALL	doc/examples/demux_decode.c
+INSTALL	doc/examples/encode_audio.c
+INSTALL	doc/examples/encode_video.c
+INSTALL	doc/examples/extract_mvs.c
+INSTALL	doc/examples/filter_audio.c
+INSTALL	doc/examples/hw_decode.c
+INSTALL	doc/examples/mux.c
+INSTALL	doc/examples/qsv_decode.c
+INSTALL	doc/examples/qsv_transcode.c
+INSTALL	doc/examples/remux.c
+INSTALL	doc/examples/resample_audio.c
+INSTALL	doc/examples/scale_video.c
+INSTALL	doc/examples/show_metadata.c
+INSTALL	doc/examples/transcode.c
+INSTALL	doc/examples/transcode_aac.c
+INSTALL	doc/examples/vaapi_encode.c
+INSTALL	doc/examples/vaapi_transcode.c
+INSTALL	doc/examples/README
+INSTALL	doc/examples/Makefile
+INSTALL	libavdevice/avdevice.dll
+STRIP	install-libavdevice-shared
+INSTALL	libavdevice/avdevice.dll
+INSTALL	libavdevice/avdevice.dll
+INSTALL	libavfilter/avfilter.dll
+STRIP	install-libavfilter-shared
+INSTALL	libavfilter/avfilter.dll
+INSTALL	libavfilter/avfilter.dll
+INSTALL	libavformat/avformat.dll
+STRIP	install-libavformat-shared
+INSTALL	libavformat/avformat.dll
+INSTALL	libavformat/avformat.dll
+INSTALL	libavcodec/avcodec.dll
+STRIP	install-libavcodec-shared
+INSTALL	libavcodec/avcodec.dll
+INSTALL	libavcodec/avcodec.dll
+INSTALL	libswresample/swresample.dll
+STRIP	install-libswresample-shared
+INSTALL	libswresample/swresample.dll
+INSTALL	libswresample/swresample.dll
+INSTALL	libswscale/swscale.dll
+STRIP	install-libswscale-shared
+INSTALL	libswscale/swscale.dll
+INSTALL	libswscale/swscale.dll
+INSTALL	libavutil/avutil.dll
+STRIP	install-libavutil-shared
+INSTALL	libavutil/avutil.dll
+INSTALL	libavutil/avutil.dll
+INSTALL	libavdevice/avdevice.h
+INSTALL	libavdevice/version.h
+INSTALL	libavdevice/version_major.h
+INSTALL	libavdevice/libavdevice.pc
+INSTALL	libavfilter/avfilter.h
+INSTALL	libavfilter/buffersink.h
+INSTALL	libavfilter/buffersrc.h
+INSTALL	libavfilter/version.h
+INSTALL	libavfilter/version_major.h
+INSTALL	libavfilter/libavfilter.pc
+INSTALL	libavformat/avformat.h
+INSTALL	libavformat/avio.h
+INSTALL	libavformat/version.h
+INSTALL	libavformat/version_major.h
+INSTALL	libavformat/libavformat.pc
+INSTALL	libavcodec/ac3_parser.h
+INSTALL	libavcodec/adts_parser.h
+INSTALL	libavcodec/avcodec.h
+INSTALL	libavcodec/avdct.h
+INSTALL	libavcodec/avfft.h
+INSTALL	libavcodec/bsf.h
+INSTALL	libavcodec/codec.h
+INSTALL	libavcodec/codec_desc.h
+INSTALL	libavcodec/codec_id.h
+INSTALL	libavcodec/codec_par.h
+INSTALL	libavcodec/d3d11va.h
+INSTALL	libavcodec/defs.h
+INSTALL	libavcodec/dirac.h
+INSTALL	libavcodec/dv_profile.h
+INSTALL	libavcodec/dxva2.h
+INSTALL	libavcodec/jni.h
+INSTALL	libavcodec/mediacodec.h
+INSTALL	libavcodec/packet.h
+INSTALL	libavcodec/qsv.h
+INSTALL	libavcodec/vdpau.h
+INSTALL	libavcodec/version.h
+INSTALL	libavcodec/version_major.h
+INSTALL	libavcodec/videotoolbox.h
+INSTALL	libavcodec/vorbis_parser.h
+INSTALL	libavcodec/libavcodec.pc
+INSTALL	libswresample/swresample.h
+INSTALL	libswresample/version.h
+INSTALL	libswresample/version_major.h
+INSTALL	libswresample/libswresample.pc
+INSTALL	libswscale/swscale.h
+INSTALL	libswscale/version.h
+INSTALL	libswscale/version_major.h
+INSTALL	libswscale/libswscale.pc
+INSTALL	libavutil/adler32.h
+INSTALL	libavutil/aes.h
+INSTALL	libavutil/aes_ctr.h
+INSTALL	libavutil/ambient_viewing_environment.h
+INSTALL	libavutil/attributes.h
+INSTALL	libavutil/audio_fifo.h
+INSTALL	libavutil/avassert.h
+INSTALL	libavutil/avstring.h
+INSTALL	libavutil/avutil.h
+INSTALL	libavutil/base64.h
+INSTALL	libavutil/blowfish.h
+INSTALL	libavutil/bprint.h
+INSTALL	libavutil/bswap.h
+INSTALL	libavutil/buffer.h
+INSTALL	libavutil/cast5.h
+INSTALL	libavutil/camellia.h
+INSTALL	libavutil/channel_layout.h
+INSTALL	libavutil/common.h
+INSTALL	libavutil/cpu.h
+INSTALL	libavutil/crc.h
+INSTALL	libavutil/csp.h
+INSTALL	libavutil/des.h
+INSTALL	libavutil/detection_bbox.h
+INSTALL	libavutil/dict.h
+INSTALL	libavutil/display.h
+INSTALL	libavutil/dovi_meta.h
+INSTALL	libavutil/downmix_info.h
+INSTALL	libavutil/encryption_info.h
+INSTALL	libavutil/error.h
+INSTALL	libavutil/eval.h
+INSTALL	libavutil/executor.h
+INSTALL	libavutil/fifo.h
+INSTALL	libavutil/file.h
+INSTALL	libavutil/frame.h
+INSTALL	libavutil/hash.h
+INSTALL	libavutil/hdr_dynamic_metadata.h
+INSTALL	libavutil/hdr_dynamic_vivid_metadata.h
+INSTALL	libavutil/hmac.h
+INSTALL	libavutil/hwcontext.h
+INSTALL	libavutil/hwcontext_cuda.h
+INSTALL	libavutil/hwcontext_d3d11va.h
+INSTALL	libavutil/hwcontext_d3d12va.h
+INSTALL	libavutil/hwcontext_drm.h
+INSTALL	libavutil/hwcontext_dxva2.h
+INSTALL	libavutil/hwcontext_qsv.h
+INSTALL	libavutil/hwcontext_mediacodec.h
+INSTALL	libavutil/hwcontext_opencl.h
+INSTALL	libavutil/hwcontext_vaapi.h
+INSTALL	libavutil/hwcontext_videotoolbox.h
+INSTALL	libavutil/hwcontext_vdpau.h
+INSTALL	libavutil/hwcontext_vulkan.h
+INSTALL	libavutil/iamf.h
+INSTALL	libavutil/imgutils.h
+INSTALL	libavutil/intfloat.h
+INSTALL	libavutil/intreadwrite.h
+INSTALL	libavutil/lfg.h
+INSTALL	libavutil/log.h
+INSTALL	libavutil/lzo.h
+INSTALL	libavutil/macros.h
+INSTALL	libavutil/mathematics.h
+INSTALL	libavutil/mastering_display_metadata.h
+INSTALL	libavutil/md5.h
+INSTALL	libavutil/mem.h
+INSTALL	libavutil/motion_vector.h
+INSTALL	libavutil/murmur3.h
+INSTALL	libavutil/opt.h
+INSTALL	libavutil/parseutils.h
+INSTALL	libavutil/pixdesc.h
+INSTALL	libavutil/pixelutils.h
+INSTALL	libavutil/pixfmt.h
+INSTALL	libavutil/random_seed.h
+INSTALL	libavutil/rc4.h
+INSTALL	libavutil/rational.h
+INSTALL	libavutil/replaygain.h
+INSTALL	libavutil/ripemd.h
+INSTALL	libavutil/samplefmt.h
+INSTALL	libavutil/sha.h
+INSTALL	libavutil/sha512.h
+INSTALL	libavutil/spherical.h
+INSTALL	libavutil/stereo3d.h
+INSTALL	libavutil/threadmessage.h
+INSTALL	libavutil/time.h
+INSTALL	libavutil/timecode.h
+INSTALL	libavutil/timestamp.h
+INSTALL	libavutil/tree.h
+INSTALL	libavutil/twofish.h
+INSTALL	libavutil/uuid.h
+INSTALL	libavutil/version.h
+INSTALL	libavutil/video_enc_params.h
+INSTALL	libavutil/xtea.h
+INSTALL	libavutil/tea.h
+INSTALL	libavutil/tx.h
+INSTALL	libavutil/film_grain_params.h
+INSTALL	libavutil/video_hint.h
+INSTALL	libavutil/avconfig.h
+INSTALL	libavutil/ffversion.h
+INSTALL	libavutil/libavutil.pc
+==> FFmpeg pkg-config files installed to: /d/a/OMugen/OMugen/build/ffmpeg/lib/pkgconfig
+total 8
+-rw-r--r-- 1 runneradmin None 509 Nov 21 00:54 libavcodec.pc
+-rw-r--r-- 1 runneradmin None 457 Nov 21 00:54 libavdevice.pc
+-rw-r--r-- 1 runneradmin None 410 Nov 21 00:54 libavfilter.pc
+-rw-r--r-- 1 runneradmin None 442 Nov 21 00:54 libavformat.pc
+-rw-r--r-- 1 runneradmin None 366 Nov 21 00:54 libavutil.pc
+-rw-r--r-- 1 runneradmin None 385 Nov 21 00:54 libswresample.pc
+-rw-r--r-- 1 runneradmin None 378 Nov 21 00:54 libswscale.pc
+-rw-r--r-- 1 runneradmin None 328 Nov 21 00:51 vpx.pc
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avcodec-61.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avdevice-61.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avfilter-10.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avformat-61.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/avutil-59.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/swresample-5.dll] Found PE+ image
+ * [D:/a/OMugen/OMugen/build/ffmpeg/bin/swscale-8.dll] Found PE+ image
+ * [D:/a/_temp/msys64/mingw64/bin/libxmp.dll] Found PE+ image
+ * [D:/a/_temp/msys64/mingw64/bin/libwinpthread-1.dll] Found PE+ image
+ * [D:/a/_temp/msys64/mingw64/bin/SDL2.dll] Found PE+ image
+==> Building Go binary (this may take a while)...
+go: downloading github.com/bodgit/sevenzip v1.6.0
+go: downloading github.com/Eiton/vulkan v0.0.0-20251125114215-6585a2a8590b
+go: downloading github.com/flopp/go-findfont v0.1.0
+go: downloading github.com/go-gl/gl v0.0.0-20231021071112-07e5d0ea2e71
+go: downloading github.com/go-gl/mathgl v1.0.0
+go: downloading github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
+go: downloading github.com/gopxl/beep/v2 v2.1.1-0.20240921133731-defe79638e99
+go: downloading github.com/lukegb/dds v0.0.0-20190402175749-8b7170e64003
+go: downloading github.com/ikemen-engine/reisen v0.1.10-0.20260911210321-7972c2bbc957
+go: downloading github.com/huin/goupnp v1.3.1
+go: downloading github.com/ikemen-engine/ggpo v0.0.0-20260413180701-b08e7d27b7f2
+go: downloading github.com/mdouchement/hdr v0.2.4
+go: downloading github.com/nwaples/rardecode/v2 v2.0.1
+go: downloading github.com/qmuntal/gltf v0.24.2
+go: downloading github.com/sqweek/dialog v0.0.0-20220809060634-e981b270ebbf
+go: downloading github.com/tidwall/gjson v1.18.0
+go: downloading github.com/tidwall/sjson v1.2.5
+go: downloading github.com/veandco/go-sdl2 v0.5.0-alpha.7.0.20250220045537-7f43f67a3a12
+go: downloading github.com/yuin/gopher-lua v1.1.0
+go: downloading golang.org/x/exp v0.0.0-20220609121020-a51bd0440498
+go: downloading golang.org/x/image v0.22.0
+go: downloading golang.org/x/mobile v0.0.0-20221110043201-43a038452099
+go: downloading golang.org/x/sys v0.18.0
+go: downloading golang.org/x/text v0.20.0
+go: downloading gopkg.in/ini.v1 v1.67.0
+go: downloading github.com/bodgit/plumbing v1.3.0
+go: downloading github.com/bodgit/windows v1.0.1
+go: downloading github.com/hashicorp/go-multierror v1.1.1
+go: downloading go4.org v0.0.0-20200411211856-f5505b9728dd
+go: downloading github.com/mewkiz/flac v1.0.12
+go: downloading github.com/pkg/errors v0.9.1
+go: downloading github.com/jfreymuth/oggvorbis v1.0.5
+go: downloading github.com/hajimehoshi/go-mp3 v0.3.4
+go: downloading github.com/samhocevar/go-meltysynth v0.0.0-20230403180939-aca4a036cb16
+go: downloading github.com/TheTitanrain/w32 v0.0.0-20200114052255-2654d97dbd3d
+go: downloading github.com/tidwall/match v1.1.1
+go: downloading github.com/tidwall/pretty v1.2.0
+go: downloading github.com/hashicorp/golang-lru/v2 v2.0.7
+go: downloading github.com/andybalholm/brotli v1.1.1
+go: downloading github.com/klauspost/compress v1.17.9
+go: downloading github.com/pierrec/lz4/v4 v4.1.21
+go: downloading github.com/ulikunitz/xz v0.5.12
+go: downloading github.com/hashicorp/errwrap v1.0.0
+go: downloading github.com/icza/bitio v1.1.0
+go: downloading github.com/mewkiz/pkg v0.0.0-20230226050401-4010bf0fec14
+go: downloading github.com/jfreymuth/vorbis v1.0.2
+go: downloading github.com/lucasb-eyer/go-colorful v1.2.0
+go: downloading golang.org/x/sync v0.9.0
+internal/unsafeheader
+internal/byteorder
+internal/goarch
+internal/coverage/rtcov
+internal/cpu
+internal/abi
+internal/godebugs
+internal/goexperiment
+internal/profilerecord
+internal/goos
+internal/runtime/atomic
+internal/runtime/gc
+internal/runtime/sys
+internal/bytealg
+internal/runtime/exithook
+internal/chacha8rand
+internal/runtime/gc/scan
+internal/asan
+internal/msan
+internal/race
+internal/runtime/math
+math/bits
+internal/runtime/pprof/label
+internal/runtime/syscall/windows
+internal/stringslite
+internal/strconv
+internal/runtime/maps
+internal/trace/tracev2
+sync/atomic
+internal/synctest
+unicode
+unicode/utf8
+internal/sync
+cmp
+math
+internal/syscall/windows/sysdll
+structs
+unicode/utf16
+container/list
+crypto/internal/fips140/alias
+crypto/internal/fips140deps/byteorder
+crypto/internal/fips140deps/cpu
+crypto/internal/constanttime
+crypto/internal/boring/sig
+crypto/internal/fips140/subtle
+runtime
+encoding
+log/internal
+golang.org/x/text/encoding/internal/identifier
+crypto/subtle
+golang.org/x/text/internal/utf8internal
+vendor/golang.org/x/crypto/cryptobyte/asn1
+vendor/golang.org/x/crypto/internal/alias
+internal/nettrace
+github.com/pierrec/lz4/v4/internal/lz4errors
+github.com/ulikunitz/xz/internal/hash
+github.com/klauspost/compress
+github.com/klauspost/compress/internal/cpuinfo
+github.com/bodgit/windows
+golang.org/x/image/math/f32
+github.com/gopxl/beep/v2/internal/util
+image/color
+github.com/hajimehoshi/go-mp3/internal/bits
+github.com/hajimehoshi/go-mp3/internal/imdct
+golang.org/x/exp/constraints
+database/sql/internal
+github.com/tidwall/match
+golang.org/x/exp/maps
+weak
+iter
+internal/reflectlite
+sync
+maps
+slices
+internal/testlog
+internal/bisect
+errors
+arena
+io
+internal/oserror
+strconv
+bytes
+strings
+reflect
+syscall
+bufio
+path
+internal/fmtsort
+internal/godebug
+encoding/binary
+hash
+crypto/internal/fips140deps/godebug
+hash/crc32
+crypto
+crypto/internal/fips140
+crypto/internal/impl
+crypto/internal/fips140/sha3
+crypto/internal/fips140/sha256
+crypto/internal/fips140/sha512
+internal/syscall/windows
+internal/syscall/windows/registry
+encoding/base64
+crypto/internal/fips140/hmac
+internal/saferio
+time
+internal/syscall/execenv
+crypto/internal/fips140/check
+crypto/internal/fips140deps/time
+encoding/json/internal
+crypto/internal/entropy/v1.0.0
+crypto/internal/fips140/aes
+crypto/fips140
+io/fs
+internal/poll
+context
+internal/filepathlite
+embed
+encoding/json/internal/jsonflags
+encoding/base32
+os
+encoding/json/internal/jsonopts
+encoding/json/internal/jsonwire
+github.com/bodgit/plumbing
+encoding/json/jsontext
+github.com/hashicorp/golang-lru/v2/internal
+crypto/internal/sysrand
+fmt
+path/filepath
+crypto/internal/fips140/drbg
+compress/flate
+crypto/internal/fips140only
+crypto/internal/fips140/aes/gcm
+encoding/gob
+encoding/hex
+crypto/cipher
+encoding/json/v2
+archive/zip
+crypto/internal/boring
+crypto/sha1
+crypto/sha256
+crypto/aes
+github.com/hashicorp/golang-lru/v2/simplelru
+encoding/json
+github.com/hashicorp/golang-lru/v2
+log
+golang.org/x/text/transform
+golang.org/x/text/encoding
+go4.org/syncutil
+golang.org/x/text/runes
+github.com/bodgit/sevenzip/internal/util
+golang.org/x/text/encoding/internal
+github.com/hashicorp/errwrap
+golang.org/x/text/encoding/unicode
+github.com/bodgit/sevenzip/internal/bra
+github.com/hashicorp/go-multierror
+github.com/bodgit/sevenzip/internal/bcj2
+compress/gzip
+github.com/bodgit/sevenzip/internal/aes7z
+github.com/andybalholm/brotli/matchfinder
+crypto/des
+crypto/internal/fips140/nistec/fiat
+crypto/internal/fips140/edwards25519/field
+math/rand/v2
+crypto/internal/randutil
+math/rand
+crypto/internal/rand
+crypto/internal/fips140/bigmod
+math/big
+runtime/cgo
+crypto/internal/fips140cache
+crypto/sha3
+crypto/internal/fips140hash
+crypto/internal/fips140/nistec
+crypto/sha512
+crypto/internal/boring/bbig
+encoding/asn1
+crypto/internal/fips140/edwards25519
+vendor/golang.org/x/crypto/cryptobyte
+crypto/internal/fips140/ed25519
+crypto/internal/fips140/ecdh
+crypto/elliptic
+crypto/internal/fips140/ecdsa
+crypto/ecdh
+crypto/rand
+crypto/internal/fips140/hkdf
+crypto/ecdsa
+crypto/ed25519
+crypto/hkdf
+crypto/hmac
+crypto/internal/fips140/mlkem
+vendor/golang.org/x/crypto/chacha20
+vendor/golang.org/x/crypto/internal/poly1305
+vendor/golang.org/x/sys/cpu
+crypto/mlkem
+crypto/internal/fips140/tls12
+crypto/internal/fips140/tls13
+crypto/md5
+vendor/golang.org/x/crypto/chacha20poly1305
+crypto/internal/fips140/mldsa
+crypto/rc4
+crypto/hpke
+crypto/mldsa
+crypto/internal/fips140/rsa
+crypto/tls/internal/fips140tls
+crypto/dsa
+crypto/x509/pkix
+crypto/rsa
+encoding/pem
+internal/singleflight
+vendor/golang.org/x/net/dns/dnsmessage
+unique
+sort
+net/netip
+vendor/golang.org/x/text/transform
+vendor/golang.org/x/text/unicode/bidi
+vendor/golang.org/x/text/unicode/norm
+vendor/golang.org/x/text/secure/bidirule
+net/url
+net
+vendor/golang.org/x/net/idna
+mime
+mime/quotedprintable
+net/http/internal
+net/http/internal/ascii
+vendor/golang.org/x/net/http2/hpack
+net/http/internal/httpsfv
+compress/bzip2
+github.com/klauspost/compress/flate
+crypto/x509
+net/textproto
+vendor/golang.org/x/net/http/httpguts
+vendor/golang.org/x/net/http/httpproxy
+mime/multipart
+github.com/bodgit/sevenzip/internal/bzip2
+github.com/bodgit/sevenzip/internal/deflate
+crypto/tls
+github.com/bodgit/sevenzip/internal/delta
+github.com/pierrec/lz4/v4/internal/lz4block
+github.com/pierrec/lz4/v4/internal/xxh32
+io/ioutil
+github.com/ulikunitz/xz/internal/xlog
+github.com/pierrec/lz4/v4/internal/lz4stream
+github.com/ulikunitz/xz/lzma
+github.com/pierrec/lz4/v4
+github.com/bodgit/sevenzip/internal/lz4
+github.com/bodgit/sevenzip/internal/lzma
+github.com/bodgit/sevenzip/internal/lzma2
+github.com/bodgit/sevenzip/internal/pool
+github.com/klauspost/compress/fse
+github.com/klauspost/compress/internal/snapref
+github.com/klauspost/compress/zstd/internal/xxhash
+net/http/httptrace
+github.com/klauspost/compress/huff0
+net/http/internal/httpcommon
+runtime/debug
+net/http/internal/http2
+os/user
+github.com/klauspost/compress/zstd
+github.com/flopp/go-findfont
+github.com/Eiton/vulkan
+github.com/bodgit/sevenzip/internal/zstd
+text/tabwriter
+net/http
+github.com/go-gl/mathgl/mgl32
+golang.org/x/image/math/fixed
+image
+github.com/andybalholm/brotli
+expvar
+image/internal/imageutil
+go4.org/readerutil
+image/draw
+github.com/pkg/errors
+github.com/golang/freetype/raster
+golang.org/x/image/font
+github.com/gopxl/beep/v2
+github.com/golang/freetype/truetype
+github.com/gopxl/beep/v2/effects
+github.com/golang/freetype
+github.com/icza/bitio
+github.com/mewkiz/flac/internal/hashutil
+github.com/mewkiz/flac/internal/hashutil/crc16
+github.com/mewkiz/flac/internal/bits
+github.com/mewkiz/flac/internal/hashutil/crc8
+github.com/mewkiz/flac/internal/ioutilx
+github.com/mewkiz/pkg/term
+github.com/mewkiz/flac/internal/bufseekio
+github.com/mewkiz/pkg/errutil
+github.com/mewkiz/flac/meta
+github.com/mewkiz/flac/internal/utf8
+github.com/samhocevar/go-meltysynth/meltysynth
+github.com/mewkiz/flac/frame
+github.com/mewkiz/flac
+github.com/gopxl/beep/v2/midi
+github.com/hajimehoshi/go-mp3/internal/consts
+github.com/gopxl/beep/v2/flac
+github.com/hajimehoshi/go-mp3/internal/huffman
+github.com/hajimehoshi/go-mp3/internal/frameheader
+github.com/bodgit/sevenzip/internal/brotli
+github.com/hajimehoshi/go-mp3/internal/sideinfo
+github.com/jfreymuth/vorbis
+github.com/hajimehoshi/go-mp3/internal/maindata
+github.com/bodgit/sevenzip
+github.com/hajimehoshi/go-mp3/internal/frame
+github.com/jfreymuth/oggvorbis
+github.com/gopxl/beep/v2/vorbis
+github.com/hajimehoshi/go-mp3
+github.com/gopxl/beep/v2/wav
+github.com/gopxl/beep/v2/mp3
+encoding/xml
+golang.org/x/sync/errgroup
+regexp/syntax
+github.com/ikemen-engine/ggpo/internal/buffer
+github.com/ikemen-engine/ggpo/internal/util
+github.com/ikemen-engine/ggpo/internal/input
+github.com/ikemen-engine/ggpo/internal/messages
+regexp
+github.com/huin/goupnp/scpd
+github.com/ikemen-engine/ggpo/internal/polling
+github.com/ikemen-engine/ggpo/internal/sync
+github.com/ikemen-engine/ggpo/transport
+github.com/ikemen-engine/ggpo/internal/protocol
+github.com/huin/goupnp/httpu
+github.com/huin/goupnp/soap
+github.com/huin/goupnp/ssdp
+github.com/ikemen-engine/ggpo
+github.com/huin/goupnp
+github.com/huin/goupnp/dcps/internetgateway2
+github.com/lukegb/dds
+uuid
+github.com/mdouchement/hdr/format
+database/sql/driver
+github.com/nwaples/rardecode/v2
+github.com/lucasb-eyer/go-colorful
+github.com/mdouchement/hdr/hdrcolor
+golang.org/x/sys/windows
+github.com/mdouchement/hdr
+github.com/mdouchement/hdr/codec/rgbe
+github.com/qmuntal/gltf
+github.com/qmuntal/gltf/binary
+github.com/qmuntal/gltf/modeler
+github.com/TheTitanrain/w32
+github.com/oakTINOoff/OMugen/src/mugenjoy
+github.com/tidwall/pretty
+github.com/sqweek/dialog
+github.com/tidwall/gjson
+github.com/tidwall/sjson
+github.com/yuin/gopher-lua/ast
+github.com/ikemen-engine/reisen
+github.com/yuin/gopher-lua/parse
+github.com/yuin/gopher-lua/pm
+os/exec
+github.com/yuin/gopher-lua
+golang.org/x/mobile/exp/f32
+golang.org/x/text/encoding/charmap
+golang.org/x/text/encoding/japanese
+golang.org/x/text/encoding/korean
+golang.org/x/text/encoding/simplifiedchinese
+golang.org/x/text/encoding/traditionalchinese
+gopkg.in/ini.v1
+hash/fnv
+html
+image/jpeg
+hash/adler32
+runtime/pprof
+compress/zlib
+image/png
+github.com/veandco/go-sdl2/sdl
+github.com/go-gl/gl/v3.3-core/gl
+github.com/oakTINOoff/OMugen/src
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avcodec-61.dll' -> 'lib/avcodec-61.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avdevice-61.dll' -> 'lib/avdevice-61.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avfilter-10.dll' -> 'lib/avfilter-10.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avformat-61.dll' -> 'lib/avformat-61.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/avutil-59.dll' -> 'lib/avutil-59.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/swresample-5.dll' -> 'lib/swresample-5.dll'
+'/d/a/OMugen/OMugen/build/ffmpeg/bin/swscale-8.dll' -> 'lib/swscale-8.dll'
+'/mingw64/bin/libwinpthread-1.dll' -> 'lib/libwinpthread-1.dll'
+'/mingw64/bin/libgcc_s_seh-1.dll' -> 'lib/libgcc_s_seh-1.dll'
+'/mingw64/bin/libstdc++-6.dll' -> 'lib/libstdc++-6.dll'
+'/mingw64/bin/libxmp.dll' -> 'lib/libxmp.dll'
+'/mingw64/bin/SDL2.dll' -> 'lib/SDL2.dll'
+==> Build successful (Windows)
+    Binary: ./OMugen.exe
+    Runtime DLLs: lib/
+==> Generating the OMugen screenpack sprites
+wrote screenpack\omugen\system.sff: 40 sprites, 2.8 MB
+==> Generating the new-game template (Proto, Proto Arena)
+wrote templates\newgame\chars\proto\proto.sff (1112.6 KB)
+wrote templates\newgame\chars\proto\proto.air (31.9 KB)
+  93 animations, 169 sprites
+wrote templates\newgame\stages\proto_arena.sff (610.6 KB)
+==> Generating the OMugen lifebars
+  screenpack/lifebars/fight.sff (1752.7 KB)
+  screenpack/lifebars/fight.def (16.9 KB)
+  screenpack/lifebars/fight.snd (3277.1 KB)
+  screenpack/lifebars/fonts/name.def (0.3 KB)
+  screenpack/lifebars/fonts/time.def (0.3 KB)
+  screenpack/lifebars/fonts/combo.def (0.3 KB)
+  screenpack/lifebars/fonts/small.def (0.3 KB)
+  screenpack/lifebars/fonts/win.def (0.3 KB)
+  screenpack/lifebars/fightfx.sff (6435.2 KB)
+  screenpack/lifebars/fightfx.air (3.8 KB)
+  screenpack/lifebars/common.snd (569.6 KB)
+  screenpack/engine/gofx/gofx.def (0.5 KB)
+  screenpack/engine/gofx/gofx.sff (316.9 KB)
+  screenpack/engine/gofx/gofx.air (3.0 KB)
+  screenpack/engine/gofx/gofx.snd (227.9 KB)
+  screenpack/engine/glyphs.sff (241.3 KB)
+==> Packing engine files
+wrote src\omugen_engine.zip: 99 files, 27.9 MB -> 20.0 MB
+==> Embedding Windows resources (icon + manifest) with windres...
+==> Delay-load import libs already exist in build/delaylib, skipping generation (delete that directory to force regeneration)
+==> Building Go binary (this may take a while)...
+github.com/oakTINOoff/OMugen/src
+==> Build successful (Windows)
+    Binary: ./OMugen.exe
+    Runtime DLLs: lib/
+==> OMugen build finished with exit code 0
