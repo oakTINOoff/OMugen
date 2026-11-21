@@ -2678,7 +2678,9 @@ func (cl *CommandList) InputUpdate(char *Char, controller int) bool {
 	var buttons [14]bool
 	var axes [6]float32
 
-	if isAI {
+	if omugenTrainButtons(cl, char, &buttons) {
+		// OMugen: the training tools play this character (the dummy's recording)
+	} else if isAI {
 		if char != nil && !char.asf(ASF_noaibuttonjam) {
 			// Since AI inputs use random numbers, we handle them locally to avoid desync
 			idx := ^controller
@@ -2829,6 +2831,7 @@ func (cl *CommandList) InputUpdate(char *Char, controller int) bool {
 
 	// Send final inputs to buffer
 	cl.Buffer.updateInputTime(U, D, L, R, B, F, a, b, c, x, y, z, s, d, w, m)
+	omugenTrainInputs(char, U, D, B, F, a, b, c, x, y, z, s, d, w) // OMugen: training input display
 
 	// This check is currently needed to prevent screenpack inputs from rapid firing
 	// It forces the command list update to wait one frame after a buffer reset

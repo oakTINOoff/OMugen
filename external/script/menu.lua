@@ -58,6 +58,24 @@ menu.t_valuename = {
 		{itemname = 'd', displayname = motif.pause_menu.training_pause_menu.menu.valuename.buttonjam_d},
 		{itemname = 'w', displayname = motif.pause_menu.training_pause_menu.menu.valuename.buttonjam_w},
 	},
+	--OMugen: Training Tools (omugen_training.go)
+	hitboxes = {
+		{itemname = 'off', displayname = motif.pause_menu.training_pause_menu.menu.valuename.hitboxes_off or 'Off'},
+		{itemname = 'on', displayname = motif.pause_menu.training_pause_menu.menu.valuename.hitboxes_on or 'On'},
+	},
+	inputdisplay = {
+		{itemname = 'off', displayname = motif.pause_menu.training_pause_menu.menu.valuename.inputdisplay_off or 'Off'},
+		{itemname = 'p1', displayname = motif.pause_menu.training_pause_menu.menu.valuename.inputdisplay_p1 or 'P1'},
+		{itemname = 'both', displayname = motif.pause_menu.training_pause_menu.menu.valuename.inputdisplay_both or 'P1 and P2'},
+	},
+	framedata = {
+		{itemname = 'off', displayname = motif.pause_menu.training_pause_menu.menu.valuename.framedata_off or 'Off'},
+		{itemname = 'on', displayname = motif.pause_menu.training_pause_menu.menu.valuename.framedata_on or 'On'},
+	},
+	playback = {
+		{itemname = 'off', displayname = motif.pause_menu.training_pause_menu.menu.valuename.playback_off or 'Off'},
+		{itemname = 'loop', displayname = motif.pause_menu.training_pause_menu.menu.valuename.playback_loop or 'Loop'},
+	},
 }
 
 -- Shared logic for pause menu option change, returns 2 values:
@@ -174,6 +192,43 @@ menu.t_itemname = {
 		if menu.f_valueChanged(t.items[item], sec) then
 			player(2)
 			mapSet('_iksys_trainingButtonJam', menu.buttonjam - 1)
+		end
+		return true
+	end,
+	--OMugen: Training Tools
+	['hitboxes'] = function(t, item, cursorPosY, moveTxt, sec)
+		if menu.f_valueChanged(t.items[item], sec) then
+			omugenTrainingSet('hitboxes', menu.hitboxes == 2)
+		end
+		return true
+	end,
+	['inputdisplay'] = function(t, item, cursorPosY, moveTxt, sec)
+		if menu.f_valueChanged(t.items[item], sec) then
+			omugenTrainingSet('inputs', menu.inputdisplay - 1)
+		end
+		return true
+	end,
+	['framedata'] = function(t, item, cursorPosY, moveTxt, sec)
+		if menu.f_valueChanged(t.items[item], sec) then
+			omugenTrainingSet('framedata', menu.framedata == 2)
+		end
+		return true
+	end,
+	['playback'] = function(t, item, cursorPosY, moveTxt, sec)
+		if menu.f_valueChanged(t.items[item], sec) then
+			omugenTrainingSet('playback', menu.playback == 2)
+		end
+		return true
+	end,
+	--Record Dummy: back to the fight, where P1's controller plays the dummy
+	--until the pause menu opens again (or 10 seconds)
+	['record'] = function(t, item, cursorPosY, moveTxt, sec)
+		if getInput(-1, sec.menu.done.key) then
+			sndPlay(motif.Snd, sec.cursor.done.snd[1], sec.cursor.done.snd[2])
+			omugenTrainingRecord()
+			menu.currentMenu[1] = menu.currentMenu[2]
+			menu.pauseExitDelay = gameOption('Input.PauseExitDelay')
+			return false
 		end
 		return true
 	end,
@@ -347,6 +402,18 @@ menu.t_vardisplay = {
 	end,
 	['buttonjam'] = function()
 		return menu.t_valuename.buttonjam[menu.buttonjam or 1].displayname
+	end,
+	['hitboxes'] = function()
+		return menu.t_valuename.hitboxes[menu.hitboxes or 1].displayname
+	end,
+	['inputdisplay'] = function()
+		return menu.t_valuename.inputdisplay[menu.inputdisplay or 1].displayname
+	end,
+	['framedata'] = function()
+		return menu.t_valuename.framedata[menu.framedata or 1].displayname
+	end,
+	['playback'] = function()
+		return menu.t_valuename.playback[menu.playback or 1].displayname
 	end,
 }
 
@@ -542,9 +609,15 @@ end
 
 -- Called from start.lua right before game() function to reset training menu values and p2 settings for a new match
 function menu.f_trainingReset()
+	--OMugen: the Training Tools stay on from match to match (the dummy's recording doesn't)
+	local keep = {hitboxes = menu.hitboxes, inputdisplay = menu.inputdisplay, framedata = menu.framedata}
 	for k, _ in pairs(menu.t_valuename) do
-		menu[k] = 1
+		menu[k] = keep[k] or 1
 	end
+	omugenTrainingReset()
+	omugenTrainingSet('hitboxes', menu.hitboxes == 2)
+	omugenTrainingSet('inputs', menu.inputdisplay - 1)
+	omugenTrainingSet('framedata', menu.framedata == 2)
 	menu.ailevel = gameOption('Options.Difficulty')
 	for _, v in ipairs(menu.t_vardisplayPointers) do
 		v.vardisplay = menu.f_vardisplay(v.itemname)
@@ -563,11 +636,13 @@ hook.add('loop#training', 'trainingSettings', function()
 	mapSet('_iksys_trainingFallRecovery', menu.fallrecovery - 1)
 	mapSet('_iksys_trainingDistance', menu.distance - 1)
 	mapSet('_iksys_trainingButtonJam', menu.buttonjam - 1)
+	omugenTrainingApply()
 end)
 
 menu.movelistChar = 1
 function menu.f_init()
 	esc(false)
+	omugenTrainingStop() --OMugen: pausing ends the dummy's recording
 	main.pauseMenuActive = true
 	bgReset(motif.optionbgdef.BGDef)
 	local id = f_pauseMenuIdFromKey(f_pauseMenuKey(gameMode()))

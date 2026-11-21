@@ -2889,6 +2889,7 @@ func (s *System) action() {
 
 		// Run the main character logic
 		s.charList.action()
+		omugenTrainTick() // OMugen: training frame data
 
 		// The following must be placed after char action or they will lag behind 1 frame
 		s.allPalFX.step()
@@ -4046,6 +4047,10 @@ func (s *System) runMatch() (reload bool) {
 		Srand(Atoi(v))
 	}
 
+	// OMugen: the training tools' hitboxes stay in training
+	if omugenTrain.hitboxes {
+		s.clsnDisplay = s.gameMode == "training"
+	}
 	// Disable debug during netplay (but not during replays)
 	if !s.debugModeAllowed() {
 		s.debugDisplay = false

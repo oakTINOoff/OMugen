@@ -231,6 +231,7 @@ func omugenControllersTable(l *lua.LState) *lua.LTable {
 func omugenScriptInit(l *lua.LState) {
 	omugenScreenpackScriptInit(l)
 	omugenAddScriptInit(l)
+	omugenTrainingScriptInit(l)
 	luaRegister(l, "omugenControllers", func(l *lua.LState) int {
 		/*Players 1-4 and their controllers, for the controller indicator.
 		@function omugenControllers

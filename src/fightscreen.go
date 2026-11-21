@@ -4169,7 +4169,7 @@ func (ro *FightScreenRound) drawFade() {
 		ro.fadeOut.draw()
 	} else if ro.fadeIn.isActive() {
 		ro.fadeIn.draw()
-	} else if sys.clsnDisplay && sys.cfg.Debug.ClsnDarken {
+	} else if sys.clsnDisplay && sys.cfg.Debug.ClsnDarken && !(omugenTrain.hitboxes && omugenTrainActive()) { // OMugen: training hitboxes keep the screen bright
 		ro.fadeIn.drawRect(sys.scrrect, 0, 0)
 	}
 

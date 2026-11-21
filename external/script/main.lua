@@ -641,6 +641,8 @@ require('external.script.debug')
 
 --OMugen: controller indicator, drawn on top of every menu frame
 main.hud = require('external.script.omugen_hud')
+--OMugen: Training Tools drawn over training matches
+main.trainingTools = require('external.script.omugen_training')
 local refreshFrame = refresh
 function refresh()
 	main.hud.draw()
