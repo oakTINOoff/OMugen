@@ -1,0 +1,47 @@
+success eac52fc7867296eef90e240dacb33cffd88f01e4 run 44846305561
+{
+  "go": {
+    "outputs": {
+      "GOPATH": "/home/runner/go",
+      "GOBIN": "/home/runner/go/bin",
+      "GOROOT": "/opt/hostedtoolcache/go/1.27.4/x64",
+      "GOCACHE": "/home/runner/.cache/go-build",
+      "GOMODCACHE": "/home/runner/go/pkg/mod",
+      "GOOS": "linux",
+      "GOARCH": "amd64",
+      "GOTOOLDIR": "/opt/hostedtoolcache/go/1.27.4/x64/pkg/tool/linux_amd64",
+      "go-bin-path": "/home/runner/go/bin",
+      "cache-hit": "false",
+      "go-version": "1.27.4"
+    },
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "apt": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "deps": {
+    "outputs": {
+      "cache-primary-key": "android-deps-v1-58bb533d4e6b70ee06a095c99ed24fb42bc32b8e12d27a8a0bda291c17dcf8d9"
+    },
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "build_android": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "apk": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "package": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  }
+}
