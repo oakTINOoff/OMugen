@@ -1,0 +1,55 @@
+success eac52fc7867296eef90e240dacb33cffd88f01e4 run 44846305561
+{
+  "go": {
+    "outputs": {
+      "GOPATH": "/home/runner/go",
+      "GOBIN": "/home/runner/go/bin",
+      "GOROOT": "/opt/hostedtoolcache/go/1.27.4/x64",
+      "GOCACHE": "/home/runner/.cache/go-build",
+      "GOMODCACHE": "/home/runner/go/pkg/mod",
+      "GOOS": "linux",
+      "GOARCH": "amd64",
+      "GOTOOLDIR": "/opt/hostedtoolcache/go/1.27.4/x64/pkg/tool/linux_amd64",
+      "go-bin-path": "/home/runner/go/bin",
+      "cache-hit": "false",
+      "go-version": "1.27.4"
+    },
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "msys2": {
+    "outputs": {},
+    "outcome": "skipped",
+    "conclusion": "skipped"
+  },
+  "msys2_retry": {
+    "outputs": {},
+    "outcome": "skipped",
+    "conclusion": "skipped"
+  },
+  "apt": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "build_windows": {
+    "outputs": {},
+    "outcome": "skipped",
+    "conclusion": "skipped"
+  },
+  "build_linux": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "package": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  },
+  "tests": {
+    "outputs": {},
+    "outcome": "success",
+    "conclusion": "success"
+  }
+}
