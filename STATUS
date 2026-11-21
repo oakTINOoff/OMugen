@@ -1,0 +1,8 @@
+success v0.1.6 eac52fc7867296eef90e240dacb33cffd88f01e4 run 44846306084
+total 80740
+drwxr-xr-x 2 runner runner     4096 Nov 21 00:59 .
+drwxr-xr-x 6 runner runner     4096 Nov 21 00:59 ..
+-rw-r--r-- 1 runner runner 27281701 Nov 21 00:59 OMugen-v0.1.6-android.apk
+-rw-r--r-- 1 runner runner 26537121 Nov 21 00:59 OMugen-v0.1.6-linux.tar.gz
+-rw-r--r-- 1 runner runner 28840001 Nov 21 00:59 OMugen-v0.1.6-windows.zip
+-rw-r--r-- 1 runner runner      277 Nov 21 00:59 SHA256SUMS.txt
